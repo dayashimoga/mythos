@@ -1,0 +1,108 @@
+name: CI - Multi-Platform Matrix & Validation
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint-and-integrity:
+    name: Lint, Types & Append-Only Verification
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate TypeScript strict types
+        run: npm run lint
+
+      - name: Verify append-only integrity for TODO.md & CHANGELOG.md
+        run: npm run verify:append-only
+
+  test-matrix:
+    name: Test Suite (${{ matrix.os }})
+    needs: [lint-and-integrity]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run unit, integration, and UI tests
+        run: npm run test
+
+      - name: Run coverage verification (>= 90% threshold)
+        if: matrix.os == 'ubuntu-latest'
+        run: npm run test:coverage
+
+      - name: Upload coverage report
+        if: matrix.os == 'ubuntu-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: code-coverage-report
+          path: coverage/
+          retention-days: 14
+
+  build-verification:
+    name: Production Bundle Build
+    needs: [test-matrix]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Compile production distribution
+        run: npm run build
+
+      - name: Generate SBOM & Dependency Manifest
+        run: npm run generate:sbom
+
+      - name: Verify build outputs exist
+        run: |
+          test -f dist/index.html || exit 1
+          test -f dist/SBOM.json || exit 1
+          test -f dist/DEPENDENCY_MANIFEST.json || exit 1
+
+      - name: Upload production build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: mythos-astra-production-dist
+          path: dist/
+          retention-days: 7

@@ -1,0 +1,93 @@
+import { IScene } from './SceneManager';
+import { IGameEngine } from '../engine/Engine';
+import { IRenderer } from '../render/CanvasRenderer';
+import { InputManager } from '../input/InputManager';
+import { DialogueBox, DialogueNode } from '../ui/DialogueBox';
+import { SacredGeometry } from '../render/SacredGeometry';
+
+export class StoryScene implements IScene {
+  public readonly id = 'StoryScene';
+  private engine!: IGameEngine;
+  private dialogueBox: DialogueBox = new DialogueBox();
+  private animTimer = 0;
+
+  private storyScript: DialogueNode[] = [
+    {
+      speaker: 'Devi Tara',
+      speakerRole: 'Celestial Oracle of Tapas',
+      portraitColor: '#00E5FF',
+      text: 'Arise, Child of the Sun. The Wheel of Time falters upon its axis. The seal of Surya has shattered, and Tamas claims the thresholds of the realm.',
+    },
+    {
+      speaker: 'Veer',
+      speakerRole: 'Solar Guardian',
+      portraitColor: '#FFB703',
+      text: 'The Sanctum... has the corruption of Mahisha reached this sacred ground? My gauntlet pulses with turbulent heat.',
+    },
+    {
+      speaker: 'Devi Tara',
+      speakerRole: 'Celestial Oracle of Tapas',
+      portraitColor: '#00E5FF',
+      text: 'The sentinels have fallen into shadow slumber. Gather the three radiant Astra Shards scattered across this chamber. Bring them to the Sun Altar and rekindle the primal flame.',
+    },
+    {
+      speaker: 'Veer',
+      speakerRole: 'Solar Guardian',
+      portraitColor: '#FFB703',
+      text: 'The flame will not die while I draw breath. For the light of Rta—I shall calibrate the Sanctum!',
+    },
+  ];
+
+  public onEnter(engine: IGameEngine): void {
+    this.engine = engine;
+    this.animTimer = 0;
+    this.dialogueBox.start(this.storyScript, () => {
+      this.engine.getAudio().playAltarResonate();
+      this.engine.getSceneManager().switchTo('GameScene');
+    });
+  }
+
+  public onExit(): void {}
+
+  public update(dt: number): void {
+    this.animTimer += dt;
+    this.dialogueBox.update(dt);
+  }
+
+  public render(renderer: IRenderer): void {
+    const vp = renderer.getViewport();
+    const ctx = renderer.getContext();
+    renderer.clear('#080C14');
+
+    const cx = vp.width / 2;
+    const cy = vp.height / 2;
+
+    // Atmospheric cosmic aura
+    SacredGeometry.drawMandala(ctx, cx, cy - 80, 180, 12, this.animTimer * 0.1, 'rgba(0, 229, 255, 0.12)', 1);
+    SacredGeometry.drawSriYantraCentral(ctx, cx, cy - 80, 60, 'rgba(255, 183, 3, 0.3)', 0.5);
+
+    // Chapter Title
+    renderer.drawText(
+      'ACT I : PROLOGUE OF THE ASTRAL ANCHOR',
+      cx,
+      cy - 160,
+      'bold 14px "Cinzel", Georgia, serif',
+      '#FFD166',
+      'center'
+    );
+
+    // Dialogue Overlay
+    this.dialogueBox.render(renderer);
+  }
+
+  public handleInput(input: InputManager): void {
+    if (
+      input.isActionJustPressed('DASH') ||
+      input.isActionJustPressed('ATTACK') ||
+      input.isActionJustPressed('INTERACT')
+    ) {
+      this.engine.getAudio().playShardPickup();
+      this.dialogueBox.advance();
+    }
+  }
+}

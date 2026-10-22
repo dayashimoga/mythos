@@ -1,0 +1,90 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=Outfit:wght@300;400;500;600&family=Inter:wght@400;500;600&display=swap');
+
+:root {
+  --color-bg-deep: #080C14;
+  --color-bg-surface: #121824;
+  --color-solar-primary: #FFB703;
+  --color-solar-accent: #FB8500;
+  --color-solar-glow: #FFD166;
+  --color-astral-cyan: #00E5FF;
+  --color-life-green: #06D6A0;
+  --color-corruption-dark: #1F1A24;
+  --color-corruption-glow: #EF476F;
+  --color-text-primary: #F8F9FA;
+  --color-text-secondary: #A0AAB8;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: var(--color-bg-deep);
+  color: var(--color-text-primary);
+  font-family: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  touch-action: none;
+}
+
+#app-root {
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at center, #0F172A 0%, #080C14 100%);
+}
+
+#game-canvas {
+  box-shadow: 0 0 50px rgba(0, 0, 0, 0.9), 0 0 20px rgba(255, 183, 3, 0.15);
+  border-radius: 4px;
+  max-width: 100vw;
+  max-height: 100vh;
+  object-fit: contain;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+}
+
+/* Quick Bar in Top-Right */
+#quick-bar {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  display: flex;
+  gap: 8px;
+  z-index: 900;
+}
+
+.quick-btn {
+  background: rgba(18, 24, 36, 0.85);
+  border: 1px solid rgba(255, 183, 3, 0.4);
+  color: var(--color-text-primary);
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 500;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.quick-btn:hover {
+  background: rgba(255, 183, 3, 0.2);
+  border-color: var(--color-solar-primary);
+  transform: translateY(-1px);
+}
+
+.quick-btn:active {
+  transform: translateY(1px);
+}

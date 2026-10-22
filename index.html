@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <title>Mythos: Astra &amp; The Seven Realms — Stage 0</title>
+    <meta name="description" content="Production-Grade Cross-Platform Mythological Game Engine &amp; Action-Adventure Foundation rooted in Vedic Cosmology." />
+    <meta name="theme-color" content="#080C14" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    
+    <!-- Open Graph Metadata -->
+    <meta property="og:title" content="Mythos: Astra &amp; The Seven Realms" />
+    <meta property="og:description" content="Stage 0 Production-Grade Game Engine Foundation" />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="./assets/icon.png" />
+    
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='45' fill='%23080C14' stroke='%23FFB703' stroke-width='8'/><polygon points='50,15 80,75 20,75' fill='%23FB8500'/><circle cx='50' cy='50' r='10' fill='%23FFD166'/></svg>" />
+    <link rel="stylesheet" href="./src/style.css" />
+  </head>
+  <body>
+    <div id="app-root">
+      <header id="sr-header" style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); border: 0;">
+        <h1>Mythos: Astra &amp; The Seven Realms</h1>
+      </header>
+
+      <nav id="quick-bar" aria-label="Game Quick Controls">
+        <button id="btn-toggle-diagnostics" class="quick-btn" title="Toggle Diagnostics Telemetry (F3)">
+          📊 <span>Diagnostics</span>
+        </button>
+        <button id="btn-toggle-audio" class="quick-btn" title="Toggle Sound (M)">
+          🔊 <span id="lbl-audio">Sound</span>
+        </button>
+        <button id="btn-fullscreen" class="quick-btn" title="Toggle Fullscreen">
+          ⛶ <span>Fullscreen</span>
+        </button>
+      </nav>
+
+      <canvas id="game-canvas" width="1280" height="720" role="application" aria-label="Interactive Mythos Game Canvas"></canvas>
+    </div>
+
+    <script type="module" src="./src/main.ts"></script>
+  </body>
+</html>
