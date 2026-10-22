@@ -4,12 +4,17 @@ import { IRenderer } from '../render/CanvasRenderer';
 import { InputManager } from '../input/InputManager';
 import { DialogueBox, DialogueNode } from '../ui/DialogueBox';
 import { SacredGeometry } from '../render/SacredGeometry';
+import { CharacterDefinitions } from '../animation/CharacterDefinitions';
+import { CharacterRig } from '../animation/CharacterRig';
 
 export class StoryScene implements IScene {
   public readonly id = 'StoryScene';
   private engine!: IGameEngine;
   private dialogueBox: DialogueBox = new DialogueBox();
   private animTimer = 0;
+
+  public deviTaraRig: CharacterRig = CharacterDefinitions.createDeviTaraRig();
+  public veerRig: CharacterRig = CharacterDefinitions.createVeerRig();
 
   private storyScript: DialogueNode[] = [
     {
@@ -41,6 +46,16 @@ export class StoryScene implements IScene {
   public onEnter(engine: IGameEngine): void {
     this.engine = engine;
     this.animTimer = 0;
+
+    const vp = engine.getRenderer().getViewport();
+    this.deviTaraRig.position.set(vp.width / 2 - 280, vp.height / 2 + 10);
+    this.deviTaraRig.scale = 1.25;
+    this.deviTaraRig.facing = 1;
+
+    this.veerRig.position.set(vp.width / 2 + 280, vp.height / 2 + 10);
+    this.veerRig.scale = 1.25;
+    this.veerRig.facing = -1;
+
     this.dialogueBox.start(this.storyScript, () => {
       this.engine.getAudio().playAltarResonate();
       this.engine.getSceneManager().switchTo('GameScene');
@@ -52,6 +67,8 @@ export class StoryScene implements IScene {
   public update(dt: number): void {
     this.animTimer += dt;
     this.dialogueBox.update(dt);
+    this.deviTaraRig.update(dt);
+    this.veerRig.update(dt);
   }
 
   public render(renderer: IRenderer): void {
@@ -65,6 +82,10 @@ export class StoryScene implements IScene {
     // Atmospheric cosmic aura
     SacredGeometry.drawMandala(ctx, cx, cy - 80, 180, 12, this.animTimer * 0.1, 'rgba(0, 229, 255, 0.12)', 1);
     SacredGeometry.drawSriYantraCentral(ctx, cx, cy - 80, 60, 'rgba(255, 183, 3, 0.3)', 0.5);
+
+    // Render Conversational Character Rigs
+    this.deviTaraRig.render(renderer);
+    this.veerRig.render(renderer);
 
     // Chapter Title
     renderer.drawText(

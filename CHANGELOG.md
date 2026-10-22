@@ -77,3 +77,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Specification Documentation:**
   - Created `STAGE1_SPECIFICATION.md` defining functional gameplay scenario, combat formulas, entity contracts, and acceptance criteria.
 
+---
+
+## [0.3.0] - 2026-10-22
+
+### Added
+- **Production Character System & Hierarchical Skeletal Animation Engine (`src/animation/`):**
+  - High-performance 2D Affine Transformation engine (`Transform2D.ts`) with forward transform composition, inverse local space transformations, shortest-arc rotational slerp, and directional vectors.
+  - Hierarchical Bone Node tree (`Bone.ts`) supporting arbitrary parent-child skeletal graphs, rest pose caching, local-to-world transform cascades, and tip world coordinate evaluation.
+  - Skeletal container & socket registry (`Skeleton.ts`) with named joint lookups, topological bone transform updates, equipment sockets (`getSocketTransform`), and color-coded vector bone debug rendering.
+  - Analytical Two-Bone Inverse Kinematics solver (`TwoBoneIK.ts`) implementing the Law of Cosines with reachable distance clamping to prevent mathematical singularities ($NaN$) and smooth joint orientation bending.
+  - Multi-track property keyframing engine (`KeyframeTrack.ts`) supporting both scalar floats and 2D vectors across Linear, Cubic Hermite Spline, and Stepped interpolation modes.
+  - Animation Clip player (`AnimationClip.ts`) with clamped or looping playback and timed frame event dispatching (`getTriggeredEvents`) for audio, particle, and combat collision synchronization.
+  - 1D Parametric Blend Tree (`BlendTree1D.ts`) with normalized cycle phase synchronization ($\phi \in [0, 1)$), eliminating foot sliding and cadence popping across idle-walk-run transitions.
+  - Hierarchical Animation State Machine (`AnimationStateMachine.ts`) supporting clip nodes, blend tree nodes, dynamic float/boolean parameter driving, conditional transition evaluation, and smooth Hermite cross-fading (default 0.15s).
+  - Master Character Rig controller (`CharacterRig.ts`) binding skeletal nodes, state machines, aim IK, foot IK, direction facing, and custom render delegates.
+- **Authoritative Roster Rigs & Vedic Aesthetic Visuals (`CharacterDefinitions.ts`):**
+  - *Solar Guardian Veer (21 Bones):* Complete spine, clavicle, arm, finger, leg, and foot hierarchy. Features radiant saffron tunic, Surya breastplate, golden cuffs, glowing tilak, and Surya Sun-Blade socketed to the right hand.
+  - *Devi Tara (18 Bones):* Celestial guide rig with floating spine, graceful arms, flowing turquoise sari, diaphanous veil, glowing third eye, and Abhaya/Varada mudra hand poses.
+  - *Stone Rakshasa (15 Bones):* Heavy crystalline brute with hunched spine, basalt spikes, glowing molten lava fissures, and stone-bound war club socketed to the right fist.
+  - *Vanara Scout (16 Bones):* Agile forest scout with golden-amber fur, dynamic head crest, and expressive 4-segment prehensile tail with sinusoidal idle oscillation.
+- **Interactive Character Studio & Inspection Environment (`CharacterShowcaseScene.ts`):**
+  - Dedicated character inspection studio accessible via Title Screen button or `[ C ]` hotkey.
+  - Interactive features:
+    - Character switcher hotkeys: `[1]` Veer, `[2]` Devi Tara, `[3]` Stone Rakshasa, `[4]` Vanara Scout.
+    - Animation playback state cycling: Idle, Walk, Run, Attack, Hurt, Dead.
+    - Parameter speed slider `[ [ / ] ]` driving blend trees from 0.0 to 1.0.
+    - Play/Pause toggle `[ Space ]` and slow-motion time-scaling `[ T ]` (1.0x, 0.5x, 0.25x, 0.1x).
+    - Skeletal debug overlay toggle `[ B ]` displaying color-coded bone segments, joints, and sockets.
+    - Dynamic Aim IK toggle `[ M ]` tracking mouse cursor in world space.
+    - Dynamic Foot IK toggle `[ K ]` simulating uneven terrain raycast placement.
+    - Telemetry HUD displaying active character, bone count, active state, transition progress, cycle time, and playback FPS.
+- **Gameplay & Narrative Scene Integration:**
+  - Integrated Veer's 21-bone `CharacterRig` into `Player.ts`, mapping velocity and actions directly to blend trees, slashes, dashes, hurt states, and directional facing.
+  - Integrated Devi Tara's 18-bone `CharacterRig` into `StoryScene.ts`, rendering her ethereal floating posture and mudra hand gestures during the Act I prologue dialogue.
+- **Character Specification & Documentation:**
+  - Authored comprehensive `CHARACTER_SPECIFICATION.md` detailing lore dossiers, proportions, color palettes, skeletal joint hierarchies, 2-bone IK math formulations, and blend tree graphs.
+- **Quality Assurance & Verification:**
+  - Expanded automated test coverage across 27 test files and 125 tests achieving 94.09% statement coverage, 85.70% branch coverage, and 100% pass rate.
+  - Verified visual fidelity, interaction stability, and 60 FPS performance via automated browser smoke tests with session WebP recording and artifacts.
+
+

@@ -2,6 +2,8 @@ import { Entity } from './Entity';
 import { Vector2D } from '../physics/Vector2D';
 import { Projectile } from './Projectile';
 import { IRenderer } from '../render/CanvasRenderer';
+import { CharacterDefinitions } from '../animation/CharacterDefinitions';
+import { CharacterRig } from '../animation/CharacterRig';
 
 export type CombatStance = 'Standard' | 'SolarResonantFlare';
 
@@ -47,6 +49,7 @@ export class Player extends Entity {
   public shardsCollected = 0;
   public score = 0;
 
+  public rig: CharacterRig = CharacterDefinitions.createVeerRig();
   private idleBreath = 0;
 
   constructor(id: string, x: number, y: number) {
@@ -214,6 +217,20 @@ export class Player extends Entity {
         this.velocity.set(0, 0);
       }
     }
+
+    // Update Character Rig
+    this.rig.position.set(this.position.x, this.position.y);
+    this.rig.facing = this.facing.x >= 0 ? 1 : -1;
+    const speedParam = this.isDashing ? 1.0 : Math.min(1.0, this.velocity.magnitude() / this.speed);
+    this.rig.stateMachine.setFloat('speed', speedParam);
+    if (this.isMeleeSlashing) {
+      this.rig.stateMachine.setTrigger('trigger_slash');
+    }
+    if (this.isDashing) {
+      this.rig.stateMachine.setTrigger('trigger_dash');
+    }
+    this.rig.expression = this.iFrameTimer > 0 ? 'hurt' : 'neutral';
+    this.rig.update(dt);
   }
 
   public render(renderer: IRenderer): void {
@@ -225,10 +242,6 @@ export class Player extends Entity {
     if (this.iFrameTimer > 0 && Math.floor(this.iFrameTimer * 20) % 2 === 0) {
       ctx.globalAlpha = 0.4;
     }
-
-    // Subtle breathing scale
-    const breath = 1 + Math.sin(this.idleBreath) * 0.03;
-    ctx.scale(breath, breath);
 
     // Shadow on ground
     ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
@@ -271,36 +284,9 @@ export class Player extends Entity {
       ctx.restore();
     }
 
-    // Veer's Cuirass Body (Bronze & Obsidian)
-    ctx.fillStyle = '#121824';
-    ctx.strokeStyle = '#FFB703';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.roundRect(-12, -18, 24, 32, 6);
-    ctx.fill();
-    ctx.stroke();
-
-    // Sacred Saffron Mantle / Scarf
-    ctx.fillStyle = '#FB8500';
-    const scarfOffset = -this.facing.x * 8;
-    ctx.beginPath();
-    ctx.moveTo(-6, -14);
-    ctx.lineTo(6, -14);
-    ctx.lineTo(scarfOffset, 2);
-    ctx.closePath();
-    ctx.fill();
-
-    // Consecrated Solar Core / Gauntlet
-    ctx.fillStyle = this.stance === 'SolarResonantFlare' ? '#FFFFFF' : '#FFD166';
-    const gauntletX = this.facing.x >= 0 ? 12 : -12;
-    ctx.beginPath();
-    ctx.arc(gauntletX, 0, 5, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.strokeStyle = '#FFB703';
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
-
     ctx.restore();
+
+    // Render Skeletal Character Rig
+    this.rig.render(renderer);
   }
 }

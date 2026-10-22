@@ -101,16 +101,35 @@ export class SplashScene implements IScene {
     ctx.strokeStyle = '#FFD166';
     ctx.lineWidth = 1.5;
     ctx.beginPath();
-    ctx.roundRect(btnX, btn2Y, btnWidth, 38, 6);
+    ctx.roundRect(btnX, btn2Y, btnWidth, 34, 6);
     ctx.fill();
     ctx.stroke();
 
     renderer.drawText(
       'STAGE 1: BHUMI TEMPLE [ B / 🗡️ ]',
       cx,
-      btn2Y + 24,
-      'bold 12px "Cinzel", sans-serif',
+      btn2Y + 22,
+      'bold 11px "Cinzel", sans-serif',
       '#080C14',
+      'center'
+    );
+
+    // Stage 2 Character Showcase Studio Button
+    const btn3Y = cy + 276;
+    ctx.fillStyle = 'rgba(131, 56, 236, 0.85)';
+    ctx.strokeStyle = '#FFD166';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.roundRect(btnX, btn3Y, btnWidth, 34, 6);
+    ctx.fill();
+    ctx.stroke();
+
+    renderer.drawText(
+      'STAGE 2: CHARACTER STUDIO [ C / ✨ ]',
+      cx,
+      btn3Y + 22,
+      'bold 11px "Cinzel", sans-serif',
+      '#FFFFFF',
       'center'
     );
 
@@ -118,7 +137,7 @@ export class SplashScene implements IScene {
     renderer.drawText(
       'Press [ P ] for Settings  •  [ F3 ] Diagnostics Overlay',
       cx,
-      cy + 295,
+      cy + 326,
       '11px sans-serif',
       '#718096',
       'center'
@@ -126,7 +145,10 @@ export class SplashScene implements IScene {
   }
 
   public handleInput(input: InputManager): void {
-    if (input.isActionJustPressed('MELEE_ATTACK')) {
+    if (input.isActionJustPressed('INTERACT')) {
+      this.engine.getAudio().playShardPickup();
+      this.engine.getSceneManager().switchTo('CharacterShowcaseScene');
+    } else if (input.isActionJustPressed('MELEE_ATTACK')) {
       this.engine.getAudio().playShardPickup();
       this.engine.getSceneManager().switchTo('BhumiTempleScene');
     } else if (input.isActionJustPressed('DASH') || input.isActionJustPressed('ATTACK')) {

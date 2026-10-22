@@ -88,4 +88,8 @@ export class Vector2D {
   public static distance(a: Vector2D, b: Vector2D): number {
     return a.distanceTo(b);
   }
+
+  public static lerp(a: Vector2D, b: Vector2D, t: number): Vector2D {
+    return new Vector2D(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t);
+  }
 }

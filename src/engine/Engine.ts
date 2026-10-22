@@ -11,6 +11,7 @@ import { SplashScene } from '../scenes/SplashScene';
 import { StoryScene } from '../scenes/StoryScene';
 import { GameScene } from '../scenes/GameScene';
 import { BhumiTempleScene } from '../scenes/BhumiTempleScene';
+import { CharacterShowcaseScene } from '../scenes/CharacterShowcaseScene';
 import { SettingsScene } from '../scenes/SettingsScene';
 
 export interface IGameEngine {
@@ -49,6 +50,7 @@ export class Engine implements IGameEngine {
     this.sceneManager.register(new StoryScene());
     this.sceneManager.register(new GameScene());
     this.sceneManager.register(new BhumiTempleScene());
+    this.sceneManager.register(new CharacterShowcaseScene());
     this.sceneManager.register(new SettingsScene());
 
     // Attach input
