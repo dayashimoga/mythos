@@ -35,3 +35,25 @@
 - [ ] TASK-103: Implement sacred forge weapon crafting and elemental rune attunement.
 - [ ] TASK-104: Design and implement Stage 1 Boss encounter: Kalanemi's Shadow.
 - [ ] TASK-105: Integrate WebGPU compute shader pass for volumetric temple light shafts.
+
+---
+
+## [2026-10-22] Stage 1 Vertical Slice Delivery (The Realm of Bhumi: Sunken Fire Temple of Surya-Kund)
+
+- [x] TASK-106: Formulate Phase 1.1 Functional Specification and acceptance criteria; produce STAGE1_SPECIFICATION.md. (Completed 2026-10-22)
+- [x] TASK-107: Implement Phase 1.2 Gameplay Architecture (DamageNumberSystem, Shockwave, ResonancePillar, AmritaFont, AgniForge). (Completed 2026-10-22)
+- [x] TASK-108: Implement Phase 1.3 Core Functionality (Dual-mode combat with Melee Agni-Slash & deflection, Ranged Surya-Burst, SolarResonantFlare stance, Vanara Scout AI, Stone Rakshasa AI, Tamas Spire). (Completed 2026-10-22)
+- [x] TASK-109: Implement Phase 1.4 Visual Experience (Carved stone temple floor, animated lava trench hazard, Brahmic glyphs, Sanskrit inlays, victory rank grading S/A/B, defeat/retry overlay). (Completed 2026-10-22)
+- [x] TASK-110: Implement Phase 1.5 Integration (Integrated BhumiTempleScene into Engine, SplashScene, and GameScene; added Melee touch action button to VirtualJoystick). (Completed 2026-10-22)
+- [x] TASK-111: Implement Phase 1.6 Validation & Optimization (24 test suites, 106 automated tests passing, 92.73% line coverage, zero console errors, 60 FPS verified via browser smoke test with WebP recording). (Completed 2026-10-22)
+- [x] TASK-112: Implement Phase 1.7 Delivery (Updated CycloneDX SBOM, rebuilt 6 platform bundles with authenticated SHA-256 hashes, updated CHANGELOG, and appended task register). (Completed 2026-10-22)
+
+---
+
+## [2026-10-22] Stage 2 Upcoming Pipeline Backlog (The Realm of Patala: The Serpentine Abyssal Depths)
+
+- [ ] TASK-201: Implement procedural fluid flow dynamics for subterranean venom rivers in Patala.
+- [ ] TASK-202: Add 3 new Naga enemy archetypes (Naga Venom-Spitter, Serpentine Constrictor, Shadow Illusionist).
+- [ ] TASK-203: Implement grappling hook Astra mechanic (Vedic Harpoon) for navigating vertical chasm chasms.
+- [ ] TASK-204: Design and implement Stage 2 Boss encounter: Shesha's Tormented Echo.
+- [ ] TASK-205: Integrate dynamic 2D lighting with normal map specular reflections on subterranean basalt.

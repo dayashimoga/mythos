@@ -118,10 +118,10 @@ describe('Scene & Entity Rendering and Interaction Coverage', () => {
       game.update(0.5);
       expect(() => game.render(renderer)).not.toThrow(); // Renders victory overlay
 
-      // Victory exit input
+      // Victory exit input (DASH advances to Stage 1 BhumiTempleScene)
       input.triggerVirtualAction('DASH');
       game.handleInput(input);
-      expect(engine.getSceneManager().getCurrentScene()?.id).toBe('SplashScene');
+      expect(engine.getSceneManager().getCurrentScene()?.id).toBe('BhumiTempleScene');
     });
   });
 

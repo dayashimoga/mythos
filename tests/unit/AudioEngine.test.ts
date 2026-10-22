@@ -26,6 +26,13 @@ describe('AudioEngine Procedural Synthesizer', () => {
       audio.playShardPickup();
       audio.playAltarResonate();
       audio.playVictoryFanfare();
+      audio.playMeleeSlash();
+      audio.playEnemyHit();
+      audio.playShockwave();
+      audio.playHeal();
+      audio.playDefeat();
+      audio.playPillarHarmonic();
+      audio.playForgeUpgrade();
     }).not.toThrow();
   });
 

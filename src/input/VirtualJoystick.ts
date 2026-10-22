@@ -61,12 +61,14 @@ export class VirtualJoystick {
     `;
 
     const attackBtn = this.createActionButton('⚔️', 'ATTACK', '#FB8500');
+    const meleeBtn = this.createActionButton('🗡️', 'MELEE_ATTACK', '#FFB703');
     const dashBtn = this.createActionButton('⚡', 'DASH', '#00E5FF');
-    const interactBtn = this.createActionButton('✨', 'INTERACT', '#FFB703');
+    const interactBtn = this.createActionButton('✨', 'INTERACT', '#FFD166');
 
     actionZone.appendChild(dashBtn);
-    actionZone.appendChild(interactBtn);
+    actionZone.appendChild(meleeBtn);
     actionZone.appendChild(attackBtn);
+    actionZone.appendChild(interactBtn);
 
     this.container.appendChild(actionZone);
     rootElement.appendChild(this.container);
@@ -74,8 +76,9 @@ export class VirtualJoystick {
     this.setupTouchListeners(stickZone);
   }
 
-  private createActionButton(label: string, action: 'ATTACK' | 'DASH' | 'INTERACT', color: string): HTMLElement {
+  private createActionButton(label: string, action: 'ATTACK' | 'MELEE_ATTACK' | 'DASH' | 'INTERACT', color: string): HTMLElement {
     const btn = document.createElement('button');
+    btn.id = `btn-${action.toLowerCase().replace('_', '-')}`;
     btn.textContent = label;
     btn.style.cssText = `
       width: 60px; height: 60px; border-radius: 50%; border: 2px solid ${color};

@@ -95,11 +95,30 @@ export class SplashScene implements IScene {
       'center'
     );
 
+    // Stage 1 Vertical Slice Button
+    const btn2Y = cy + 235;
+    ctx.fillStyle = 'rgba(0, 229, 255, 0.85)';
+    ctx.strokeStyle = '#FFD166';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.roundRect(btnX, btn2Y, btnWidth, 38, 6);
+    ctx.fill();
+    ctx.stroke();
+
+    renderer.drawText(
+      'STAGE 1: BHUMI TEMPLE [ B / 🗡️ ]',
+      cx,
+      btn2Y + 24,
+      'bold 12px "Cinzel", sans-serif',
+      '#080C14',
+      'center'
+    );
+
     // Settings Prompt
     renderer.drawText(
       'Press [ P ] for Settings  •  [ F3 ] Diagnostics Overlay',
       cx,
-      cy + 250,
+      cy + 295,
       '11px sans-serif',
       '#718096',
       'center'
@@ -107,7 +126,10 @@ export class SplashScene implements IScene {
   }
 
   public handleInput(input: InputManager): void {
-    if (input.isActionJustPressed('DASH') || input.isActionJustPressed('ATTACK')) {
+    if (input.isActionJustPressed('MELEE_ATTACK')) {
+      this.engine.getAudio().playShardPickup();
+      this.engine.getSceneManager().switchTo('BhumiTempleScene');
+    } else if (input.isActionJustPressed('DASH') || input.isActionJustPressed('ATTACK')) {
       this.engine.getAudio().playShardPickup();
       this.engine.getSceneManager().switchTo('StoryScene');
     } else if (input.isActionJustPressed('PAUSE')) {

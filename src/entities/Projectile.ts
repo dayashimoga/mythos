@@ -7,8 +7,8 @@ export class Projectile extends Entity {
   private life = 1.8;
   private color = '#FFB703';
 
-  constructor(id: string, x: number, y: number, direction: Vector2D, speed = 500) {
-    super(id, x, y, 12, 12, 'projectile');
+  constructor(id: string, x: number, y: number, direction: Vector2D, speed = 500, tag = 'projectile') {
+    super(id, x, y, 12, 12, tag);
     const dir = direction.clone().normalize();
     this.velocity = dir.scale(speed);
   }

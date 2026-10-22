@@ -8,8 +8,10 @@ export type GameAction =
   | 'MOVE_RIGHT'
   | 'DASH'
   | 'ATTACK'
+  | 'MELEE_ATTACK'
   | 'INTERACT'
   | 'PAUSE'
+  | 'RESTART'
   | 'TOGGLE_DIAGNOSTICS'
   | 'TOGGLE_COLLIDERS';
 
@@ -31,9 +33,11 @@ export class InputManager {
     MOVE_LEFT: ['KeyA', 'ArrowLeft'],
     MOVE_RIGHT: ['KeyD', 'ArrowRight'],
     DASH: ['Space', 'ShiftLeft'],
-    ATTACK: ['KeyJ', 'KeyX', 'Enter'],
+    ATTACK: ['KeyJ', 'Enter'],
+    MELEE_ATTACK: ['KeyK', 'KeyX', 'KeyB'],
     INTERACT: ['KeyE', 'KeyF'],
     PAUSE: ['Escape', 'KeyP'],
+    RESTART: ['KeyR'],
     TOGGLE_DIAGNOSTICS: ['F3', 'Backquote'],
     TOGGLE_COLLIDERS: ['F2', 'KeyC'],
   };
@@ -102,6 +106,7 @@ export class InputManager {
       if (this.keysHeld.has(k)) return true;
     }
     if (action === 'ATTACK' && this.mouseButtonsHeld.has(0)) return true;
+    if (action === 'MELEE_ATTACK' && this.mouseButtonsHeld.has(2)) return true;
     return false;
   }
 
@@ -113,6 +118,7 @@ export class InputManager {
       if (this.keysJustPressed.has(k)) return true;
     }
     if (action === 'ATTACK' && this.mouseButtonsJustPressed.has(0)) return true;
+    if (action === 'MELEE_ATTACK' && this.mouseButtonsJustPressed.has(2)) return true;
     return false;
   }
 

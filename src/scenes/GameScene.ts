@@ -457,7 +457,7 @@ export class GameScene implements IScene {
 
     if (this.isVictory) {
       if (input.isActionJustPressed('DASH') || input.isActionJustPressed('ATTACK')) {
-        this.engine.getSceneManager().switchTo('SplashScene');
+        this.engine.getSceneManager().switchTo('BhumiTempleScene');
       }
       return;
     }

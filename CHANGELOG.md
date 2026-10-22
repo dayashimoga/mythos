@@ -39,3 +39,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Automated scripts: `build-platforms.js` (generates artifacts and SHA256SUMS.txt), `generate-sbom.js` (CycloneDX SBOM and dependency manifest), `verify-append-only.js` (enforces append-only history).
 - **Comprehensive Documentation Suite:**
   - `README.md`, `REQUIREMENTS.md`, `ARCHITECTURE.md`, `CODEBASE_GUIDE.md`, `STORY_SCREENPLAY.md`, `ART_DIRECTION.md`, `IMPLEMENTATION_PLAN.md`, `SETUP.md`, `USER_GUIDE.md`, `TESTING.md`, `PERFORMANCE.md`, `RELEASE.md`, `TROUBLESHOOTING.md`, `TODO.md`, and `CHANGELOG.md`.
+
+---
+
+## [0.2.0] - 2026-10-22
+
+### Added
+- **Stage 1 Playable Vertical Slice — The Sunken Fire Temple of Surya-Kund (`BhumiTempleScene`):**
+  - Production-grade vertical slice level set in the Realm of Bhumi (Mortal Realm).
+  - 1500x1300 arena featuring carved Vedic stone tiles, heat-distorted animated lava trench hazard, and Sanskrit Brahmic pillars.
+  - Dual-mode combat system for Solar Guardian Veer:
+    - *Melee Agni-Slash* (135° sweeping crescent slash, 40 damage, deflecting and destroying incoming enemy projectiles).
+    - *Ranged Surya-Burst* (high-velocity solar bolt, 500 px/s, 25 damage).
+    - *Agni-Dash* (380 px/s burst with 250ms invulnerability i-frames to dodge shockwaves and hazards).
+    - *Solar Resonant Flare Stance* (unlocked at Agni-Forge; empowers melee damage to 55 and fires dual-shot projectile spread).
+  - Interactive sacred props:
+    - *Brahmic Resonance Pillars*: Dual Sanskrit-inscribed obelisks (ॐ / क्रीं); striking them harmonizes frequencies and collapses the Tamas Spire void barrier.
+    - *Amrita Healing Font*: Sacred fountain restoring 40 Prana with animated cool-down and turquoise water particles.
+    - *Agni-Forge*: Ancient anvil granting permanent stance consecration.
+    - *High Sun Altar of Surya-Kund*: Final consecrated altar accepting 3 purified Astra Shards to cleanse the temple.
+  - Asura Enemy Archetypes & AI:
+    - *Vanara Void-Scout*: Agile ranged skirmisher maintaining standoff orbit (140–260px), telegraphing with violet charge rings, and shooting Void Needles.
+    - *Stone Rakshasa Enforcer*: Armored heavy brute (140 HP) charging the player, telegraphing seismic ground slam with expanding red ground indicator circle (1.0s windup), and producing expanding seismic shockwaves.
+    - *Tamas Corruption Spire*: Monolith (200 HP) protected by an impervious Void Shield until both resonance pillars are harmonized.
+  - Real-time Floating Combat Text (`DamageNumberSystem.ts`):
+    - Pooled floating numbers rendering gold damage dealt, red damage taken, green healing received, and cyan deflection notices.
+  - End-of-Level Evaluation & Retry:
+    - Dynamic rank grading (Rank S for <90s, Rank A for <150s, Rank B otherwise) with clear time and enemy kill tally.
+    - Instant retry overlay upon defeat (`R` key or `[ SPACE ]` to restart instantly without reloading).
+- **Procedural Audio Enhancements:**
+  - Added 7 procedural WebAudio synthesizers: `playMeleeSlash`, `playEnemyHit`, `playShockwave`, `playHeal`, `playDefeat`, `playPillarHarmonic`, and `playForgeUpgrade`.
+- **Touch & Mobile Controls:**
+  - Added dedicated Melee Agni-Slash touch button (`🗡️`) to `VirtualJoystick.ts` with responsive scale animations and semantic IDs.
+- **Verification & Testing:**
+  - Expanded test suite to 24 test files and 106 tests achieving 92.73% statement coverage, 85.56% branch coverage, and 100% passing tests.
+  - Automated browser smoke testing via browser subagent with real-time diagnostics (60 FPS, 10 active entities, 5.6 MB JS heap, 0 console errors) and WebP recording.
+- **Specification Documentation:**
+  - Created `STAGE1_SPECIFICATION.md` defining functional gameplay scenario, combat formulas, entity contracts, and acceptance criteria.
+

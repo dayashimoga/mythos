@@ -5,7 +5,6 @@ import { AudioEngine } from '../../src/audio/AudioEngine';
 import { InputManager } from '../../src/input/InputManager';
 import { DialogueBox } from '../../src/ui/DialogueBox';
 import { CanvasRenderer } from '../../src/render/CanvasRenderer';
-import { PlatformBridge } from '../../src/platform/PlatformBridge';
 
 describe('Targeted Branch Coverage', () => {
   it('exercises AudioEngine branches with localStorage and muted states', () => {
