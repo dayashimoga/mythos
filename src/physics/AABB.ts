@@ -47,6 +47,10 @@ export class AABB {
     );
   }
 
+  public intersects(other: AABB): boolean {
+    return this.overlaps(other);
+  }
+
   public containsPoint(px: number, py: number): boolean {
     return (
       px >= this.minX &&

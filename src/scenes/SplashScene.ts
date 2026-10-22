@@ -133,11 +133,30 @@ export class SplashScene implements IScene {
       'center'
     );
 
+    // Stage 3 World Exploration Button
+    const btn4Y = cy + 317;
+    ctx.fillStyle = 'rgba(16, 185, 129, 0.85)';
+    ctx.strokeStyle = '#FFD166';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.roundRect(btnX, btn4Y, btnWidth, 34, 6);
+    ctx.fill();
+    ctx.stroke();
+
+    renderer.drawText(
+      'STAGE 3: WORLD EXPLORATION [ E / 🌍 ]',
+      cx,
+      btn4Y + 22,
+      'bold 11px "Cinzel", sans-serif',
+      '#080C14',
+      'center'
+    );
+
     // Settings Prompt
     renderer.drawText(
       'Press [ P ] for Settings  •  [ F3 ] Diagnostics Overlay',
       cx,
-      cy + 326,
+      cy + 368,
       '11px sans-serif',
       '#718096',
       'center'
@@ -145,10 +164,13 @@ export class SplashScene implements IScene {
   }
 
   public handleInput(input: InputManager): void {
-    if (input.isActionJustPressed('INTERACT')) {
+    if (input.isKeyJustPressed('KeyE')) {
+      this.engine.getAudio().playShardPickup();
+      this.engine.getSceneManager().switchTo('WorldExplorationScene');
+    } else if (input.isActionJustPressed('INTERACT') || input.isKeyJustPressed('KeyC')) {
       this.engine.getAudio().playShardPickup();
       this.engine.getSceneManager().switchTo('CharacterShowcaseScene');
-    } else if (input.isActionJustPressed('MELEE_ATTACK')) {
+    } else if (input.isActionJustPressed('MELEE_ATTACK') || input.isKeyJustPressed('KeyB')) {
       this.engine.getAudio().playShardPickup();
       this.engine.getSceneManager().switchTo('BhumiTempleScene');
     } else if (input.isActionJustPressed('DASH') || input.isActionJustPressed('ATTACK')) {
@@ -159,3 +181,4 @@ export class SplashScene implements IScene {
     }
   }
 }
+

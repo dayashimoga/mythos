@@ -122,6 +122,22 @@ export class InputManager {
     return false;
   }
 
+  public isKeyHeld(code: string): boolean {
+    return this.keysHeld.has(code);
+  }
+
+  public isKeyJustPressed(code: string): boolean {
+    return this.keysJustPressed.has(code);
+  }
+
+  public isMouseButtonHeld(button: number): boolean {
+    return this.mouseButtonsHeld.has(button);
+  }
+
+  public isMouseButtonJustPressed(button: number): boolean {
+    return this.mouseButtonsJustPressed.has(button);
+  }
+
   public getMovementVector(): Vector2D {
     const move = new Vector2D(0, 0);
 

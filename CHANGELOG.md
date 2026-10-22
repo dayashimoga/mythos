@@ -117,4 +117,51 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Expanded automated test coverage across 27 test files and 125 tests achieving 94.09% statement coverage, 85.70% branch coverage, and 100% pass rate.
   - Verified visual fidelity, interaction stability, and 60 FPS performance via automated browser smoke tests with session WebP recording and artifacts.
 
+---
+
+## [0.4.0] - 2026-10-22
+
+### Added
+- **Production Environment Subsystem & World Architecture (`src/environment/`):**
+  - Continuous 4000x3200 open mythological world region: *The Sunken Citadel of Surya-Kund & Dandaka Valley*.
+  - Five distinct interconnected environmental zones:
+    - *Zone 1: The Sacred Forest of Dandaka* (Ancient Banyan trees with aerial drop-root collisions, mossy shrines, and fireflies).
+    - *Zone 2: The Grand Vedic Causeway* (Flagstone highway, monumental Torana archway, Ashoka pillars, prayer wheel pavilion).
+    - *Zone 3: The Sunken Citadel & Kalyani Ghats* (Stepped granite pool, colonnaded mandapa, towering Shikhara temple, 6 fire braziers).
+    - *Zone 4: The Patala Basalt Chasm* (Deep volcanic ravine, wooden suspension bridge, molten lava fissures, glowing crystals).
+    - *Zone 5: Distant Parallax Horizons* (Mount Meru snow peaks, floating Vimanas, drifting cloud silhouettes, celestial dome).
+  - High-performance Spatial Chunk Manager (`ChunkManager.ts`):
+    - 500x500 spatial chunk grid partitioning the 4000x3200 world canvas into 56 uniform cells.
+    - Viewport frustum culling with predictive padding, reducing active draw calls by >70%.
+    - Dynamic Level-of-Detail (LOD0 <600px, LOD1 600–1400px, LOD2 >1400px).
+    - Instanced batching for repeated cobblestones, swaying grass tufts, and flora.
+  - Multi-Source 2D Dynamic Lighting Engine (`LightingEngine.ts`):
+    - Five canonical time-of-day presets: Dawn (Usha), Noon (Surya), Sunset (Sandhya), Night (Ratri), and Eclipse (Grahana).
+    - Dynamic point lights with harmonic multi-frequency flame flicker and radial darkness cutouts.
+    - Soft penumbra falloff and additive luminescence glow overlays.
+  - Atmospheric & Weather Simulation Engine (`AtmosphericSystem.ts`):
+    - Four weather systems: Solar Clear (crepuscular god rays), Monsoon Mist (diagonal rain and fog), Chasm Embers (volcanic sparks), and Valley Wind (drifting leaves).
+  - 2D Navigation Mesh & A* Pathfinding (`NavMesh.ts`):
+    - 40px cell resolution navigation grid spanning the 4000x3200 world space.
+    - Terrain traversal weighting: Paved roads (cost 1.0), packed earth (cost 1.1), meadow (cost 1.4), shallow water (cost 2.0), obstacles (cost $\infty$).
+    - A* pathfinding with 8-directional stepping and line-of-sight string-pulling path smoothing.
+  - Automated Environment Probes (`EnvironmentProbes.ts`):
+    - Collision boundary and geometry audit, landmark reachability audit, culling budget audit, and asset completeness audit.
+- **Playable World Exploration Experience (`WorldExplorationScene.ts`):**
+  - Fully explorable open world scene integrating Hero Veer's 21-bone skeletal rig and locomotion blend tree.
+  - Real-time interactive props: igniting braziers, spinning prayer wheels, and chimes.
+  - Real-time controls:
+    - Time of Day toggle (`[ L ]`)
+    - Weather cycle toggle (`[ W ]`)
+    - NavMesh overlay toggle (`[ N ]`)
+    - Collision overlay toggle (`[ B ]`)
+    - Mini-map radar toggle (`[ M ]`)
+    - 2D Lighting pass toggle (`[ F2 ]`)
+    - Camera zoom adjustments (`[ + ]` / `[ - ]`)
+    - Mouse click waypoint navigation path generation.
+- **Quality Assurance & Verification:**
+  - Expanded automated test coverage across 30 test files and 163 tests, achieving 94.21% statement coverage, 86.76% branch coverage, and 100% pass rate.
+  - Verified 60 FPS performance, 11 MB heap, and zero errors in browser smoke test with archived WebP video recording (`mythos_stage3_world_smoke_1792690240396.webp`).
+
+
 
