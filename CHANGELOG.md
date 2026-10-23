@@ -163,5 +163,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Expanded automated test coverage across 30 test files and 163 tests, achieving 94.21% statement coverage, 86.76% branch coverage, and 100% pass rate.
   - Verified 60 FPS performance, 11 MB heap, and zero errors in browser smoke test with archived WebP video recording (`mythos_stage3_world_smoke_1792690240396.webp`).
 
+---
+
+## [0.5.0] - 2026-10-23
+
+### Added
+- **Mechanics Specification & Authoritative Systems Design (`GAMEPLAY_SPECIFICATION.md`):**
+  - Comprehensive action matrix mapping all player inputs to simulation events.
+  - Mathematical formulas for dual-weapon damage scaling, combo chains, poise reduction, directional shield blocking, and 120ms frame-accurate parry window.
+  - Multi-phase behavior specification for Titan Boss Mahishasura and squad flanker tactics for Asura Elite Vanguards.
+- **Behavior Tree AI Subsystem (`src/gameplay/BehaviorTree.ts`):**
+  - Modular, event-driven Behavior Tree implementation.
+  - Core control flow nodes: `SequenceNode`, `SelectorNode`, `InverterNode`, `CooldownNode`.
+  - Leaf execution nodes: `ActionNode` with delta-time callbacks, `ConditionNode` with blackboard predicates.
+  - Centralized blackboard data container (`Blackboard`) for decoupled entity perception and tactical awareness.
+- **Authoritative Combat Subsystem (`src/gameplay/CombatSystem.ts`):**
+  - Authoritative damage evaluation resolving `AttackSpec` and `DefenseSpec`.
+  - Directional shield blocking: checks dot product between defender facing and incoming vector ($\vec{F} \cdot \vec{A} > 0.38$), absorbing 75% of health damage and 50% poise damage.
+  - Shield-break attacks: completely bypasses guard and inflicts 2.0x poise damage.
+  - Stagger system: breaks target when poise depletes to 0, locking entity into stagger duration and granting +35% critical punish damage.
+  - Frame-accurate 120ms perfect parry window: completely nullifies damage and poise impact, triggering cyan visual effects and camera shake.
+  - Integrated floating combat text numbers and harmonic camera impact shake.
+- **Dual-Weapon Equipment & Combo Engine (`src/gameplay/EquipmentManager.ts`):**
+  - Dynamic weapon switching between:
+    - *Agni-Chakram*: Fast twin solar discs (28 base damage, 75px reach, 0.22s cadence).
+    - *Prana-Glaive*: Monumental polearm (48 base damage, 38 poise damage, 125px reach, guard-breaking thrusts).
+  - Dynamic 3-hit combo chain: Hit 1 (1.0x), Hit 2 (1.25x damage, 1.3x poise damage, 1.1x reach), Finisher (1.6x damage, 1.8x poise damage, 1.25x reach, shield-break).
+  - Astra Essence currency accumulation and weapon tier upgrades.
+- **Tactical Checkpoint Subsystem (`src/gameplay/CheckpointManager.ts`):**
+  - Checkpoint registration, activation tracking, and instantaneous player restoration upon defeat.
+- **Asura Elite Vanguard AI Entity (`src/entities/AsuraEliteVanguard.ts`):**
+  - Behavior Tree-driven squad elite with 180 HP, 60 Poise, and directional bronze tower shield.
+  - Cooperative flanking tactics: `Alpha_Left` (-50° offset) vs `Beta_Right` (+50° offset) pincer maneuvers.
+  - Leap slam jump with shockwave impact and melee cleave windup.
+- **Mahishasura Titan Boss Entity (`src/entities/MahishasuraBoss.ts`):**
+  - Colossal multi-phase titan with 1000 HP, 250 Poise, and custom Behavior Tree AI.
+  - *Phase 1: Buffalo Wrath* (100% - 70% HP): Buffalo Horn Charge (400 px/s charge sprint with red vector telegraph) and Seismic Hammer Slam (expanding shockwave ring).
+  - *Phase 2: Tamas Sorcery* (70% - 30% HP): Shadow Blink teleportation behind player, 3-orb Tamas Homing Volley, and reinforcement squad summoning.
+  - *Phase 3: Eclipse Cataclysm* (30% - 0% HP): Berserk speed (+35%), 300 Max Poise, and Eclipse Leap creating 8-directional radial magma bursts.
+- **Playable Boss Encounter Scene (`src/scenes/BossEncounterScene.ts`):**
+  - Setting: The Obsidian Throne with basalt boundary pillars, molten floor fissures, and sacred Brahmic floor circle.
+  - Dedicated Boss Health Bar HUD with 70% and 30% phase notches and Poise stagger meter.
+  - Player combat HUD showing active weapon, combo chain state, energy, and parry window indicator.
+  - Instant Checkpoint retry (`[ R ]`), pause overlay (`[ ESC ]`), and battle ranking system (Rank S/A/B).
+  - Registered in `Engine.ts` and title menu navigation in `SplashScene.ts` (`[ X ]` / `[ 👹 ]`).
+- **Quality Assurance & Verification:**
+  - Expanded test coverage across 32 test files and 207 automated tests with 93.56% statement coverage and 85.84% branch coverage (100% passing).
+  - Multi-platform production packaging validated across Web, Windows x64, Linux x64, macOS Universal, Android, and iOS.
+
 
 

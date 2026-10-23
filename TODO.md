@@ -101,3 +101,25 @@
 - [ ] TASK-403: Implement elemental combo chain system (Agni fire + Vayu wind synergy).
 - [ ] TASK-404: Design and implement Asura elite guard AI squad coordinating pincer flank maneuvers.
 - [ ] TASK-405: Integrate screen-space distortion shader for high-impact critical hits.
+
+---
+
+## [2026-10-23] Stage 4 Combat Subsystem, Behavior Tree AI & Boss Battle Delivery
+
+- [x] TASK-406: Formulate Phase 4.1 Mechanics Specification and combat formulas (authoritative action mapping, dual-weapon properties, 3-hit combo multipliers, directional block dot product, 120ms parry window, poise/stagger rules, cooperative squad flanking, 3-phase Titan Boss); produce GAMEPLAY_SPECIFICATION.md. (Completed 2026-10-23)
+- [x] TASK-407: Implement Phase 4.2 Behavior Tree Subsystem (src/gameplay/BehaviorTree.ts with Blackboard, ActionNode, ConditionNode, SequenceNode, SelectorNode, InverterNode, CooldownNode). (Completed 2026-10-23)
+- [x] TASK-408: Implement Phase 4.3 Authoritative Combat System & Equipment (src/gameplay/CombatSystem.ts with poise depletion, stagger timers, directional shield block absorption, shield break bypass, 120ms perfect parry, floating combat text, and camera shake; src/gameplay/EquipmentManager.ts with Agni-Chakram vs Prana-Glaive swap, 3-hit combo multipliers, essence tracking, and weapon level upgrades; src/gameplay/CheckpointManager.ts with respawn restoration). (Completed 2026-10-23)
+- [x] TASK-409: Implement Phase 4.4 Squad AI & Flanker Behavior (src/entities/AsuraEliteVanguard.ts with Behavior Tree AI, tower shield block, Alpha_Left and Beta_Right pincer flanking angles, leap shockwave slam, and poise stagger). (Completed 2026-10-23)
+- [x] TASK-410: Implement Phase 4.5 Multi-Phase Titan Boss Entity (src/entities/MahishasuraBoss.ts with 1000 HP, 250 Poise, Phase 1 Buffalo Horn Charge & Seismic Hammer Slam, Phase 2 Shadow Blink, Tamas Homing Orbs & Squad Summon, Phase 3 Eclipse Berserk & 8-directional radial magma leap slam). (Completed 2026-10-23)
+- [x] TASK-411: Implement Phase 4.6 Player Combat Extension & Boss Battle Scene (Updated Player.ts with EquipmentManager, 3-hit combo chain, guard/parry frames; created src/scenes/BossEncounterScene.ts with Obsidian Throne arena, boss health & poise HUD with phase notches, checkpoint pillar, defeat retry [R], victory evaluation [Rank S/A/B], and Title Screen integration). (Completed 2026-10-23)
+- [x] TASK-412: Implement Phase 4.7 QA, Automation & Multi-Platform Release (32 test files, 207 automated tests passing with 93.56% statement coverage and 85.84% branch coverage; verified multi-platform packaging for Web, Windows, Linux, macOS, Android, and iOS). (Completed 2026-10-23)
+
+---
+
+## [2026-10-23] Stage 5 Upcoming Pipeline Backlog (VFX, Audio Synthesis & Cinematic Cutscenes)
+
+- [ ] TASK-501: Implement WebGL GLSL fragment shader pipeline for celestial heat distortion, Brahmic rune auras, and chromatic aberration.
+- [ ] TASK-502: Design and integrate polyphonic procedural synthesizer presets for boss phase musical transitions.
+- [ ] TASK-503: Implement timeline-driven cinematic camera sequencer with focal depth of field and letterboxing.
+- [ ] TASK-504: Build celestial weather particle effects for solar eclipse and astral comet showers.
+- [ ] TASK-505: Implement dynamic audio occlusion and reverb simulation for underground temple halls.

@@ -4,6 +4,8 @@ import { Projectile } from './Projectile';
 import { IRenderer } from '../render/CanvasRenderer';
 import { CharacterDefinitions } from '../animation/CharacterDefinitions';
 import { CharacterRig } from '../animation/CharacterRig';
+import { EquipmentManager, WeaponType, WeaponStats } from '../gameplay/EquipmentManager';
+import { PoiseData } from '../gameplay/CombatSystem';
 
 export type CombatStance = 'Standard' | 'SolarResonantFlare';
 
@@ -13,6 +15,8 @@ export interface MeleeAttackArc {
   radius: number;
   arcAngle: number;
   damage: number;
+  poiseDamage?: number;
+  isShieldBreak?: boolean;
 }
 
 export class Player extends Entity {
@@ -22,6 +26,16 @@ export class Player extends Entity {
   public maxEnergy = 100;
   public energyRegenRate = 18; // per second
 
+  // Poise System
+  public poise: PoiseData = {
+    current: 100,
+    max: 100,
+    isStaggered: false,
+    staggerTimer: 0,
+    staggerDuration: 1.2,
+  };
+
+  // Movement & Dash
   public speed = 220;
   public dashSpeed = 520;
   public isDashing = false;
@@ -30,16 +44,25 @@ export class Player extends Entity {
   public dashCooldown = 0.55;
   public dashCooldownTimer = 0;
 
+  // Ranged Shoot
   public shootCooldown = 0.22;
   public shootCooldownTimer = 0;
 
-  // Melee Attack
-  public meleeCooldown = 0.35;
+  // Melee & Combo System
+  public equipmentManager: EquipmentManager = new EquipmentManager();
+  public comboIndex = 0;
+  public comboResetTimer = 0;
+  public readonly comboChainWindow = 1.0; // 1s to chain next hit
   public meleeCooldownTimer = 0;
   public isMeleeSlashing = false;
   public meleeSlashTimer = 0;
   public meleeDamage = 40;
   public meleeRadius = 80;
+
+  // Defensive Guard & Parry
+  public isGuarding = false;
+  public parryWindowTimer = 0;
+  public readonly PARRY_WINDOW = 0.12; // 120ms frame-accurate window
 
   // Stance & Buffs
   public stance: CombatStance = 'Standard';
@@ -85,6 +108,26 @@ export class Player extends Entity {
 
     this.velocity = this.facing.clone().normalize().scale(this.dashSpeed);
     return true;
+  }
+
+  public startGuard(): void {
+    if (!this.isGuarding) {
+      this.isGuarding = true;
+      this.parryWindowTimer = this.PARRY_WINDOW;
+    }
+  }
+
+  public stopGuard(): void {
+    this.isGuarding = false;
+    this.parryWindowTimer = 0;
+  }
+
+  public swapWeapon(): boolean {
+    return this.equipmentManager.swapWeapon();
+  }
+
+  public getActiveWeaponStats(): WeaponStats {
+    return this.equipmentManager.getActiveWeaponStats();
   }
 
   public shoot(targetPos?: Vector2D): Projectile | null {
@@ -137,21 +180,48 @@ export class Player extends Entity {
     return projs;
   }
 
-  public performMeleeSlash(): MeleeAttackArc | null {
-    if (this.meleeCooldownTimer > 0 || this.energy < 20) return null;
+  public executeComboAttack(): {
+    arc: MeleeAttackArc;
+    strike: ReturnType<EquipmentManager['getComboStrike']>;
+    weaponType: WeaponType;
+  } | null {
+    if (this.meleeCooldownTimer > 0 || this.energy < 15 || this.poise.isStaggered) return null;
+
+    const strike = this.equipmentManager.getComboStrike(this.comboIndex);
+    const activeStats = this.equipmentManager.getActiveWeaponStats();
 
     this.isMeleeSlashing = true;
-    this.meleeSlashTimer = 0.2;
-    this.meleeCooldownTimer = this.meleeCooldown;
-    this.energy -= 20;
+    this.meleeSlashTimer = 0.22;
+    this.meleeCooldownTimer = activeStats.attackCooldown;
+    this.energy = Math.max(0, this.energy - 15);
 
-    return {
+    // Apply stance damage bonus if active
+    const finalDamage = this.stance === 'SolarResonantFlare' ? Math.round(strike.damage * 1.3) : strike.damage;
+
+    // Progress combo chain
+    this.comboIndex = (this.comboIndex + 1) % 3;
+    this.comboResetTimer = this.comboChainWindow;
+
+    const arc: MeleeAttackArc = {
       origin: this.position.clone(),
       direction: this.facing.clone().normalize(),
-      radius: this.meleeRadius,
-      arcAngle: Math.PI * 0.75, // 135-degree sweep
-      damage: this.stance === 'SolarResonantFlare' ? 55 : this.meleeDamage,
+      radius: strike.reach,
+      arcAngle: strike.arcAngle,
+      damage: finalDamage,
+      poiseDamage: strike.poiseDamage,
+      isShieldBreak: strike.isShieldBreak,
     };
+
+    return {
+      arc,
+      strike,
+      weaponType: activeStats.type,
+    };
+  }
+
+  public performMeleeSlash(): MeleeAttackArc | null {
+    const result = this.executeComboAttack();
+    return result ? result.arc : null;
   }
 
   public takeDamage(amount: number, knockbackDir?: Vector2D): boolean {
@@ -177,6 +247,7 @@ export class Player extends Entity {
 
   public update(dt: number): void {
     this.idleBreath += dt * 3;
+    this.equipmentManager.update(dt);
 
     // Energy regeneration
     if (this.energy < this.maxEnergy) {
@@ -195,6 +266,28 @@ export class Player extends Entity {
     }
     if (this.iFrameTimer > 0) {
       this.iFrameTimer = Math.max(0, this.iFrameTimer - dt);
+    }
+    if (this.parryWindowTimer > 0) {
+      this.parryWindowTimer = Math.max(0, this.parryWindowTimer - dt);
+    }
+
+    // Combo reset timer
+    if (this.comboResetTimer > 0) {
+      this.comboResetTimer -= dt;
+      if (this.comboResetTimer <= 0) {
+        this.comboIndex = 0;
+      }
+    }
+
+    // Poise stagger recovery
+    if (this.poise.isStaggered) {
+      this.poise.staggerTimer -= dt;
+      if (this.poise.staggerTimer <= 0) {
+        this.poise.isStaggered = false;
+        this.poise.current = this.poise.max;
+      }
+    } else if (this.poise.current < this.poise.max) {
+      this.poise.current = Math.min(this.poise.max, this.poise.current + 25 * dt);
     }
 
     // Melee slash visual duration
@@ -249,6 +342,32 @@ export class Player extends Entity {
     ctx.ellipse(0, 18, 14, 6, 0, 0, Math.PI * 2);
     ctx.fill();
 
+    // Guarding & Parry Shield Visual
+    if (this.isGuarding) {
+      ctx.save();
+      const facingAngle = Math.atan2(this.facing.y, this.facing.x);
+      ctx.rotate(facingAngle);
+
+      if (this.parryWindowTimer > 0) {
+        // Bright cyan parry flash
+        ctx.strokeStyle = '#00E5FF';
+        ctx.shadowColor = '#00E5FF';
+        ctx.shadowBlur = 16;
+        ctx.lineWidth = 4;
+      } else {
+        // Golden defensive shield arc
+        ctx.strokeStyle = '#F59E0B';
+        ctx.shadowColor = '#D97706';
+        ctx.shadowBlur = 8;
+        ctx.lineWidth = 3;
+      }
+
+      ctx.beginPath();
+      ctx.arc(0, 0, 26, -Math.PI * 0.4, Math.PI * 0.4);
+      ctx.stroke();
+      ctx.restore();
+    }
+
     // Stance Aura (Solar Resonant Flare)
     if (this.stance === 'SolarResonantFlare') {
       ctx.strokeStyle = '#FFB703';
@@ -266,19 +385,21 @@ export class Player extends Entity {
       ctx.fill();
     }
 
-    // Melee Crescent Arc Flash
+    // Melee Crescent Arc Flash (Weapon specific colors)
     if (this.isMeleeSlashing) {
       const facingAngle = Math.atan2(this.facing.y, this.facing.x);
       ctx.save();
       ctx.rotate(facingAngle);
 
-      ctx.strokeStyle = '#FFD166';
-      ctx.lineWidth = 5;
-      ctx.shadowColor = '#FB8500';
-      ctx.shadowBlur = 12;
+      const isGlaive = this.equipmentManager.getActiveWeapon() === 'PRANA_GLAIVE';
+      ctx.strokeStyle = isGlaive ? '#06B6D4' : '#FFD166';
+      ctx.lineWidth = isGlaive ? 7 : 5;
+      ctx.shadowColor = isGlaive ? '#0891B2' : '#FB8500';
+      ctx.shadowBlur = 14;
 
+      const stats = this.equipmentManager.getActiveWeaponStats();
       ctx.beginPath();
-      ctx.arc(0, 0, this.meleeRadius, -Math.PI * 0.35, Math.PI * 0.35);
+      ctx.arc(0, 0, stats.reach, -stats.arcAngle / 2, stats.arcAngle / 2);
       ctx.stroke();
 
       ctx.restore();

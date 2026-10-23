@@ -14,6 +14,7 @@ import { BhumiTempleScene } from '../scenes/BhumiTempleScene';
 import { CharacterShowcaseScene } from '../scenes/CharacterShowcaseScene';
 import { WorldExplorationScene } from '../scenes/WorldExplorationScene';
 import { SettingsScene } from '../scenes/SettingsScene';
+import { BossEncounterScene } from '../scenes/BossEncounterScene';
 
 export interface IGameEngine {
   init(canvas: HTMLCanvasElement): void;
@@ -53,6 +54,7 @@ export class Engine implements IGameEngine {
     this.sceneManager.register(new BhumiTempleScene());
     this.sceneManager.register(new CharacterShowcaseScene());
     this.sceneManager.register(new WorldExplorationScene());
+    this.sceneManager.register(new BossEncounterScene());
     this.sceneManager.register(new SettingsScene());
 
     // Attach input

@@ -73,82 +73,101 @@ export class SplashScene implements IScene {
     );
 
     // Action Prompts / Buttons
-    const btnWidth = 280;
-    const btnHeight = 44;
+    const btnWidth = 300;
+    const btnHeight = 36;
     const btnX = cx - btnWidth / 2;
-    const btnY = cy + 180;
+    const btnY = cy + 155;
 
     ctx.fillStyle = 'rgba(251, 133, 0, 0.85)';
     ctx.strokeStyle = '#FFD166';
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 1.5;
     ctx.beginPath();
-    ctx.roundRect(btnX, btnY, btnWidth, btnHeight, 8);
+    ctx.roundRect(btnX, btnY, btnWidth, btnHeight, 6);
     ctx.fill();
     ctx.stroke();
 
     renderer.drawText(
       'ENTER THE SANCTUM [ SPACE / CLICK ]',
       cx,
-      btnY + 28,
-      'bold 13px "Cinzel", sans-serif',
+      btnY + 23,
+      'bold 12px "Cinzel", sans-serif',
       '#080C14',
       'center'
     );
 
     // Stage 1 Vertical Slice Button
-    const btn2Y = cy + 235;
+    const btn2Y = cy + 198;
     ctx.fillStyle = 'rgba(0, 229, 255, 0.85)';
     ctx.strokeStyle = '#FFD166';
     ctx.lineWidth = 1.5;
     ctx.beginPath();
-    ctx.roundRect(btnX, btn2Y, btnWidth, 34, 6);
+    ctx.roundRect(btnX, btn2Y, btnWidth, 32, 6);
     ctx.fill();
     ctx.stroke();
 
     renderer.drawText(
       'STAGE 1: BHUMI TEMPLE [ B / 🗡️ ]',
       cx,
-      btn2Y + 22,
+      btn2Y + 21,
       'bold 11px "Cinzel", sans-serif',
       '#080C14',
       'center'
     );
 
     // Stage 2 Character Showcase Studio Button
-    const btn3Y = cy + 276;
+    const btn3Y = cy + 237;
     ctx.fillStyle = 'rgba(131, 56, 236, 0.85)';
     ctx.strokeStyle = '#FFD166';
     ctx.lineWidth = 1.5;
     ctx.beginPath();
-    ctx.roundRect(btnX, btn3Y, btnWidth, 34, 6);
+    ctx.roundRect(btnX, btn3Y, btnWidth, 32, 6);
     ctx.fill();
     ctx.stroke();
 
     renderer.drawText(
       'STAGE 2: CHARACTER STUDIO [ C / ✨ ]',
       cx,
-      btn3Y + 22,
+      btn3Y + 21,
       'bold 11px "Cinzel", sans-serif',
       '#FFFFFF',
       'center'
     );
 
     // Stage 3 World Exploration Button
-    const btn4Y = cy + 317;
+    const btn4Y = cy + 276;
     ctx.fillStyle = 'rgba(16, 185, 129, 0.85)';
     ctx.strokeStyle = '#FFD166';
     ctx.lineWidth = 1.5;
     ctx.beginPath();
-    ctx.roundRect(btnX, btn4Y, btnWidth, 34, 6);
+    ctx.roundRect(btnX, btn4Y, btnWidth, 32, 6);
     ctx.fill();
     ctx.stroke();
 
     renderer.drawText(
       'STAGE 3: WORLD EXPLORATION [ E / 🌍 ]',
       cx,
-      btn4Y + 22,
+      btn4Y + 21,
       'bold 11px "Cinzel", sans-serif',
       '#080C14',
+      'center'
+    );
+
+    // Stage 4 Boss Battle Button (Mahishasura Titan)
+    const btn5Y = cy + 315;
+    ctx.fillStyle = 'rgba(220, 38, 38, 0.88)';
+    ctx.strokeStyle = '#FCA5A5';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.roundRect(btnX, btn5Y, btnWidth, 34, 6);
+    ctx.fill();
+    ctx.stroke();
+
+    renderer.drawText(
+      'STAGE 4: BOSS BATTLE [ X / 👹 ]',
+      cx,
+      btn5Y + 22,
+      'bold 11px "Cinzel", sans-serif',
+      '#FFFFFF',
       'center'
     );
 
@@ -156,7 +175,7 @@ export class SplashScene implements IScene {
     renderer.drawText(
       'Press [ P ] for Settings  •  [ F3 ] Diagnostics Overlay',
       cx,
-      cy + 368,
+      cy + 372,
       '11px sans-serif',
       '#718096',
       'center'
@@ -164,16 +183,57 @@ export class SplashScene implements IScene {
   }
 
   public handleInput(input: InputManager): void {
-    if (input.isKeyJustPressed('KeyE')) {
+    if (input.isMouseButtonJustPressed(0)) {
+      const mouse = input.getMousePosition();
+      const vp = this.engine.getRenderer().getViewport();
+      const cx = vp.width / 2;
+      const cy = vp.height / 2;
+      const btnWidth = 300;
+      const btnX = cx - btnWidth / 2;
+
+      const inside = (y: number, h: number) =>
+        mouse.x >= btnX && mouse.x <= btnX + btnWidth && mouse.y >= y && mouse.y <= y + h;
+
+      if (inside(cy + 315, 34)) {
+        this.engine.getAudio().playShardPickup();
+        this.engine.getSceneManager().switchTo('BossEncounterScene');
+        return;
+      }
+      if (inside(cy + 276, 32)) {
+        this.engine.getAudio().playShardPickup();
+        this.engine.getSceneManager().switchTo('WorldExplorationScene');
+        return;
+      }
+      if (inside(cy + 237, 32)) {
+        this.engine.getAudio().playShardPickup();
+        this.engine.getSceneManager().switchTo('CharacterShowcaseScene');
+        return;
+      }
+      if (inside(cy + 198, 32)) {
+        this.engine.getAudio().playShardPickup();
+        this.engine.getSceneManager().switchTo('BhumiTempleScene');
+        return;
+      }
+      if (inside(cy + 155, 36)) {
+        this.engine.getAudio().playShardPickup();
+        this.engine.getSceneManager().switchTo('StoryScene');
+        return;
+      }
+    }
+
+    if (input.isKeyJustPressed('KeyX')) {
+      this.engine.getAudio().playShardPickup();
+      this.engine.getSceneManager().switchTo('BossEncounterScene');
+    } else if (input.isKeyJustPressed('KeyE')) {
       this.engine.getAudio().playShardPickup();
       this.engine.getSceneManager().switchTo('WorldExplorationScene');
-    } else if (input.isActionJustPressed('INTERACT') || input.isKeyJustPressed('KeyC')) {
+    } else if (input.isKeyJustPressed('KeyC')) {
       this.engine.getAudio().playShardPickup();
       this.engine.getSceneManager().switchTo('CharacterShowcaseScene');
-    } else if (input.isActionJustPressed('MELEE_ATTACK') || input.isKeyJustPressed('KeyB')) {
+    } else if (input.isKeyJustPressed('KeyB')) {
       this.engine.getAudio().playShardPickup();
       this.engine.getSceneManager().switchTo('BhumiTempleScene');
-    } else if (input.isActionJustPressed('DASH') || input.isActionJustPressed('ATTACK')) {
+    } else if (input.isActionJustPressed('DASH') || input.isKeyJustPressed('Space') || input.isKeyJustPressed('Enter')) {
       this.engine.getAudio().playShardPickup();
       this.engine.getSceneManager().switchTo('StoryScene');
     } else if (input.isActionJustPressed('PAUSE')) {
