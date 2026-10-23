@@ -69,3 +69,8 @@ func _on_shrine_consecrated() -> void:
 	if sun_light:
 		var tween = create_tween()
 		tween.tween_property(sun_light, "light_energy", 1.8, 1.5)
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed and not event.echo:
+		if event.keycode == KEY_F1:
+			get_tree().change_scene_to_file("res://scenes/studio/CharacterStudio3D.tscn")

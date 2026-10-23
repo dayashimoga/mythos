@@ -1112,3 +1112,58 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `.github/workflows/godot-ci.yml` configuring headless validation and multiplatform export builds on GitHub Actions.
   - Updated `package.json` with `npm run test:godot` and `npm run test:godot:podman`.
 
+
+---
+
+## [1.16.0] - 2026-10-23
+
+### Stage 3D-1 — Production 3D Character, Locomotion & Camera Overhaul
+
+#### Added
+- **Production 3D Skinned Model for Hero Veer (godot/assets/characters/veer/veer.glb):**
+  - High-fidelity original humanoid mesh with 8 PBR materials:
+    - Warm bronze skin (#BC6C25) with sculpted facial features, amber eyes, and Tripundra tilak.
+    - Ancient gilded bronze cuirass breastplate with metallic 0.82 and roughness 0.28.
+    - Embossed 8-pointed golden Surya medallion with golden radiance emission (#FF9E00).
+    - Royal crimson silk dhoti (#7F1D1D) with gold-embroidered borders and waist pleats.
+    - Flowing Tapovan azure celestial sash with glowing cyan accents (#00E5FF).
+    - Blazing Agni solar brass bracers emitting amber particle embers (#FB8500).
+    - Forged sunsteel Surya Khadga scimitar with curved blade and glowing cyan runic fuller.
+    - Jet black warrior topknot (*Shikha*) bound by a polished brass ring.
+  - Standard 21-node Humanoid Skeleton3D with inverse bind matrices and vertex bone weighting (JOINTS_0, WEIGHTS_0).
+- **Complete 15-Animation Production Skeletal Suite:**
+  - idle: Natural breathing cycle, subtle chest rise, and ready weapon posture.
+  - walk: 2-beat bipedal gait with counter-rotating shoulders, alternating arm/leg swings, and foot planting (nominal velocity 4.2 m/s).
+  - jog: Athletic forward drive with deeper knee flex and lean (nominal velocity 7.5 m/s).
+  - sprint: High-velocity forward charge with low center of mass (nominal velocity 10.5 m/s).
+  - jump_start, jump (flight loop), jump_fall, jump_land: Dynamic vertical arc with shock-absorption recovery.
+  - dodge: Evasive Prana Dash roll with solar particle trails.
+  - ttack_light_1: Horizontal Surya slash from right to left with weapon socket sweep.
+  - ttack_light_2: Diagonal rising backhand slash.
+  - ttack_heavy_finisher: Two-handed overhead solar cleave with ground impact.
+  - lock: Directional forward guard raising Khadga and Agni bracers across chest.
+  - hit_reaction: Recoil flinch backwards upon impact.
+  - interact: Right arm reaching forward with open palm to touch/kindle.
+- **Physical Character Controller & Locomotion Kinematics (player_controller_3d.gd):**
+  - Camera-relative input mapping with smooth angular yaw interpolation (lerp_angle).
+  - Velocity matching gait speed to actual foot displacement, preventing foot sliding or skate-walking.
+  - Sprint toggle (Shift key) boosting velocity to 10.5 m/s.
+  - Directional guard block (Q key / Right Click) mitigating damage and slowing movement to 2.2 m/s.
+  - 4-directional Prana Dash (Space while moving or double tap) with 18.0 m/s burst velocity.
+  - Continuous 0.4m floor snapping across the 8-step monumental staircase.
+- **Enhanced Third-Person Camera with Over-The-Shoulder Mode (orbit_camera_3d.gd):**
+  - SpringArm3D with spherical orbit (yaw, pitch) and obstacle raycast occlusion margin (0.25m).
+  - Smooth mouse wheel zoom (2.0m to 8.0m, default 4.5m) with exponential damping.
+  - Over-The-Shoulder combat mode toggle (C key): shifts camera arm offset to (+0.65m, +1.45m, 0.0m), tightens spring length to 2.2m, and narrows FOV from 72° to 64°.
+- **Dedicated 3D Character Studio (CharacterStudio3D.tscn, character_studio_3d.gd):**
+  - Interactive 360° inspection viewer with Hoysala stone pedestal.
+  - 4 Cinematic lighting presets: *Surya Dawn*, *High Noon*, *Twilight Tapas*, *Agni Forge*.
+  - Full 15-animation picker with category organization (Locomotion, Combat, Aerial/Actions).
+  - Playback speed scaling (0.25x - 2.0x) and auto-rotation toggle (18°/s).
+  - 3D skeletal joint overlay visualization showing deformation bones in real time.
+  - Seamless navigation between Test Chamber and Character Studio via F1 and ESC.
+- **Quality Assurance & Verification:**
+  - 	est_veer_model.gd: Validates imported eer.glb, 21-node skeleton, and 15 skeletal animations.
+  - 	est_character_studio.gd: Validates studio scene, lighting presets, and animation playback.
+  - Stage3D1CharacterAndLocomotion.test.ts: Vitest parity suite validating anatomical proportions, bones, gait cadences, camera kinematics, and PBR materials.
+  - 100% pass across 26 Godot headless tests and 499 Vitest tests.

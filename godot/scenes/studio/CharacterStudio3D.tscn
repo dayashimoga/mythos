@@ -1,0 +1,333 @@
+[gd_scene load_steps=10 format=3 uid="uid://c8m4p7k1y3n9v"]
+
+[ext_resource type="Script" path="res://scripts/studio/character_studio_3d.gd" id="1_studio"]
+[ext_resource type="PackedScene" path="res://assets/characters/veer/veer.glb" id="2_veer"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_studio"]
+sky_top_color = Color(0.12, 0.15, 0.28, 1)
+sky_horizon_color = Color(0.38, 0.26, 0.20, 1)
+ground_bottom_color = Color(0.08, 0.08, 0.12, 1)
+ground_horizon_color = Color(0.25, 0.18, 0.15, 1)
+
+[sub_resource type="Sky" id="Sky_studio"]
+sky_material = SubResource("ProceduralSkyMaterial_studio")
+
+[sub_resource type="Environment" id="Environment_studio"]
+background_mode = 2
+sky = SubResource("Sky_studio")
+ambient_light_source = 2
+ambient_light_color = Color(0.25, 0.22, 0.28, 1)
+tonemap_mode = 3
+ssr_enabled = false
+glow_enabled = true
+glow_intensity = 0.8
+glow_bloom = 0.15
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_pedestal"]
+albedo_color = Color(0.14, 0.15, 0.18, 1)
+metallic = 0.2
+roughness = 0.75
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_pedestal"]
+material = SubResource("StandardMaterial3D_pedestal")
+top_radius = 2.2
+bottom_radius = 2.4
+height = 0.35
+radial_segments = 36
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_gold_ring"]
+albedo_color = Color(1, 0.75, 0.1, 1)
+metallic = 0.88
+roughness = 0.2
+emission_enabled = true
+emission = Color(1, 0.65, 0, 1)
+emission_energy_multiplier = 0.8
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_gold_ring"]
+material = SubResource("StandardMaterial3D_gold_ring")
+top_radius = 2.22
+bottom_radius = 2.22
+height = 0.04
+radial_segments = 36
+
+[node name="CharacterStudio3D" type="Node3D"]
+script = ExtResource("1_studio")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_studio")
+
+[node name="Lights" type="Node3D" parent="."]
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="Lights"]
+transform = Transform3D(0.707107, -0.353553, 0.612372, 0, 0.866025, 0.5, -0.707107, -0.353553, 0.612372, 0, 4, 0)
+light_color = Color(1, 0.85, 0.65, 1)
+light_energy = 1.9
+shadow_enabled = true
+
+[node name="RimLight3D" type="OmniLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.8, -2.2)
+light_color = Color(1, 0.9, 0.75, 1)
+light_energy = 1.4
+omni_range = 6.0
+
+[node name="UnderLight3D" type="OmniLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1, 0)
+light_color = Color(1, 0.45, 0.05, 1)
+light_energy = 0.2
+omni_range = 3.5
+
+[node name="Pedestal" type="Node3D" parent="."]
+
+[node name="Base" type="MeshInstance3D" parent="Pedestal"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.175, 0)
+mesh = SubResource("CylinderMesh_pedestal")
+
+[node name="GoldRing" type="MeshInstance3D" parent="Pedestal"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.01, 0)
+mesh = SubResource("CylinderMesh_gold_ring")
+
+[node name="VeerModel" parent="Pedestal" instance=ExtResource("2_veer")]
+
+[node name="JointContainer" type="Node3D" parent="."]
+visible = false
+
+[node name="CameraPivot" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.15, 0)
+
+[node name="SpringArm3D" type="SpringArm3D" parent="CameraPivot"]
+transform = Transform3D(1, 0, 0, 0, 0.965926, 0.258819, 0, -0.258819, 0.965926, 0, 0, 0)
+spring_length = 3.2
+margin = 0.2
+
+[node name="Camera3D" type="Camera3D" parent="CameraPivot/SpringArm3D"]
+current = true
+fov = 60.0
+
+[node name="UI" type="CanvasLayer" parent="."]
+
+[node name="TopBar" type="PanelContainer" parent="UI"]
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 54.0
+grow_horizontal = 2
+
+[node name="Margin" type="MarginContainer" parent="UI/TopBar"]
+layout_mode = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 8
+
+[node name="HBox" type="HBoxContainer" parent="UI/TopBar/Margin"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="UI/TopBar/Margin/HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(1, 0.85, 0.3, 1)
+theme_override_font_sizes/font_size = 18
+text = "✦ MYTHOS 3D CHARACTER STUDIO — HERO VEER (SOLAR GUARDIAN) ✦"
+
+[node name="BtnReturn" type="Button" parent="UI/TopBar/Margin/HBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "[ Return to Chamber (ESC) ]"
+
+[node name="Panel" type="PanelContainer" parent="UI"]
+anchors_preset = 11
+anchor_left = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -340.0
+offset_top = 64.0
+offset_right = -16.0
+offset_bottom = -16.0
+grow_horizontal = 0
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="UI/Panel"]
+layout_mode = 2
+theme_override_constants/separation = 7
+
+[node name="Header" type="HBoxContainer" parent="UI/Panel/VBox"]
+layout_mode = 2
+
+[node name="CurrentAnimLabel" type="Label" parent="UI/Panel/VBox/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.2, 0.9, 1, 1)
+theme_override_font_sizes/font_size = 14
+text = "ANIMATION: IDLE"
+
+[node name="SecLoco" type="Label" parent="UI/Panel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
+theme_override_font_sizes/font_size = 11
+text = "── LOCOMOTION ──"
+
+[node name="LocomotionRow" type="HBoxContainer" parent="UI/Panel/VBox"]
+layout_mode = 2
+
+[node name="BtnIdle" type="Button" parent="UI/Panel/VBox/LocomotionRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Idle"
+
+[node name="BtnWalk" type="Button" parent="UI/Panel/VBox/LocomotionRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Walk"
+
+[node name="BtnJog" type="Button" parent="UI/Panel/VBox/LocomotionRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Jog"
+
+[node name="BtnSprint" type="Button" parent="UI/Panel/VBox/LocomotionRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Sprint"
+
+[node name="SecCombat" type="Label" parent="UI/Panel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
+theme_override_font_sizes/font_size = 11
+text = "── COMBAT & DEFENSE ──"
+
+[node name="CombatRow1" type="HBoxContainer" parent="UI/Panel/VBox"]
+layout_mode = 2
+
+[node name="BtnAtk1" type="Button" parent="UI/Panel/VBox/CombatRow1"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Slash 1"
+
+[node name="BtnAtk2" type="Button" parent="UI/Panel/VBox/CombatRow1"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Slash 2"
+
+[node name="BtnFinisher" type="Button" parent="UI/Panel/VBox/CombatRow1"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Finisher"
+
+[node name="CombatRow2" type="HBoxContainer" parent="UI/Panel/VBox"]
+layout_mode = 2
+
+[node name="BtnBlock" type="Button" parent="UI/Panel/VBox/CombatRow2"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Block"
+
+[node name="BtnDodge" type="Button" parent="UI/Panel/VBox/CombatRow2"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Dodge"
+
+[node name="BtnHit" type="Button" parent="UI/Panel/VBox/CombatRow2"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Hit"
+
+[node name="SecActions" type="Label" parent="UI/Panel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
+theme_override_font_sizes/font_size = 11
+text = "── AERIAL & ACTIONS ──"
+
+[node name="ActionRow" type="HBoxContainer" parent="UI/Panel/VBox"]
+layout_mode = 2
+
+[node name="BtnJump" type="Button" parent="UI/Panel/VBox/ActionRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Jump"
+
+[node name="BtnFall" type="Button" parent="UI/Panel/VBox/ActionRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Fall"
+
+[node name="BtnLand" type="Button" parent="UI/Panel/VBox/ActionRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Land"
+
+[node name="BtnInteract" type="Button" parent="UI/Panel/VBox/ActionRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Interact"
+
+[node name="SecLighting" type="Label" parent="UI/Panel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
+theme_override_font_sizes/font_size = 11
+text = "── LIGHTING PRESETS ──"
+
+[node name="LightingRow" type="HBoxContainer" parent="UI/Panel/VBox"]
+layout_mode = 2
+
+[node name="BtnDawn" type="Button" parent="UI/Panel/VBox/LightingRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Dawn"
+
+[node name="BtnNoon" type="Button" parent="UI/Panel/VBox/LightingRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Noon"
+
+[node name="BtnTwilight" type="Button" parent="UI/Panel/VBox/LightingRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Twilight"
+
+[node name="BtnForge" type="Button" parent="UI/Panel/VBox/LightingRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Forge"
+
+[node name="SecInspect" type="Label" parent="UI/Panel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
+theme_override_font_sizes/font_size = 11
+text = "── PLAYBACK & INSPECTION ──"
+
+[node name="SpeedBox" type="HBoxContainer" parent="UI/Panel/VBox"]
+layout_mode = 2
+
+[node name="SpeedLabel" type="Label" parent="UI/Panel/VBox/SpeedBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "SPEED: 1.00x"
+
+[node name="SpeedSlider" type="HSlider" parent="UI/Panel/VBox/SpeedBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+min_value = 0.25
+max_value = 2.0
+step = 0.05
+value = 1.0
+
+[node name="TogglesBox" type="HBoxContainer" parent="UI/Panel/VBox"]
+layout_mode = 2
+
+[node name="AutoRotateCheck" type="CheckBox" parent="UI/Panel/VBox/TogglesBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 12
+text = "Auto-Rotate"
+
+[node name="SkeletonCheck" type="CheckBox" parent="UI/Panel/VBox/TogglesBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 12
+text = "Show Joints"
+
+[node name="ControlsNote" type="Label" parent="UI/Panel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.55, 0.55, 0.6, 1)
+theme_override_font_sizes/font_size = 10
+text = "Left-Drag: Orbit | Wheel: Zoom | Mid-Drag: Pan"
+horizontal_alignment = 1

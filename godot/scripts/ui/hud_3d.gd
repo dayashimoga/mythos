@@ -9,10 +9,13 @@ extends CanvasLayer
 @onready var objective_label: Label = $MarginContainer/VBoxContainer/ObjectivePanel/ObjectiveLabel
 @onready var banner_label: Label = $BannerPanel/BannerLabel
 @onready var banner_panel: PanelContainer = $BannerPanel
+@onready var btn_studio: Button = $MarginContainer/VBoxContainer/TopBar/BtnStudio
 
 func _ready() -> void:
 	if banner_panel:
 		banner_panel.visible = false
+	if btn_studio:
+		btn_studio.pressed.connect(func(): get_tree().change_scene_to_file("res://scenes/studio/CharacterStudio3D.tscn"))
 
 func update_health(current: int, max_val: int) -> void:
 	if health_bar:

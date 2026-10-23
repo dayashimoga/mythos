@@ -68,6 +68,15 @@ theme_override_colors/font_color = Color(0.2, 0.9, 1, 1)
 theme_override_font_sizes/font_size = 14
 text = "✦ ASTRA SHARDS: 0 / 3"
 
+[node name="Spacer" type="Control" parent="MarginContainer/VBoxContainer/TopBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="BtnStudio" type="Button" parent="MarginContainer/VBoxContainer/TopBar"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+text = "[F1] 3D Character Studio"
+
 [node name="ObjectivePanel" type="PanelContainer" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 0

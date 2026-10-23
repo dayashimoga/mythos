@@ -21,9 +21,10 @@ static func _test_player_3d_node_hierarchy() -> Dictionary:
 	var has_col = player.has_node("CollisionShape3D")
 	var has_cam_arm = player.has_node("CameraArm")
 	var has_cam = player.has_node("CameraArm/Camera3D")
-	var has_weapon = player.has_node("Visual/Body/ArmR/WeaponSocket/SuryaKhadga")
+	var has_model = player.has_node("Visual/VeerModel") or player.has_node("Visual/Body/ArmR/WeaponSocket/SuryaKhadga")
+	var has_anim = player.anim_player != null or player.find_child("AnimationPlayer", true, false) != null
 
-	var passed = (player is CharacterBody3D and has_col and has_cam_arm and has_cam and has_weapon)
+	var passed = (player is CharacterBody3D and has_col and has_cam_arm and has_cam and has_model and has_anim)
 	player.free()
 	return {"name": "test_player_3d_node_hierarchy", "passed": passed}
 

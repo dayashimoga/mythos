@@ -17,6 +17,8 @@ func _init() -> void:
 	var test_quest_manager = load("res://tests/unit/test_quest_manager.gd")
 	var test_save_system = load("res://tests/unit/test_save_system.gd")
 	var test_dialogue_runner = load("res://tests/unit/test_dialogue_runner.gd")
+	var test_veer_model = load("res://tests/unit/test_veer_model.gd")
+	var test_character_studio = load("res://tests/unit/test_character_studio.gd")
 	var test_traversal_3d = load("res://tests/integration/test_player_traversal_3d.gd")
 
 	var suites = [
@@ -24,6 +26,8 @@ func _init() -> void:
 		{"name": "Quest & Narrative Manager (Domain)", "runner": test_quest_manager},
 		{"name": "Save State & Tamper Verification (Domain)", "runner": test_save_system},
 		{"name": "Dialogue Runner (Domain)", "runner": test_dialogue_runner},
+		{"name": "Veer 3D Skinned Model & Rigging (Model/Anim)", "runner": test_veer_model},
+		{"name": "3D Character Studio (Viewer/Inspection)", "runner": test_character_studio},
 		{"name": "3D Physics, Camera & Traversal (Integration)", "runner": test_traversal_3d}
 	]
 
