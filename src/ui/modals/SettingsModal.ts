@@ -17,6 +17,8 @@ import { AccessibilityManager, SubtitleScale, ColorblindMode } from '../accessib
 import { SaveGameManager } from '../../state/SaveGameManager';
 import { ToastManager } from '../components/ToastManager';
 import { DesignTokens } from '../design/DesignTokens';
+import { LayeredRenderer } from '../../render/LayeredRenderer';
+import { GraphicsQuality } from '../../render/RenderLayers';
 
 export class SettingsModal {
   public modal: UIModal;
@@ -139,14 +141,26 @@ export class SettingsModal {
     });
 
     // 2. Display Controls
+    const currentQ = LayeredRenderer.getInstance().getQuality();
+    const activeTab = currentQ === GraphicsQuality.LOW ? 'fast' : currentQ === GraphicsQuality.MEDIUM ? 'balanced' : 'cinematic';
+
     this.tabsQuality = new UITabs('display_quality', 0, 0, 420, 30, {
       tabs: [
-        { id: 'fast', label: 'Performance' },
-        { id: 'balanced', label: 'Balanced' },
-        { id: 'cinematic', label: 'Cinematic' },
+        { id: 'fast', label: 'Performance (Low)' },
+        { id: 'balanced', label: 'Balanced (Med)' },
+        { id: 'cinematic', label: 'Cinematic (High)' },
       ],
-      activeTabId: 'balanced',
-      onTabChange: (q: string) => ToastManager.getInstance().show(`Graphics Quality: ${q.toUpperCase()}`, 'info'),
+      activeTabId: activeTab,
+      onTabChange: (q: string) => {
+        const qualityMap: Record<string, GraphicsQuality> = {
+          fast: GraphicsQuality.LOW,
+          balanced: GraphicsQuality.MEDIUM,
+          cinematic: GraphicsQuality.HIGH,
+        };
+        const mapped = qualityMap[q] ?? GraphicsQuality.HIGH;
+        LayeredRenderer.getInstance().setQuality(mapped);
+        ToastManager.getInstance().show(`Graphics Quality: ${mapped}`, 'info');
+      },
     });
 
     this.toggleFullscreen = new UIToggle('display_fullscreen', 0, 0, 420, 28, {

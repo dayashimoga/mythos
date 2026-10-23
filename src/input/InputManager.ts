@@ -8,7 +8,12 @@ export type GameAction =
   | 'MOVE_RIGHT'
   | 'DASH'
   | 'ATTACK'
+  | 'SHOOT'
+  | 'MELEE'
   | 'MELEE_ATTACK'
+  | 'SPECIAL_ATTACK'
+  | 'SWAP_WEAPON'
+  | 'GUARD'
   | 'INTERACT'
   | 'PAUSE'
   | 'RESTART'
@@ -35,12 +40,17 @@ export class InputManager {
     MOVE_RIGHT: ['KeyD', 'ArrowRight'],
     DASH: ['Space', 'ShiftLeft'],
     ATTACK: ['KeyJ', 'Enter'],
+    SHOOT: ['KeyJ', 'Enter'],
+    MELEE: ['KeyK', 'KeyX', 'KeyB'],
     MELEE_ATTACK: ['KeyK', 'KeyX', 'KeyB'],
-    INTERACT: ['KeyE', 'KeyF'],
+    SPECIAL_ATTACK: ['KeyE', 'Digit1'],
+    SWAP_WEAPON: ['KeyQ', 'Tab'],
+    GUARD: ['KeyG', 'KeyZ', 'KeyC'],
+    INTERACT: ['KeyF', 'KeyE'],
     PAUSE: ['Escape', 'KeyP'],
     RESTART: ['KeyR'],
     TOGGLE_DIAGNOSTICS: ['F3', 'Backquote'],
-    TOGGLE_COLLIDERS: ['F2', 'KeyC'],
+    TOGGLE_COLLIDERS: ['F2'],
   };
 
   private boundKeyDown = this.handleKeyDown.bind(this);
@@ -48,6 +58,16 @@ export class InputManager {
   private boundMouseMove = this.handleMouseMove.bind(this);
   private boundMouseDown = this.handleMouseDown.bind(this);
   private boundMouseUp = this.handleMouseUp.bind(this);
+
+  private canvasElement: HTMLCanvasElement | null = null;
+
+  public setCanvas(canvas: HTMLCanvasElement | null): void {
+    this.canvasElement = canvas;
+  }
+
+  public getCanvas(): HTMLCanvasElement | null {
+    return this.canvasElement;
+  }
 
   public attach(target: Window | HTMLElement): void {
     target.addEventListener('keydown', this.boundKeyDown as EventListener);
@@ -66,6 +86,19 @@ export class InputManager {
     this.clear();
   }
 
+  private updateMouseCoordinates(e: MouseEvent): void {
+    if (this.canvasElement && typeof this.canvasElement.getBoundingClientRect === 'function') {
+      const rect = this.canvasElement.getBoundingClientRect();
+      const scaleX = rect.width > 0 ? this.canvasElement.width / rect.width : 1;
+      const scaleY = rect.height > 0 ? this.canvasElement.height / rect.height : 1;
+      const x = (e.clientX - rect.left) * scaleX;
+      const y = (e.clientY - rect.top) * scaleY;
+      this.mousePosition.set(x, y);
+    } else {
+      this.mousePosition.set(e.clientX, e.clientY);
+    }
+  }
+
   private handleKeyDown(e: KeyboardEvent): void {
     if (!this.keysHeld.has(e.code)) {
       this.keysJustPressed.add(e.code);
@@ -79,10 +112,11 @@ export class InputManager {
   }
 
   private handleMouseMove(e: MouseEvent): void {
-    this.mousePosition.set(e.clientX, e.clientY);
+    this.updateMouseCoordinates(e);
   }
 
   private handleMouseDown(e: MouseEvent): void {
+    this.updateMouseCoordinates(e);
     if (!this.mouseButtonsHeld.has(e.button)) {
       this.mouseButtonsJustPressed.add(e.button);
     }
@@ -90,6 +124,7 @@ export class InputManager {
   }
 
   private handleMouseUp(e: MouseEvent): void {
+    this.updateMouseCoordinates(e);
     this.mouseButtonsHeld.delete(e.button);
     this.mouseButtonsJustReleased.add(e.button);
   }
@@ -104,33 +139,43 @@ export class InputManager {
 
   public isActionHeld(action: GameAction): boolean {
     const keys = this.actionKeyMap[action];
-    for (const k of keys) {
-      if (this.keysHeld.has(k)) return true;
+    if (keys) {
+      for (const k of keys) {
+        if (this.keysHeld.has(k)) return true;
+      }
     }
-    if (action === 'ATTACK' && this.mouseButtonsHeld.has(0)) return true;
-    if (action === 'MELEE_ATTACK' && this.mouseButtonsHeld.has(2)) return true;
+    if ((action === 'ATTACK' || action === 'SHOOT') && this.mouseButtonsHeld.has(0)) return true;
+    if ((action === 'MELEE' || action === 'MELEE_ATTACK') && this.mouseButtonsHeld.has(2)) return true;
     return false;
+  }
+
+  public isActionActive(action: GameAction): boolean {
+    return this.isActionHeld(action);
   }
 
   public isActionJustPressed(action: GameAction): boolean {
     if (this.virtualActionJustPressed.has(action)) return true;
 
     const keys = this.actionKeyMap[action];
-    for (const k of keys) {
-      if (this.keysJustPressed.has(k)) return true;
+    if (keys) {
+      for (const k of keys) {
+        if (this.keysJustPressed.has(k)) return true;
+      }
     }
-    if (action === 'ATTACK' && this.mouseButtonsJustPressed.has(0)) return true;
-    if (action === 'MELEE_ATTACK' && this.mouseButtonsJustPressed.has(2)) return true;
+    if ((action === 'ATTACK' || action === 'SHOOT') && this.mouseButtonsJustPressed.has(0)) return true;
+    if ((action === 'MELEE' || action === 'MELEE_ATTACK') && this.mouseButtonsJustPressed.has(2)) return true;
     return false;
   }
 
   public isActionJustReleased(action: GameAction): boolean {
     const keys = this.actionKeyMap[action];
-    for (const k of keys) {
-      if (this.keysJustReleased.has(k)) return true;
+    if (keys) {
+      for (const k of keys) {
+        if (this.keysJustReleased.has(k)) return true;
+      }
     }
-    if (action === 'ATTACK' && this.mouseButtonsJustReleased.has(0)) return true;
-    if (action === 'MELEE_ATTACK' && this.mouseButtonsJustReleased.has(2)) return true;
+    if ((action === 'ATTACK' || action === 'SHOOT') && this.mouseButtonsJustReleased.has(0)) return true;
+    if ((action === 'MELEE' || action === 'MELEE_ATTACK') && this.mouseButtonsJustReleased.has(2)) return true;
     return false;
   }
 

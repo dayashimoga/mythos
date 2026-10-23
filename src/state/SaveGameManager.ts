@@ -88,4 +88,8 @@ export class SaveGameManager {
     const storage = StorageAdapter.getStorage();
     storage.removeItem(this.STORAGE_KEY);
   }
+
+  public static clear(): void {
+    this.reset();
+  }
 }

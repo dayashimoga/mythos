@@ -74,6 +74,42 @@ describe('CharacterRig & CharacterShowcaseScene Studio', () => {
       scout.update(0.016);
       expect(() => scout.render(renderer)).not.toThrow();
     });
+
+    it('creates Mahishasura rig with 21 bones, buffalo horns, void gada socket, and enrage state', () => {
+      const boss = CharacterDefinitions.createMahishasuraRig();
+      expect(boss.id).toBe('mahishasura');
+      expect(boss.skeleton.getBoneCount()).toBe(21);
+      expect(boss.skeleton.getSocketTransform('socket_right_hand')).not.toBeNull();
+      expect(boss.skeleton.getSocketTransform('socket_crown')).not.toBeNull();
+
+      boss.update(0.016);
+      expect(() => boss.render(renderer)).not.toThrow();
+
+      // Trigger overhead slam
+      boss.stateMachine.setTrigger('trigger_slam');
+      boss.update(0.016);
+      expect(boss.stateMachine.currentState?.name).toBe('Slam');
+
+      // Reset to locomotion to test charge
+      boss.stateMachine.transitionProgress = 1.0;
+      boss.stateMachine.transitionTo('Locomotion');
+      boss.stateMachine.transitionProgress = 1.0;
+
+      // Trigger buffalo charge
+      boss.stateMachine.setTrigger('trigger_charge');
+      boss.update(0.016);
+      expect(boss.stateMachine.currentState?.name).toBe('Charge');
+
+      // Reset to locomotion to test enrage
+      boss.stateMachine.transitionProgress = 1.0;
+      boss.stateMachine.transitionTo('Locomotion');
+      boss.stateMachine.transitionProgress = 1.0;
+
+      // Trigger eclipse enrage
+      boss.stateMachine.setTrigger('trigger_enrage');
+      boss.update(0.016);
+      expect(boss.stateMachine.currentState?.name).toBe('Enrage');
+    });
   });
 
   describe('CharacterRig Features & Inverse Kinematics', () => {
@@ -113,7 +149,7 @@ describe('CharacterRig & CharacterShowcaseScene Studio', () => {
       const scene = new CharacterShowcaseScene();
       scene.onEnter(engine);
 
-      expect(scene.rigs.length).toBe(4);
+      expect(scene.rigs.length).toBe(5);
       expect(scene.getActiveRig().id).toBe('veer');
 
       // Switch to Devi Tara
@@ -128,6 +164,10 @@ describe('CharacterRig & CharacterShowcaseScene Studio', () => {
       scene.selectCharacter(3);
       expect(scene.getActiveRig().id).toBe('vanara_scout');
 
+      // Switch to Mahishasura
+      scene.selectCharacter(4);
+      expect(scene.getActiveRig().id).toBe('mahishasura');
+
       // Toggles
       const bones = scene.toggleBones();
       expect(bones).toBe(true);
@@ -137,6 +177,20 @@ describe('CharacterRig & CharacterShowcaseScene Studio', () => {
 
       const footIK = scene.toggleFootIK();
       expect(footIK).toBe(true);
+
+      const sockets = scene.toggleSockets();
+      expect(sockets).toBe(true);
+
+      const light = scene.cycleLighting();
+      expect(light).toBe(1);
+
+      // Camera
+      scene.panX = 50;
+      scene.panY = -30;
+      scene.zoom = 1.4;
+      scene.resetCamera();
+      expect(scene.panX).toBe(0);
+      expect(scene.zoom).toBe(1.0);
 
       // Render
       expect(() => scene.render(renderer)).not.toThrow();

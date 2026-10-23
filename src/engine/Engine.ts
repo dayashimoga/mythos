@@ -7,6 +7,7 @@ import { EventBus } from '../core/EventBus';
 import { Logger } from '../core/Logger';
 import { DiagnosticOverlay } from '../ui/DiagnosticOverlay';
 import { GameLoop } from './GameLoop';
+import { AssetManager } from '../assets/AssetManager';
 import { SplashScene } from '../scenes/SplashScene';
 import { StoryScene } from '../scenes/StoryScene';
 import { GameScene } from '../scenes/GameScene';
@@ -23,6 +24,7 @@ export interface IGameEngine {
   pause(): void;
   resume(): void;
   stop(): void;
+  resize(width: number, height: number): void;
   getRenderer(): IRenderer;
   getSceneManager(): SceneManager;
   getInput(): InputManager;
@@ -48,6 +50,15 @@ export class Engine implements IGameEngine {
     this.renderer = new CanvasRenderer(canvas);
     this.sceneManager = new SceneManager(this);
 
+    // Attach input with canvas reference
+    this.inputManager.setCanvas(canvas);
+    this.inputManager.attach(window);
+
+    // Asynchronously preload production visual assets
+    AssetManager.getInstance().loadAll().catch((err) => {
+      Logger.getInstance().warn('Engine', `Asset preloading encountered non-critical error: ${err}`);
+    });
+
     // Register all Scenes
     this.sceneManager.register(new SplashScene());
     this.sceneManager.register(new StoryScene());
@@ -58,9 +69,6 @@ export class Engine implements IGameEngine {
     this.sceneManager.register(new BossEncounterScene());
     this.sceneManager.register(new StoryCampaignScene());
     this.sceneManager.register(new SettingsScene());
-
-    // Attach input
-    this.inputManager.attach(window);
 
     // Setup GameLoop
     this.gameLoop = new GameLoop(
@@ -95,6 +103,12 @@ export class Engine implements IGameEngine {
     this.inputManager.detach(window);
   }
 
+  public resize(width: number, height: number): void {
+    if (this.renderer) {
+      this.renderer.resize(width, height);
+    }
+  }
+
   private update(dt: number): void {
     const t0 = performance.now();
 
@@ -109,6 +123,9 @@ export class Engine implements IGameEngine {
     // Process Scene Input & Update
     this.sceneManager.handleInput(this.inputManager);
     this.sceneManager.update(dt);
+
+    // Central camera update ensures camera target tracking and shake decay are executed reliably
+    this.renderer.getCamera().update(dt);
 
     // Clear just-pressed inputs
     this.inputManager.postUpdate();

@@ -98,6 +98,8 @@ export class BossEncounterScene implements IScene {
     CelestialVFX.getInstance().clear();
     this.engine.getAudio().stopMusic();
     this.engine.getAudio().stopAmbience();
+    const camera = this.engine.getRenderer().getCamera();
+    camera.reset(0, 0, 1.0);
   }
 
   public resetEncounter(): void {
@@ -219,14 +221,16 @@ export class BossEncounterScene implements IScene {
     this.player.move(moveDir, 1 / 60);
 
     // Dash
+    // Dash (DASH action / Space / Shift)
     if (input.isActionJustPressed('DASH')) {
       if (this.player.triggerDash()) {
         this.particles.emitBurst(this.player.position.x, this.player.position.y, 16, '#FB8500', 160);
+        this.engine.getAudio().playSfx('DASH');
       }
     }
 
-    // Weapon Swap (Q)
-    if (input.isKeyJustPressed('KeyQ')) {
+    // Weapon Swap (Q, Tab, or SWAP_WEAPON action)
+    if (input.isActionJustPressed('SWAP_WEAPON') || input.isKeyJustPressed('KeyQ') || input.isKeyJustPressed('Tab')) {
       if (this.player.swapWeapon()) {
         const isGlaive = this.player.equipmentManager.getActiveWeapon() === 'PRANA_GLAIVE';
         this.damageNumbers.spawn(
@@ -242,49 +246,68 @@ export class BossEncounterScene implements IScene {
           isGlaive ? '#06B6D4' : '#FFB703',
           180
         );
+        this.engine.getAudio().playFoleyImpact('CELESTIAL_GOLD', 'PARRY');
       }
     }
 
-    // Defensive Guard / Parry (C or X or Gamepad LB)
-    const isGuardingKey = input.isKeyHeld('KeyC') || input.isKeyHeld('KeyX');
+    // Defensive Guard / Parry (C, X, G, Z or GUARD action)
+    const isGuardingKey = input.isActionHeld('GUARD') || input.isKeyHeld('KeyC') || input.isKeyHeld('KeyX');
     if (isGuardingKey) {
       this.player.startGuard();
     } else {
       this.player.stopGuard();
     }
 
-    // Melee Attack / 3-Hit Combo (J or Left Mouse Click)
-    if (input.isActionJustPressed('ATTACK')) {
-      const strikeData = this.player.executeComboAttack();
-      if (strikeData) {
-        this.handlePlayerMeleeStrike(strikeData.arc);
+    // Special Attack (E, Digit1, or SPECIAL_ATTACK action)
+    if (input.isActionJustPressed('SPECIAL_ATTACK')) {
+      const special = this.player.executeSpecialAttack();
+      if (special) {
+        this.handlePlayerMeleeStrike(special.arc, true);
+        this.damageNumbers.spawn(
+          this.player.position.x,
+          this.player.position.y - 36,
+          special.name.toUpperCase(),
+          special.weaponType === 'PRANA_GLAIVE' ? '#06B6D4' : '#FFD700'
+        );
       }
     }
 
-    // Ranged Solar Burst (K or Right Mouse Click)
-    if (input.isActionJustPressed('MELEE_ATTACK')) {
+    // Melee Attack / 3-Hit Combo (J, Enter, Left Mouse, or ATTACK action)
+    if (input.isActionJustPressed('ATTACK')) {
+      const strikeData = this.player.executeComboAttack();
+      if (strikeData) {
+        this.handlePlayerMeleeStrike(strikeData.arc, false);
+      }
+    }
+
+    // Ranged Solar Burst (K, Right Mouse, or MELEE_ATTACK action)
+    if (input.isActionJustPressed('MELEE_ATTACK') || input.isKeyJustPressed('KeyK')) {
       const projs = this.player.shootBurst();
       if (projs.length > 0) {
         this.playerProjectiles.push(...projs);
         this.particles.emitBurst(this.player.position.x, this.player.position.y, 8, '#FFD166', 100);
+        this.engine.getAudio().playSfx('SHOOT');
       }
     }
   }
 
-  private handlePlayerMeleeStrike(arc: MeleeAttackArc): void {
+  private handlePlayerMeleeStrike(arc: MeleeAttackArc, isSpecial = false): void {
     const isGlaive = this.player.equipmentManager.getActiveWeapon() === 'PRANA_GLAIVE';
     const burstColor = isGlaive ? '#06B6D4' : '#FFD166';
+    const burstCount = isSpecial ? 28 : (arc.isShieldBreak ? 18 : 12);
     this.particles.emitBurst(
       this.player.position.x + this.player.facing.x * 25,
       this.player.position.y + this.player.facing.y * 25,
-      12,
+      burstCount,
       burstColor,
-      140
+      isSpecial ? 220 : 140
     );
 
     const facingAngle = Math.atan2(this.player.facing.y, this.player.facing.x || 1);
     CelestialVFX.getInstance().emitSlashTrail(this.player.position, facingAngle, burstColor);
-    this.engine.getAudio().playFoleyImpact('CELESTIAL_GOLD', 'SLASH');
+    this.engine.getAudio().playFoleyImpact('CELESTIAL_GOLD', isSpecial ? 'IMPACT' : 'SLASH');
+    const shakeIntensity = isSpecial ? 8.5 : (arc.isShieldBreak ? 5.5 : 3.0);
+    this.engine.getRenderer().getCamera().triggerShake(shakeIntensity, 0.12);
 
     // 1. Check Hit Against Boss
     if (this.boss.isActive) {
@@ -310,6 +333,10 @@ export class BossEncounterScene implements IScene {
         const res = this.combatSystem.resolveAttack(attackSpec, bossDefense);
         this.boss.takeDamage(res.damageDealt);
         this.player.score += res.damageDealt * 10;
+
+        if (res.isCritical) {
+          this.particles.emitBurst(this.boss.position.x, this.boss.position.y, 20, '#FFD700', 200);
+        }
 
         if (this.boss.health <= 0) {
           this.handleBossDefeated();
@@ -344,6 +371,13 @@ export class BossEncounterScene implements IScene {
         const res = this.combatSystem.resolveAttack(attackSpec, vDefense);
         v.health -= res.damageDealt;
 
+        if (res.wasBlocked) {
+          this.engine.getAudio().playShieldBlockFoley();
+        }
+        if (res.triggeredStagger || (attackSpec.isShieldBreak && vDefense.isGuarding)) {
+          this.engine.getAudio().playShieldBreakFoley();
+        }
+
         if (v.health <= 0) {
           v.destroy();
           this.vanguards.splice(i, 1);
@@ -360,6 +394,7 @@ export class BossEncounterScene implements IScene {
     this.boss.destroy();
     this.isVictory = true;
     this.player.equipmentManager.addEssence(500);
+    this.engine.getAudio().playSfx('VICTORY');
 
     // Save progression
     SaveGameManager.save({
@@ -480,12 +515,30 @@ export class BossEncounterScene implements IScene {
       }
     }
 
-    // 5. Update Enemy Projectiles & Collision
+    // 5. Update Enemy Projectiles & Collision / Deflection
     for (let i = this.enemyProjectiles.length - 1; i >= 0; i--) {
       const proj = this.enemyProjectiles[i];
       proj.update(dt);
 
       if (proj.bounds.intersects(this.player.bounds)) {
+        // Check for Perfect Parry Projectile Deflection!
+        if (this.player.parryWindowTimer > 0) {
+          this.parriesPerformed++;
+          this.player.score += 200;
+          this.damageNumbers.spawn(this.player.position.x, this.player.position.y - 25, 'DEFLECTED!', '#00E5FF');
+          this.particles.emitBurst(this.player.position.x, this.player.position.y, 22, '#00E5FF', 220);
+          this.engine.getAudio().playSfx('PARRY');
+          this.engine.getRenderer().getCamera().triggerShake(6.0, 0.15);
+
+          // Reverse velocity and magnify into counter-projectile
+          proj.velocity.scale(-1.4);
+          proj.damage = Math.round(proj.damage * 1.5);
+          // Transfer to player projectile pool
+          this.enemyProjectiles.splice(i, 1);
+          this.playerProjectiles.push(proj);
+          continue;
+        }
+
         proj.destroy();
         this.enemyProjectiles.splice(i, 1);
         const knockDir = proj.velocity.clone().normalize();
@@ -508,7 +561,7 @@ export class BossEncounterScene implements IScene {
         this.playerProjectiles.splice(i, 1);
         this.boss.takeDamage(proj.damage);
         this.damageNumbers.spawn(this.boss.position.x, this.boss.position.y - 20, proj.damage.toString(), '#FFD166');
-        this.particles.emitBurst(proj.position.x, proj.position.y, 6, '#FFB703', 100);
+        this.particles.emitBurst(proj.position.x, proj.position.y, 8, '#FFB703', 110);
         if (this.boss.health <= 0) {
           this.handleBossDefeated();
         }
@@ -560,7 +613,17 @@ export class BossEncounterScene implements IScene {
     if (res.wasParried) {
       this.parriesPerformed++;
       this.particles.emitBurst(this.player.position.x, this.player.position.y, 25, '#00E5FF', 220);
+      this.engine.getAudio().playSfx('PARRY');
       return;
+    }
+
+    if (res.wasBlocked) {
+      this.engine.getAudio().playShieldBlockFoley();
+      this.particles.emitBurst(this.player.position.x, this.player.position.y, 10, '#94A3B8', 120);
+    }
+
+    if (res.triggeredStagger) {
+      this.engine.getAudio().playShieldBreakFoley();
     }
 
     if (res.damageDealt > 0) {
@@ -570,6 +633,7 @@ export class BossEncounterScene implements IScene {
 
       if (this.player.health <= 0) {
         this.isGameOver = true;
+        this.engine.getAudio().playSfx('DEFEAT');
       }
     }
   }
@@ -740,11 +804,13 @@ export class BossEncounterScene implements IScene {
     ctx.fillRect(barX, poiseBarY, barWidth * poiseRatio, 6);
 
     // --- Bottom Player Combat HUD ---
+    const hudW = 560;
     const hudY = cam.viewportHeight - 65;
-    ctx.fillStyle = 'rgba(15, 23, 42, 0.9)';
-    ctx.fillRect(20, hudY, 460, 52);
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.92)';
+    ctx.fillRect(20, hudY, hudW, 52);
     ctx.strokeStyle = '#334155';
-    ctx.strokeRect(20, hudY, 460, 52);
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(20, hudY, hudW, 52);
 
     // Player Health
     ctx.font = 'bold 11px Inter, sans-serif';
@@ -752,18 +818,18 @@ export class BossEncounterScene implements IScene {
     ctx.textAlign = 'left';
     ctx.fillText(`HP: ${Math.round(this.player.health)}/${this.player.maxHealth}`, 32, hudY + 18);
     ctx.fillStyle = '#10B981';
-    ctx.fillRect(95, hudY + 8, 120 * (this.player.health / this.player.maxHealth), 12);
+    ctx.fillRect(95, hudY + 8, 110 * Math.max(0, this.player.health / this.player.maxHealth), 12);
 
     // Player Energy
     ctx.fillStyle = '#E2E8F0';
     ctx.fillText(`EP: ${Math.round(this.player.energy)}/${this.player.maxEnergy}`, 32, hudY + 38);
     ctx.fillStyle = '#06B6D4';
-    ctx.fillRect(95, hudY + 28, 120 * (this.player.energy / this.player.maxEnergy), 10);
+    ctx.fillRect(95, hudY + 28, 110 * Math.max(0, this.player.energy / this.player.maxEnergy), 10);
 
     // Active Weapon & Combo Status
     const weaponStats = this.player.getActiveWeaponStats();
     ctx.fillStyle = '#FDE047';
-    ctx.fillText(`WEAPON: [Q] ${weaponStats.name}`, 235, hudY + 18);
+    ctx.fillText(`WEAPON: [Q] ${weaponStats.name}`, 220, hudY + 18);
 
     const comboText =
       this.player.comboIndex === 0
@@ -772,12 +838,17 @@ export class BossEncounterScene implements IScene {
         ? 'CHAINING (HIT 2)'
         : 'FINISHER READY!';
     ctx.fillStyle = this.player.comboIndex === 2 ? '#F59E0B' : '#94A3B8';
-    ctx.fillText(`COMBO: ${comboText}`, 235, hudY + 38);
+    ctx.fillText(`COMBO: ${comboText}`, 220, hudY + 38);
+
+    // Special Attack Status
+    const canSpecial = this.player.energy >= 30 && !this.player.poise.isStaggered;
+    ctx.fillStyle = canSpecial ? '#38BDF8' : '#64748B';
+    ctx.fillText(`SPECIAL: [E] ${canSpecial ? 'READY' : '30 EP'}`, 365, hudY + 18);
 
     // Guard & Parry Status
     const parryActive = this.player.parryWindowTimer > 0;
     ctx.fillStyle = parryActive ? '#00E5FF' : this.player.isGuarding ? '#F59E0B' : '#64748B';
-    ctx.fillText(parryActive ? 'PERFECT PARRY [ACTIVE]' : 'GUARD [C / X]', 365, hudY + 28);
+    ctx.fillText(parryActive ? 'PERFECT PARRY [ACTIVE]' : 'GUARD [C / X]', 365, hudY + 38);
 
     ctx.restore();
   }

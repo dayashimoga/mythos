@@ -1,5 +1,6 @@
 import { IRenderer } from '../render/CanvasRenderer';
 import { Diagnostics } from '../core/Diagnostics';
+import { LayeredRenderer } from '../render/LayeredRenderer';
 
 export class DiagnosticOverlay {
   public render(renderer: IRenderer, diagnostics: Diagnostics): void {
@@ -11,8 +12,8 @@ export class DiagnosticOverlay {
 
     ctx.save();
 
-    const panelWidth = 260;
-    const panelHeight = 220;
+    const panelWidth = 270;
+    const panelHeight = 255;
     const panelX = vp.width - panelWidth - 20;
     const panelY = 20;
 
@@ -41,11 +42,17 @@ export class DiagnosticOverlay {
     ctx.lineTo(panelX + panelWidth - 12, panelY + 30);
     ctx.stroke();
 
+    // Layered render metrics
+    const quality = LayeredRenderer.getInstance().getQuality();
+    const rMetrics = LayeredRenderer.getInstance().getMetrics();
+
     // Metrics list
     const lines = [
       `FPS:             ${metrics.fps} (${metrics.frameTimeMs} ms)`,
       `Update Step:     ${metrics.updateTimeMs} ms`,
       `Render Step:     ${metrics.renderTimeMs} ms`,
+      `Quality Preset:  ${quality}`,
+      `Render Items:    ${rMetrics.itemCount} (Lights: ${rMetrics.lightCount})`,
       `Active Scene:    ${metrics.activeScene}`,
       `Active Entities: ${metrics.entityCount}`,
       `Live Particles:  ${metrics.particleCount}`,
@@ -55,7 +62,7 @@ export class DiagnosticOverlay {
       `Colliders (F2):  ${diagnostics.getShowColliders() ? 'ON' : 'OFF'}`,
     ];
 
-    let lineY = panelY + 48;
+    let lineY = panelY + 46;
     for (const line of lines) {
       renderer.drawText(line, panelX + 12, lineY, '11px monospace', '#F8F9FA');
       lineY += 16;

@@ -22,16 +22,17 @@ function bootstrap(): void {
   const caps = bridge.getCapabilities();
   logger.info('PlatformBridge', `Running on ${caps.platform} (Touch: ${caps.hasTouch}, Mobile: ${caps.isMobile})`);
 
-  // Handle responsive canvas scaling
-  const handleResize = () => {
-    bridge.resizeCanvas(canvas, 1280, 720);
-  };
-  window.addEventListener('resize', handleResize);
-  handleResize();
-
   // 3. Instantiate Engine
   const engine = new Engine();
   engine.init(canvas);
+
+  // Handle responsive canvas scaling
+  const handleResize = () => {
+    bridge.resizeCanvas(canvas, 1280, 720);
+    engine.resize(1280, 720);
+  };
+  window.addEventListener('resize', handleResize);
+  handleResize();
 
   // 4. Mount Virtual Touch Joystick if on mobile/touch
   if (caps.hasTouch || caps.isMobile) {

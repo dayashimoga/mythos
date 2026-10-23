@@ -48,9 +48,16 @@ export class RagaMusicGenerator {
   private beatStep = 0; // 0 to 15 (Tintal 16-beat cycle)
   private currentMelodyIndex = 0;
 
+  // Crossfade state
+  private isCrossfading = false;
+  private fadeTargetRaga: RagaType | null = null;
+  private fadeTargetTension = 0;
+  private fadeTimer = 0;
+  private fadeDuration = 0;
+
   constructor(ctx: AudioContext | null, outputNode?: AudioNode) {
     this.ctx = ctx;
-    this.outputNode = outputNode ?? null;
+    this.outputNode = outputNode ?? (this.ctx ? (this.ctx.destination as any) : null);
   }
 
   public setOutput(outputNode: AudioNode): void {
@@ -73,6 +80,27 @@ export class RagaMusicGenerator {
     }
   }
 
+  /**
+   * Smoothly crossfades from current raga to target raga over duration seconds.
+   */
+  public fadeToRaga(newRaga: RagaType, tension = 0.2, fadeDuration = 1.5): void {
+    if (!this.isRunning) {
+      this.setRaga(newRaga);
+      this.setTension(tension);
+      this.start();
+      return;
+    }
+    if (this.activeRaga === newRaga) {
+      this.setTension(tension);
+      return;
+    }
+    this.isCrossfading = true;
+    this.fadeTargetRaga = newRaga;
+    this.fadeTargetTension = tension;
+    this.fadeDuration = Math.max(0.2, fadeDuration);
+    this.fadeTimer = this.fadeDuration;
+  }
+
   public start(): void {
     if (this.isRunning) return;
     this.isRunning = true;
@@ -85,6 +113,8 @@ export class RagaMusicGenerator {
   public stop(): void {
     if (!this.isRunning) return;
     this.isRunning = false;
+    this.isCrossfading = false;
+    this.fadeTargetRaga = null;
     this.stopTamburaDrone();
   }
 
@@ -92,8 +122,44 @@ export class RagaMusicGenerator {
     return this.isRunning;
   }
 
+  public isPlaying(): boolean {
+    return this.isRunning;
+  }
+
+  public getCurrentRaga(): RagaType {
+    return this.activeRaga;
+  }
+
   public update(dt: number): void {
     if (!this.isRunning || !this.ctx || !this.outputNode) return;
+
+    // Smooth Raga Crossfade Processing
+    if (this.isCrossfading) {
+      this.fadeTimer -= dt;
+      const halfFade = this.fadeDuration / 2;
+      if (this.fadeTimer > halfFade) {
+        // Fade out phase
+        const factor = (this.fadeTimer - halfFade) / halfFade;
+        if (this.droneGain && this.ctx) {
+          this.droneGain.gain.setValueAtTime(this.volume * 0.25 * factor, this.ctx.currentTime);
+        }
+      } else if (this.fadeTargetRaga) {
+        // Switch point
+        this.setRaga(this.fadeTargetRaga);
+        this.setTension(this.fadeTargetTension);
+        this.fadeTargetRaga = null;
+        this.startTamburaDrone();
+      } else {
+        // Fade in phase
+        const factor = 1.0 - (this.fadeTimer / halfFade);
+        if (this.droneGain && this.ctx) {
+          this.droneGain.gain.setValueAtTime(this.volume * 0.25 * Math.max(0, Math.min(1, factor)), this.ctx.currentTime);
+        }
+        if (this.fadeTimer <= 0) {
+          this.isCrossfading = false;
+        }
+      }
+    }
 
     // Melody pacing scales inversely with tension:
     // Tension 0.0 -> interval 2.5s; Tension 1.0 -> interval 0.35s

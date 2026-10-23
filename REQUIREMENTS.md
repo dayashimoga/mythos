@@ -174,3 +174,18 @@ At the twilight of the Dvapara Yuga, the cosmic anchor binding the realm of shad
 | **REQ-030** | Zero-Allocation Object Pool & Memory Profiler | Stage 8 | `src/core/ObjectPool.ts`, `MemoryProfiler.ts` | `tests/unit/PerformanceAndPlatform.test.ts` | **COMPLETE** |
 | **REQ-031** | Cross-Platform Bridge with Notches & Safe Areas | Stage 8 | `src/platform/PlatformBridge.ts` | `tests/unit/PerformanceAndPlatform.test.ts` | **COMPLETE** |
 | **REQ-032** | Genuine Multi-Platform Releases (6 Targets) & CI Audit | Stage 8 | `scripts/build-platforms.js`, `validate-artifacts.js` | `npm run validate:artifacts` | **COMPLETE** |
+
+---
+
+## 11. Stage 9 — Independent QA, Performance Certification & Release Verification Traceability Matrix
+
+| Req ID | Requirement Description | Stage | Source Implementation | Test Verification | Status |
+| :--- | :--- | :---: | :--- | :--- | :---: |
+| **REQ-033** | Requirements & Implementation Traceability Engine | Stage 9 | `src/scenes/StoryCampaignScene.ts`, `AssetManifest.ts` | `tests/unit/Stage9ProductionHardeningAndTraceability.test.ts` | **VERIFIED** |
+| **REQ-034** | Deep Graphics & Runtime Lifecycle Audit | Stage 9 | `src/scenes/BhumiTempleScene.ts`, `StoryCampaignScene.ts`, `BossEncounterScene.ts` | `tests/unit/Stage9ProductionHardeningAndTraceability.test.ts`, Playwright E2E | **VERIFIED** |
+| **REQ-035** | Real Performance Profiling & Hardware Budgets | Stage 9 | `src/core/MemoryProfiler.ts`, `tests/performance/PlatformBenchmark.test.ts` | `npm run test` (PlatformBenchmark) | **VERIFIED** |
+| **REQ-036** | Targeted Optimization & Zero Visual Degradation | Stage 9 | `src/render/RenderBatcher.ts`, `src/physics/SpatialHash.ts` | `tests/performance/PlatformBenchmark.test.ts` | **VERIFIED** |
+| **REQ-037** | Comprehensive Functional Certification & Code Coverage Gate | Stage 9 | Full `src/` codebase (55 test files, 478 unit tests) | `npm run test:coverage` (Stmt $\ge$ 90%, Branch $\ge$ 85%, Func $\ge$ 90%, Line $\ge$ 90%) | **VERIFIED** |
+| **REQ-038** | Genuine Platform Release Verification (6 Targets) | Stage 9 | `scripts/build-platforms.js`, `scripts/validate-artifacts.js` | `npm run validate:artifacts` (100% binary integrity) | **VERIFIED** |
+| **REQ-039** | Immutable Release Manifest, Governance & Final GO Decision | Stage 9 | `TODO.md`, `CHANGELOG.md`, `scripts/verify-append-only.js` | `npm run verify:append-only`, `stage_9_performance_and_release_certification_report.md` | **VERIFIED (GO)** |
+

@@ -17,6 +17,15 @@ export interface CinematicShot {
     startZoom: number;
     endZoom: number;
   };
+  screenShake?: {
+    intensity: number;
+    duration: number;
+  };
+  fade?: {
+    color: string;
+    startAlpha: number;
+    endAlpha: number;
+  };
   focusBlur?: number;
   titleCard?: {
     title: string;
@@ -39,6 +48,12 @@ export class CinematicDirector {
   private currentLetterbox = 0;
   private targetLetterbox = 0;
   private letterboxSpeed = 160; // px/sec
+
+  // Screen Fade Overlay
+  private fadeColor = '#000000';
+  private currentFadeAlpha = 0.0;
+  private targetFadeAlpha = 0.0;
+  private fadeSpeed = 2.0;
 
   // Camera tracking
   private camera?: Camera;
@@ -100,6 +115,21 @@ export class CinematicDirector {
       this.camera.setZoom(shot.cameraZoom);
     }
 
+    // Camera shake impulse
+    if (shot.screenShake && this.camera) {
+      this.camera.triggerShake(shot.screenShake.intensity, shot.screenShake.duration);
+    }
+
+    // Screen fade parameters
+    if (shot.fade) {
+      this.fadeColor = shot.fade.color;
+      this.currentFadeAlpha = shot.fade.startAlpha;
+      this.targetFadeAlpha = shot.fade.endAlpha;
+      this.fadeSpeed = Math.abs(shot.fade.endAlpha - shot.fade.startAlpha) / Math.max(0.1, shot.duration);
+    } else {
+      this.targetFadeAlpha = 0.0;
+    }
+
     if (shot.titleCard) {
       this.currentTitleCard = {
         title: shot.titleCard.title,
@@ -135,6 +165,16 @@ export class CinematicDirector {
         this.currentLetterbox = Math.min(this.targetLetterbox, this.currentLetterbox + step);
       } else {
         this.currentLetterbox = Math.max(this.targetLetterbox, this.currentLetterbox - step);
+      }
+    }
+
+    // Fade interpolation
+    if (this.currentFadeAlpha !== this.targetFadeAlpha) {
+      const step = this.fadeSpeed * dt;
+      if (this.currentFadeAlpha < this.targetFadeAlpha) {
+        this.currentFadeAlpha = Math.min(this.targetFadeAlpha, this.currentFadeAlpha + step);
+      } else {
+        this.currentFadeAlpha = Math.max(this.targetFadeAlpha, this.currentFadeAlpha - step);
       }
     }
 
@@ -193,17 +233,30 @@ export class CinematicDirector {
   }
 
   public finishSequence(): void {
+    if (this.dialogueTree) {
+      this.dialogueTree.onDialogueComplete = undefined;
+      if (this.dialogueTree.isActive()) {
+        this.dialogueTree.finish();
+      }
+    }
+
     this.state = 'FINISHED';
     this.targetLetterbox = 0;
+    this.currentFadeAlpha = 0.0;
+    this.targetFadeAlpha = 0.0;
     this.currentTitleCard = null;
-
-    if (this.dialogueTree && this.dialogueTree.isActive()) {
-      this.dialogueTree.finish();
-    }
 
     if (this.onSequenceComplete) {
       this.onSequenceComplete();
     }
+  }
+
+  public getFadeAlpha(): number {
+    return this.currentFadeAlpha;
+  }
+
+  public getTitleCard(): { title: string; subtitle?: string; alpha: number } | null {
+    return this.currentTitleCard;
   }
 
   public render(renderer: IRenderer): void {
@@ -249,7 +302,16 @@ export class CinematicDirector {
       drawKnot(vp.height - this.currentLetterbox);
     }
 
-    // 2. Title Card Overlay
+    // 2. Fullscreen Fade Overlay
+    if (this.currentFadeAlpha > 0.005) {
+      ctx.save();
+      ctx.globalAlpha = Math.min(1.0, this.currentFadeAlpha);
+      ctx.fillStyle = this.fadeColor;
+      ctx.fillRect(0, 0, vp.width, vp.height);
+      ctx.restore();
+    }
+
+    // 3. Title Card Overlay
     if (this.currentTitleCard && this.currentTitleCard.alpha > 0) {
       ctx.save();
       ctx.globalAlpha = this.currentTitleCard.alpha;
@@ -270,7 +332,7 @@ export class CinematicDirector {
       ctx.restore();
     }
 
-    // 3. Skip Prompt
+    // 4. Skip Prompt
     if (this.isPlaying()) {
       ctx.font = '10px Inter, sans-serif';
       ctx.fillStyle = 'rgba(148, 163, 184, 0.75)';
@@ -293,6 +355,7 @@ export class CinematicDirector {
         duration: 2.2,
         cameraTarget: playerPos,
         cameraZoom: 1.15,
+        fade: { color: '#000000', startAlpha: 1.0, endAlpha: 0.0 },
         titleCard: {
           title: 'SANCTUM OF ASTRA',
           subtitle: 'The Dawning Awakening of Surya-Kund',
@@ -316,6 +379,63 @@ export class CinematicDirector {
     ];
   }
 
+  public static createToranaUnsealingSequence(
+    toranaPos: Vector2D,
+    playerPos: Vector2D,
+    callbacks?: { onUnseal?: () => void; onComplete?: () => void }
+  ): CinematicShot[] {
+    return [
+      {
+        duration: 1.8,
+        cameraTarget: toranaPos,
+        cameraZoom: 1.1,
+        titleCard: {
+          title: 'TORANA OF DANDAKA',
+          subtitle: 'The Sacred Barrier Dissolves',
+        },
+        onShotStart: callbacks?.onUnseal,
+      },
+      {
+        duration: 2.0,
+        cameraTarget: toranaPos,
+        dollyZoom: { startZoom: 1.1, endZoom: 0.95 },
+        screenShake: { intensity: 4, duration: 0.6 },
+      },
+      {
+        duration: 1.2,
+        cameraTarget: playerPos,
+        cameraZoom: 1.0,
+        onShotEnd: callbacks?.onComplete,
+      },
+    ];
+  }
+
+  public static createSthulaStandoffSequence(
+    sthulaPos: Vector2D,
+    playerPos: Vector2D,
+    callbacks?: { onRoar?: () => void; onComplete?: () => void }
+  ): CinematicShot[] {
+    return [
+      {
+        duration: 2.0,
+        cameraTarget: sthulaPos,
+        cameraZoom: 1.2,
+        screenShake: { intensity: 8, duration: 0.8 },
+        titleCard: {
+          title: 'STHULA — STONE GUARDIAN',
+          subtitle: 'Corrupted Sentinel of Dandaka',
+        },
+        onShotStart: callbacks?.onRoar,
+      },
+      {
+        duration: 1.4,
+        cameraTarget: playerPos,
+        cameraZoom: 1.0,
+        onShotEnd: callbacks?.onComplete,
+      },
+    ];
+  }
+
   public static createMahishasuraAwakeningSequence(
     bossPos: Vector2D,
     playerPos: Vector2D,
@@ -326,8 +446,9 @@ export class CinematicDirector {
         duration: 2.0,
         cameraTarget: bossPos,
         cameraZoom: 1.25,
+        screenShake: { intensity: 14, duration: 1.5 },
         titleCard: {
-          title: 'TITAN OF ECLIPSE',
+          title: 'LORD OF THE OBSIDIAN THRONE',
           subtitle: 'Mahishasura Primordial Awakening',
         },
         onShotStart: callbacks?.onRoar,
@@ -339,6 +460,35 @@ export class CinematicDirector {
           startZoom: 1.25,
           endZoom: 0.9,
         },
+      },
+      {
+        duration: 1.5,
+        cameraTarget: playerPos,
+        cameraZoom: 1.0,
+        onShotEnd: callbacks?.onComplete,
+      },
+    ];
+  }
+
+  public static createDawnRestorationSequence(
+    playerPos: Vector2D,
+    callbacks?: { onSunrise?: () => void; onComplete?: () => void }
+  ): CinematicShot[] {
+    return [
+      {
+        duration: 2.5,
+        cameraTarget: playerPos,
+        cameraZoom: 1.2,
+        titleCard: {
+          title: 'THE DAWN RESTORED',
+          subtitle: 'Tamas Banished — The Seven Realms Awaken',
+        },
+        onShotStart: callbacks?.onSunrise,
+      },
+      {
+        duration: 2.5,
+        cameraTarget: new Vector2D(playerPos.x, playerPos.y - 120),
+        dollyZoom: { startZoom: 1.2, endZoom: 0.85 },
       },
       {
         duration: 1.5,

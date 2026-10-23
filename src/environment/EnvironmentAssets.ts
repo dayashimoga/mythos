@@ -1,6 +1,8 @@
 import { Camera } from '../render/Camera';
 import { LODLevel, TimeOfDayPreset } from './EnvironmentTypes';
 import { TIME_PRESETS } from './LightingEngine';
+import { AssetManager } from '../assets/AssetManager';
+import { ASSET_IDS } from '../assets/AssetManifest';
 
 export class EnvironmentAssets {
   /**
@@ -19,6 +21,13 @@ export class EnvironmentAssets {
 
     const halfW = width / 2;
     const colWidth = 24;
+
+    const texTorana = AssetManager.getInstance().getTexture(ASSET_IDS.SANCTUM_TORANA);
+    if (texTorana && typeof ctx.drawImage === 'function') {
+      ctx.drawImage(texTorana, -halfW - 10, 0, width + 20, height);
+      ctx.restore();
+      return;
+    }
 
     // 1. Dual Columns / Pillars
     ctx.fillStyle = '#8D99AE';
@@ -238,6 +247,13 @@ export class EnvironmentAssets {
 
     const halfW = width / 2;
 
+    const texShrine = AssetManager.getInstance().getTexture(ASSET_IDS.BHUMI_SHRINE);
+    if (texShrine && typeof ctx.drawImage === 'function') {
+      ctx.drawImage(texShrine, -halfW - 20, -_height, width + 40, _height + 40);
+      ctx.restore();
+      return;
+    }
+
     // 1. Plinth / Platform (Jagati)
     ctx.fillStyle = '#374151';
     ctx.fillRect(-halfW - 20, 0, width + 40, 30);
@@ -314,6 +330,13 @@ export class EnvironmentAssets {
     ctx.translate(x, y);
 
     const radius = 10;
+
+    const texPillar = AssetManager.getInstance().getTexture(ASSET_IDS.SANCTUM_PILLAR);
+    if (texPillar && typeof ctx.drawImage === 'function') {
+      ctx.drawImage(texPillar, -radius * 2, -height, radius * 4, height);
+      ctx.restore();
+      return;
+    }
 
     // Base pedestal
     ctx.fillStyle = '#4B5563';
@@ -431,6 +454,13 @@ export class EnvironmentAssets {
     const halfW = width / 2;
     const halfH = height / 2;
 
+    const texBridge = AssetManager.getInstance().getTexture(ASSET_IDS.BHUMI_BRIDGE);
+    if (texBridge && typeof ctx.drawImage === 'function') {
+      ctx.drawImage(texBridge, -halfW, -halfH, width, height);
+      ctx.restore();
+      return;
+    }
+
     // 1. Suspension Hemp Ropes
     ctx.strokeStyle = '#92400E';
     ctx.lineWidth = 4;
@@ -484,6 +514,16 @@ export class EnvironmentAssets {
 
     const halfW = width / 2;
     const halfH = height / 2;
+
+    const texLava = AssetManager.getInstance().getTexture(ASSET_IDS.BHUMI_LAVA);
+    if (texLava && typeof ctx.drawImage === 'function') {
+      ctx.drawImage(texLava, -halfW, -halfH, width, height);
+      ctx.strokeStyle = '#FB8500';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(-halfW, -halfH, width, height);
+      ctx.restore();
+      return;
+    }
 
     // 1. Bottomless dark abyss background
     ctx.fillStyle = '#0F0B15';
@@ -579,6 +619,17 @@ export class EnvironmentAssets {
     const vp = camera.getVisibleBounds();
 
     ctx.save();
+
+    const texBackdrop = AssetManager.getInstance().getTexture(ASSET_IDS.SANCTUM_SKY) ||
+                        AssetManager.getInstance().getTexture(ASSET_IDS.BHUMI_BACKDROP);
+    if (texBackdrop && typeof ctx.drawImage === 'function') {
+      const p0 = 0.04;
+      const bgX = vp.x - camera.position.x * p0 - 200;
+      const bgY = vp.y - camera.position.y * p0 - 100;
+      ctx.globalAlpha = 0.65;
+      ctx.drawImage(texBackdrop, bgX, bgY, vp.width + 400, vp.height + 200);
+      ctx.globalAlpha = 1.0;
+    }
 
     // 1. Celestial Sun or Moon
     const sunScreenX = vp.x + vp.width * 0.7 - camera.position.x * 0.02;

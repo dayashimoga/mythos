@@ -32,7 +32,58 @@ export class Camera {
   constructor(viewportWidth = 1280, viewportHeight = 720) {
     this.viewportWidth = viewportWidth;
     this.viewportHeight = viewportHeight;
-    this.position = new Vector2D(viewportWidth / 2, viewportHeight / 2);
+    this.position = new Vector2D(0, 0);
+  }
+
+  public reset(x = 0, y = 0, zoom = 1.0): void {
+    this.position.set(x, y);
+    this.target = null;
+    this.zoom = zoom;
+    this.shakeIntensity = 0;
+    this.shakeDuration = 0;
+    this.shakeTimer = 0;
+    this.shakeOffset.set(0, 0);
+  }
+
+  public setViewport(width: number, height: number): void {
+    this.viewportWidth = width;
+    this.viewportHeight = height;
+  }
+
+  public fitToBounds(
+    boundsOrMinX: { x: number; y: number; width: number; height: number } | number,
+    minY?: number,
+    maxX?: number,
+    maxY?: number,
+    padding = 40
+  ): void {
+    let bounds: { x: number; y: number; width: number; height: number };
+    let pad = padding;
+    if (typeof boundsOrMinX === 'object') {
+      bounds = boundsOrMinX;
+      pad = typeof minY === 'number' ? minY : 40;
+    } else {
+      const minX = boundsOrMinX;
+      const y1 = minY ?? 0;
+      const x2 = maxX ?? minX;
+      const y2 = maxY ?? y1;
+      bounds = {
+        x: Math.min(minX, x2),
+        y: Math.min(y1, y2),
+        width: Math.abs(x2 - minX),
+        height: Math.abs(y2 - y1),
+      };
+    }
+
+    const targetCenterX = bounds.x + bounds.width / 2;
+    const targetCenterY = bounds.y + bounds.height / 2;
+    this.position.set(targetCenterX, targetCenterY);
+
+    const availableW = Math.max(100, this.viewportWidth - pad * 2);
+    const availableH = Math.max(100, this.viewportHeight - pad * 2);
+    const zoomX = availableW / Math.max(1, bounds.width);
+    const zoomY = availableH / Math.max(1, bounds.height);
+    this.zoom = Math.min(zoomX, zoomY, 2.0);
   }
 
   public setTarget(target: Vector2D | null): void {
@@ -62,6 +113,10 @@ export class Camera {
     this.shakeIntensity = Math.max(this.shakeIntensity, intensity);
     this.shakeDuration = durationSeconds;
     this.shakeTimer = durationSeconds;
+  }
+
+  public shake(intensity: number, durationSeconds: number): void {
+    this.triggerShake(intensity, durationSeconds);
   }
 
   public update(dt: number): void {

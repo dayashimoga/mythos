@@ -12,12 +12,15 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "lint": "tsc --noEmit",
+    "test:e2e": "playwright test",
     "verify:append-only": "node scripts/verify-append-only.js",
     "build:platforms": "node scripts/build-platforms.js",
     "validate:artifacts": "node scripts/validate-artifacts.js",
     "generate:sbom": "node scripts/generate-sbom.js"
   },
   "devDependencies": {
+    "@playwright/test": "^1.64.1",
+    "@tauri-apps/cli": "^2.1.0",
     "@types/node": "^20.17.0",
     "@vitest/coverage-v8": "^2.1.3",
     "jsdom": "^25.0.1",

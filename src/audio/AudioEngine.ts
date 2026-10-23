@@ -4,6 +4,7 @@ import { RagaMusicGenerator, RagaType } from './RagaMusicGenerator';
 import { MantraSynthesizer, MantraType } from './MantraSynthesizer';
 import { FoleySynthesizer, MaterialType, ActionType, SurfaceType } from './FoleySynthesizer';
 import { AmbientSoundscape, EnvironmentPreset } from './AmbientSoundscape';
+import { Vector2D } from '../physics/Vector2D';
 
 export { SoundPriority };
 
@@ -92,6 +93,62 @@ export class AudioEngine {
     return this.isMutedState;
   }
 
+  public toggleMute(): boolean {
+    const next = !this.isMuted();
+    this.setMuted(next);
+    return next;
+  }
+
+  public playConsecration(): void {
+    this.playAltarResonate();
+    this.playVictoryFanfare();
+  }
+
+  public playSfx(type: string): void {
+    switch (type.toUpperCase()) {
+      case 'DASH':
+        this.playDash();
+        break;
+      case 'SHOOT':
+        this.playShoot();
+        break;
+      case 'SLASH':
+        this.playMeleeSlash();
+        break;
+      case 'HIT':
+      case 'ENEMY_HIT':
+        this.playEnemyHit();
+        break;
+      case 'PARRY':
+        this.playParryFoley();
+        break;
+      case 'SHOCKWAVE':
+        this.playShockwave();
+        break;
+      case 'HEAL':
+        this.playHeal();
+        break;
+      case 'DEFEAT':
+        this.playDefeat();
+        break;
+      case 'SHARD_COLLECT':
+      case 'SHARD':
+        this.playShardPickup();
+        break;
+      case 'ALTAR_CONSECRATE':
+      case 'CONSECRATE':
+      case 'RESONATE':
+        this.playAltarResonate();
+        break;
+      case 'VICTORY':
+        this.playVictoryFanfare();
+        break;
+      default:
+        this.playFoleyImpact('GRANITE');
+        break;
+    }
+  }
+
   public getActiveVoices(): number {
     return this.activeVoices + this.buses.getActiveVoiceCount();
   }
@@ -163,6 +220,11 @@ export class AudioEngine {
     this.raga.start();
   }
 
+  public fadeToRaga(raga: RagaType, tension = 0.2, fadeDuration = 1.5): void {
+    if (!this.ensureRunning()) return;
+    this.raga.fadeToRaga(raga, tension, fadeDuration);
+  }
+
   public stopMusic(): void {
     this.raga.stop();
   }
@@ -177,8 +239,148 @@ export class AudioEngine {
     this.ambience.start();
   }
 
+  public crossfadeAmbience(env: EnvironmentPreset, fadeDuration = 1.5): void {
+    if (!this.ensureRunning()) return;
+    this.ambience.crossfadeEnvironment(env, fadeDuration);
+  }
+
   public stopAmbience(): void {
     this.ambience.stop();
+  }
+
+  // --- Spatial 3D Audio Emitter Helpers ---
+
+  /**
+   * Plays a spatialized sound effect located at world coordinates with distance attenuation and stereo panning.
+   */
+  public playSpatialSfx(type: string, position: Vector2D, velocity?: Vector2D): void {
+    if (!this.ensureRunning() || !this.ctx) return;
+    const sfxGain = this.buses.getBusGain('sfx') ?? this.ctx.destination;
+
+    const pipeline = this.spatial.createSpatialPipeline(this.ctx, sfxGain, position, velocity);
+    const now = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+
+    let duration = 0.25;
+    if (type === 'SHOCKWAVE' || type === 'EXPLOSION') {
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(140, now);
+      osc.frequency.exponentialRampToValueAtTime(35, now + 0.35);
+      gain.gain.setValueAtTime(0.35, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.38);
+      duration = 0.4;
+    } else if (type === 'ALTAR_HUM' || type === 'RESONATE') {
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(216, now);
+      osc.frequency.exponentialRampToValueAtTime(432, now + 0.6);
+      gain.gain.setValueAtTime(0.2, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.65);
+      duration = 0.7;
+    } else if (type === 'BRAZIER') {
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(80, now);
+      osc.frequency.linearRampToValueAtTime(110, now + 0.15);
+      gain.gain.setValueAtTime(0.08, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+      duration = 0.2;
+    } else {
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(280, now);
+      osc.frequency.exponentialRampToValueAtTime(90, now + 0.18);
+      gain.gain.setValueAtTime(0.18, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+      duration = 0.22;
+    }
+
+    osc.connect(gain);
+    gain.connect(pipeline.inputNode);
+    osc.start(now);
+    osc.stop(now + duration);
+
+    osc.onended = () => {
+      pipeline.disconnect();
+    };
+  }
+
+  /**
+   * Plays a spatialized material-foley impact located at world coordinates.
+   */
+  public playSpatialFoley(
+    material: MaterialType,
+    action: ActionType,
+    position: Vector2D,
+    velocity?: Vector2D
+  ): void {
+    if (!this.ensureRunning() || !this.ctx) return;
+    const sfxGain = this.buses.getBusGain('sfx') ?? this.ctx.destination;
+
+    const pipeline = this.spatial.createSpatialPipeline(this.ctx, sfxGain, position, velocity);
+    const now = this.ctx.currentTime;
+
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+
+    const actionMult = action === 'PARRY' ? 1.35 : action === 'SLASH' ? 1.15 : 0.9;
+    const baseFreq = (material === 'CELESTIAL_GOLD' ? 1450 : material === 'BRONZE' ? 580 : 120) * actionMult;
+    osc.type = material === 'BRONZE' ? 'triangle' : 'sine';
+    osc.frequency.setValueAtTime(baseFreq, now);
+    osc.frequency.exponentialRampToValueAtTime(baseFreq * 0.4, now + 0.25);
+
+    gain.gain.setValueAtTime(0.22, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
+
+    osc.connect(gain);
+    gain.connect(pipeline.inputNode);
+    osc.start(now);
+    osc.stop(now + 0.3);
+
+    osc.onended = () => {
+      pipeline.disconnect();
+    };
+  }
+
+  /**
+   * Plays the sacred Shankha divine war conch fanfare for epic boss intros and realm gateways.
+   */
+  public playShankhaFanfare(): void {
+    if (!this.ensureRunning() || !this.ctx) return;
+    this.buses.duckBuses(['music', 'ambience'], 0.2, 2.8);
+
+    const sfxGain = this.buses.getBusGain('sfx') ?? this.ctx.destination;
+    const now = this.ctx.currentTime;
+
+    // Dual horn harmonics (fundamental 110Hz sliding to 196Hz + octave 220Hz)
+    [110, 220].forEach((freq, idx) => {
+      if (!this.ctx) return;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+
+      osc.type = idx === 0 ? 'sawtooth' : 'triangle';
+      osc.frequency.setValueAtTime(freq * 0.9, now);
+      osc.frequency.exponentialRampToValueAtTime(freq * 1.5, now + 0.8);
+      osc.frequency.setValueAtTime(freq * 1.5, now + 1.8);
+      osc.frequency.exponentialRampToValueAtTime(freq * 0.95, now + 2.5);
+
+      const peakGain = (idx === 0 ? 0.32 : 0.18);
+      gain.gain.setValueAtTime(0, now);
+      gain.gain.linearRampToValueAtTime(peakGain, now + 0.3);
+      gain.gain.setValueAtTime(peakGain, now + 1.8);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 2.6);
+
+      osc.connect(gain);
+      gain.connect(sfxGain);
+
+      osc.start(now);
+      osc.stop(now + 2.7);
+    });
+  }
+
+  /**
+   * Periodic spatial flame crackle at brazier coordinates.
+   */
+  public playBrazierSpatialCrackle(position: Vector2D): void {
+    this.playSpatialSfx('BRAZIER', position);
   }
 
   // --- Legacy and Action Sound Effects (routed through SFX / Voice buses) ---
@@ -494,5 +696,76 @@ export class AudioEngine {
     osc.onended = () => {
       this.activeVoices = Math.max(0, this.activeVoices - 1);
     };
+  }
+
+  public playDialogueVoiceCue(cue?: string): void {
+    if (!this.ensureRunning() || !this.ctx) return;
+    const sfxGain = this.buses.getBusGain('sfx') ?? this.ctx.destination;
+    const now = this.ctx.currentTime;
+
+    if (cue === 'oracle_gentle') {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(880, now);
+      osc.frequency.exponentialRampToValueAtTime(1320, now + 0.18);
+      gain.gain.setValueAtTime(0.12, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+      osc.connect(gain);
+      gain.connect(sfxGain);
+      osc.start(now);
+      osc.stop(now + 0.24);
+    } else if (cue === 'guardian_firm') {
+      [220, 330].forEach((freq) => {
+        if (!this.ctx) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(freq, now);
+        gain.gain.setValueAtTime(0.15, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.16);
+        osc.connect(gain);
+        gain.connect(sfxGain);
+        osc.start(now);
+        osc.stop(now + 0.18);
+      });
+    } else if (cue === 'scout_chatter') {
+      [660, 880].forEach((freq, idx) => {
+        if (!this.ctx) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, now + idx * 0.04);
+        gain.gain.setValueAtTime(0.14, now + idx * 0.04);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.04 + 0.12);
+        osc.connect(gain);
+        gain.connect(sfxGain);
+        osc.start(now + idx * 0.04);
+        osc.stop(now + idx * 0.04 + 0.14);
+      });
+    } else if (cue === 'titan_rumble') {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(65, now);
+      osc.frequency.exponentialRampToValueAtTime(38, now + 0.35);
+      gain.gain.setValueAtTime(0.25, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.38);
+      osc.connect(gain);
+      gain.connect(sfxGain);
+      osc.start(now);
+      osc.stop(now + 0.4);
+    } else {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(440, now);
+      gain.gain.setValueAtTime(0.08, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
+      osc.connect(gain);
+      gain.connect(sfxGain);
+      osc.start(now);
+      osc.stop(now + 0.07);
+    }
   }
 }

@@ -183,6 +183,22 @@ export class AsuraEliteVanguard extends Entity {
 
   public render(renderer: IRenderer): void {
     const ctx = renderer.getContext();
+
+    // Leap Landing Target Indicator (World-space)
+    if (this.isLeaping) {
+      ctx.save();
+      ctx.translate(this.leapTarget.x, this.leapTarget.y);
+      ctx.strokeStyle = '#D97706';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      ctx.arc(0, 0, 44, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.fillStyle = 'rgba(217, 119, 6, 0.2)';
+      ctx.fill();
+      ctx.restore();
+    }
+
     ctx.save();
     ctx.translate(this.position.x, this.position.y);
 
@@ -194,6 +210,15 @@ export class AsuraEliteVanguard extends Entity {
     ctx.beginPath();
     ctx.ellipse(0, 20, 22, 9, 0, 0, Math.PI * 2);
     ctx.fill();
+
+    // Cleave Attack Telegraph Arc
+    if (this.isAttacking && this.attackWindupTimer > 0) {
+      ctx.strokeStyle = '#DC2626';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(0, 0, 65, -Math.PI * 0.35, Math.PI * 0.35);
+      ctx.stroke();
+    }
 
     // Staggered aura
     if (this.poise.isStaggered) {

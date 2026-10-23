@@ -93,6 +93,19 @@ export class ParticleSystem {
     }
   }
 
+  public burst(
+    x: number,
+    y: number,
+    count = 8,
+    color = '#FFB703',
+    speedMin = 40,
+    speedMax = 160,
+    size = 3,
+    life = 0.6
+  ): void {
+    this.emitBurst(x, y, count, color, speedMin, speedMax, size, life);
+  }
+
   public update(dt: number): void {
     this.activeCount = 0;
     for (let i = 0; i < this.maxParticles; i++) {

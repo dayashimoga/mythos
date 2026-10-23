@@ -17,6 +17,7 @@ export interface ActiveVoice {
 export class AudioBuses {
   private ctx: AudioContext | null = null;
   private masterGain: GainNode | null = null;
+  private masterLimiter: DynamicsCompressorNode | null = null;
   private busGains: Map<BusType, GainNode> = new Map();
 
   private volumes: Map<BusType, number> = new Map([
@@ -55,7 +56,20 @@ export class AudioBuses {
     try {
       this.masterGain = this.ctx.createGain();
       this.masterGain.gain.setValueAtTime(this.isMuted ? 0 : (this.volumes.get('master') ?? 1.0), this.ctx.currentTime);
-      this.masterGain.connect(this.ctx.destination);
+
+      // Master Anti-Clipping Dynamics Compressor (Limiter)
+      if (typeof this.ctx.createDynamicsCompressor === 'function') {
+        this.masterLimiter = this.ctx.createDynamicsCompressor();
+        this.masterLimiter.threshold.setValueAtTime(-3, this.ctx.currentTime);
+        this.masterLimiter.knee.setValueAtTime(6, this.ctx.currentTime);
+        this.masterLimiter.ratio.setValueAtTime(16, this.ctx.currentTime);
+        this.masterLimiter.attack.setValueAtTime(0.003, this.ctx.currentTime);
+        this.masterLimiter.release.setValueAtTime(0.12, this.ctx.currentTime);
+        this.masterGain.connect(this.masterLimiter);
+        this.masterLimiter.connect(this.ctx.destination);
+      } else {
+        this.masterGain.connect(this.ctx.destination);
+      }
 
       const busTypes: BusType[] = ['music', 'sfx', 'voice', 'ambience', 'ui'];
       for (const bus of busTypes) {
@@ -96,6 +110,26 @@ export class AudioBuses {
 
   public getVolume(bus: BusType): number {
     return this.volumes.get(bus) ?? 1.0;
+  }
+
+  public setBusVolume(bus: BusType, volume: number): void {
+    this.setVolume(bus, volume);
+  }
+
+  public getBusVolume(bus: BusType): number {
+    return this.getVolume(bus);
+  }
+
+  public duckBus(bus: BusType, multiplier = 0.35, duration = 1.5): void {
+    this.duckBuses([bus], multiplier, duration);
+  }
+
+  public restoreBus(bus: BusType, duration = 0.5): void {
+    const node = this.busGains.get(bus);
+    if (node && this.ctx) {
+      const target = this.volumes.get(bus) ?? 1.0;
+      node.gain.linearRampToValueAtTime(target, this.ctx.currentTime + duration);
+    }
   }
 
   public setMuted(muted: boolean): void {

@@ -53,6 +53,8 @@ export class WorldExplorationScene implements IScene {
 
   public onExit(): void {
     this.collisionSystem.clear();
+    const camera = this.engine.getRenderer().getCamera();
+    camera.reset(0, 0, 1.0);
   }
 
   public handleInput(input: InputManager): void {

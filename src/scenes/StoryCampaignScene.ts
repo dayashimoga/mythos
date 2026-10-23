@@ -9,6 +9,7 @@ import { EnemySentinel } from '../entities/EnemySentinel';
 import { VanaraScout } from '../entities/VanaraScout';
 import { ResonancePillar } from '../entities/ResonancePillar';
 import { MahishasuraBoss } from '../entities/MahishasuraBoss';
+import { StoneRakshasa } from '../entities/StoneRakshasa';
 import { Projectile } from '../entities/Projectile';
 import { Shockwave } from '../entities/Shockwave';
 import { ParticleSystem } from '../render/ParticleSystem';
@@ -27,6 +28,9 @@ import { SettingsModal } from '../ui/modals/SettingsModal';
 import { ProductionHUD } from '../ui/ProductionHUD';
 import { ToastManager } from '../ui/components/ToastManager';
 import { CelestialVFX } from '../render/CelestialVFX';
+import { AssetManager } from '../assets/AssetManager';
+import { ASSET_IDS } from '../assets/AssetManifest';
+import { SacredGeometry } from '../render/SacredGeometry';
 
 export class StoryCampaignScene implements IScene {
   public readonly id = 'StoryCampaignScene';
@@ -37,6 +41,7 @@ export class StoryCampaignScene implements IScene {
   public shards: AstraShard[] = [];
   public sentinels: EnemySentinel[] = [];
   public vanaraScout!: VanaraScout;
+  public stoneRakshasa?: StoneRakshasa;
   public pillarOm!: ResonancePillar;
   public pillarKrim!: ResonancePillar;
   public boss?: MahishasuraBoss;
@@ -65,6 +70,7 @@ export class StoryCampaignScene implements IScene {
   public productionHUD!: ProductionHUD;
 
   private currentAct = 1;
+  private scintillationTimer = 0;
 
   public onEnter(engine: IGameEngine): void {
     this.engine = engine;
@@ -92,6 +98,11 @@ export class StoryCampaignScene implements IScene {
         );
       }
       this.questManager.triggerObjectiveEvent('CHOOSE_DIALOGUE', choice.id);
+    };
+
+    // Hook dialogue voice cues to audio engine synthesizer
+    this.dialogueTree.onPlayVoiceCue = (cue) => {
+      this.engine.getAudio().playDialogueVoiceCue(cue);
     };
 
     // Register primary checkpoint
@@ -191,6 +202,10 @@ export class StoryCampaignScene implements IScene {
     ];
 
     this.vanaraScout = new VanaraScout('scout_kapi', 0, -550);
+    this.stoneRakshasa = new StoneRakshasa('sthula_rakshasa', 0, -680);
+    this.stoneRakshasa.health = 220;
+    this.stoneRakshasa.maxHealth = 220;
+
     this.pillarOm = new ResonancePillar('pillar_om', -280, -750, 'om');
     this.pillarKrim = new ResonancePillar('pillar_krim', 280, -750, 'krim');
 
@@ -215,6 +230,8 @@ export class StoryCampaignScene implements IScene {
     this.engine.getAudio().stopMusic();
     this.engine.getAudio().stopAmbience();
     this.cinematicDirector.finishSequence();
+    const camera = this.engine.getRenderer().getCamera();
+    camera.reset(0, 0, 1.0);
   }
 
   public handleInput(input: InputManager): void {
@@ -317,8 +334,14 @@ export class StoryCampaignScene implements IScene {
       return;
     }
 
-    // 3. Branching Dialogue Choice Keys (1, 2, 3)
+    // 3. Branching Dialogue Choice Keys (1, 2, 3) or Mouse Click
     if (this.dialogueTree.isWaitingForChoice()) {
+      if (input.isMouseButtonJustPressed(0)) {
+        const vp = this.engine.getRenderer().getViewport();
+        if (this.dialogueTree.handlePointerDown(mousePos.x, mousePos.y, vp.width, vp.height, (this.questManager as any).storyFlags)) {
+          return;
+        }
+      }
       if (input.isKeyJustPressed('Digit1') || input.isKeyJustPressed('Numpad1')) {
         this.dialogueTree.selectChoice(0);
         return;
@@ -335,6 +358,12 @@ export class StoryCampaignScene implements IScene {
 
     // 4. Advance Dialogue with Space or Click
     if (this.dialogueTree.isActive()) {
+      if (input.isMouseButtonJustPressed(0)) {
+        const vp = this.engine.getRenderer().getViewport();
+        if (this.dialogueTree.handlePointerDown(mousePos.x, mousePos.y, vp.width, vp.height, (this.questManager as any).storyFlags)) {
+          return;
+        }
+      }
       if (input.isKeyJustPressed('Space') || input.isActionJustPressed('ATTACK')) {
         this.dialogueTree.advance();
         return;
@@ -346,20 +375,20 @@ export class StoryCampaignScene implements IScene {
     const moveDir = input.getMovementVector();
     this.player.move(moveDir, 1 / 60);
 
-    // Dash
+    // Dash (supports recovery dodge-cancelling)
     if (input.isActionJustPressed('DASH')) {
       if (this.player.triggerDash()) {
         this.particles.emitBurst(this.player.position.x, this.player.position.y, 14, '#FB8500', 160);
       }
     }
 
-    // Weapon Swap (Q)
-    if (input.isKeyJustPressed('KeyQ')) {
+    // Weapon Swap (Q / Tab / SWAP_WEAPON)
+    if (input.isActionJustPressed('SWAP_WEAPON') || input.isKeyJustPressed('KeyQ')) {
       this.player.swapWeapon();
     }
 
-    // Defensive Guard / Parry (C or X)
-    const isGuardingKey = input.isKeyHeld('KeyC') || input.isKeyHeld('KeyX');
+    // Defensive Guard / Parry (G / C / Z / GUARD)
+    const isGuardingKey = input.isActionHeld('GUARD') || input.isKeyHeld('KeyG') || input.isKeyHeld('KeyC') || input.isKeyHeld('KeyZ') || input.isKeyHeld('KeyX');
     if (isGuardingKey) {
       this.player.startGuard();
     } else {
@@ -374,6 +403,15 @@ export class StoryCampaignScene implements IScene {
       }
     }
 
+    // Special Attack (Digit1 / SPECIAL_ATTACK)
+    if (input.isActionJustPressed('SPECIAL_ATTACK') || input.isKeyJustPressed('Digit1')) {
+      const spec = this.player.executeSpecialAttack();
+      if (spec) {
+        this.handlePlayerMelee(spec);
+        this.engine.getAudio().playMantra('OM');
+      }
+    }
+
     // Ranged Attack (K or Right Click)
     if (input.isActionJustPressed('MELEE_ATTACK')) {
       const projs = this.player.shootBurst();
@@ -382,10 +420,32 @@ export class StoryCampaignScene implements IScene {
       }
     }
 
-    // Interact (E)
-    if (input.isKeyJustPressed('KeyE')) {
-      this.handleInteract();
+    // Interact / Action (E / F / INTERACT)
+    if (input.isKeyJustPressed('KeyE') || input.isKeyJustPressed('KeyF') || input.isActionJustPressed('INTERACT')) {
+      const canInteract = this.checkCanInteract();
+      if (canInteract) {
+        this.handleInteract();
+      } else {
+        const spec = this.player.executeSpecialAttack();
+        if (spec) {
+          this.handlePlayerMelee(spec);
+          this.engine.getAudio().playMantra('OM');
+        }
+      }
     }
+  }
+
+  private checkCanInteract(): boolean {
+    if (Vector2D.distance(this.player.position, this.altar.position) <= 120 && this.player.shardsCollected >= 3 && this.altar.state !== 'consecrated') {
+      return true;
+    }
+    if (Vector2D.distance(this.player.position, this.vanaraScout.position) <= 130) {
+      return true;
+    }
+    if (this.stoneRakshasa && Vector2D.distance(this.player.position, this.stoneRakshasa.position) <= 150 && !this.questManager.getFlag('sthula_resolved', false)) {
+      return true;
+    }
+    return false;
   }
 
   private handlePlayerMelee(arc: any): void {
@@ -393,12 +453,18 @@ export class StoryCampaignScene implements IScene {
 
     // Audio & VFX Slash Trail
     const activeWeapon = this.player.equipmentManager.getActiveWeapon();
-    const trailColor = activeWeapon === 'AGNI_CHAKRAM' ? '#FFB703' : '#00E5FF';
     const facingAngle = this.player.velocity.length() > 0.1
       ? Math.atan2(this.player.velocity.y, this.player.velocity.x)
       : 0;
-    CelestialVFX.getInstance().emitSlashTrail(this.player.position, facingAngle, trailColor);
-    this.engine.getAudio().playFoleyImpact('CELESTIAL_GOLD', 'SLASH');
+
+    if (activeWeapon === 'AGNI_CHAKRAM') {
+      CelestialVFX.getInstance().emitFlamingChakramTrail(this.player.position, facingAngle);
+      this.engine.getAudio().playSpatialFoley('CELESTIAL_GOLD', 'SLASH', this.player.position);
+    } else {
+      CelestialVFX.getInstance().emitSlashTrail(this.player.position, facingAngle, '#00E5FF', '#38BDF8');
+      CelestialVFX.getInstance().emitPranaWindVortex(this.player.position, 45);
+      this.engine.getAudio().playSpatialFoley('BRONZE', 'SLASH', this.player.position);
+    }
 
     // Check hit against Sentinels
     for (let i = this.sentinels.length - 1; i >= 0; i--) {
@@ -410,12 +476,35 @@ export class StoryCampaignScene implements IScene {
         s.takeDamage(arc.damage);
         this.damageNumbers.spawn(s.position.x, s.position.y - 20, arc.damage.toString(), '#FFD166');
         this.particles.emitBurst(s.position.x, s.position.y, 12, '#EF4444', 120);
-        this.engine.getAudio().playFoleyImpact('BRONZE', 'IMPACT');
+        this.engine.getAudio().playSpatialFoley('BRONZE', 'IMPACT', s.position);
         CelestialVFX.getInstance().emitMaterialDebris(s.position, s.position.subtract(this.player.position));
+        CelestialVFX.getInstance().emitTamasTendrils(s.position, 4);
 
         if (!s.isActive) {
           this.questManager.triggerObjectiveEvent('DEFEAT_TARGET', 'corrupted_sentinel', 1);
           this.player.score += 200;
+        }
+      }
+    }
+
+    // Check hit against Stone Rakshasa Sthula
+    if (this.stoneRakshasa && this.stoneRakshasa.isActive) {
+      const dist = Vector2D.distance(this.player.position, this.stoneRakshasa.position);
+      if (dist <= arc.radius + 40) {
+        this.stoneRakshasa.takeDamage(arc.damage, arc.poiseDamage || 25);
+        this.damageNumbers.spawn(this.stoneRakshasa.position.x, this.stoneRakshasa.position.y - 20, arc.damage.toString(), '#FFB703');
+        this.particles.emitBurst(this.stoneRakshasa.position.x, this.stoneRakshasa.position.y, 16, '#94A3B8', 140);
+        this.engine.getAudio().playFoleyImpact('GRANITE', 'IMPACT');
+
+        if (this.stoneRakshasa.poise.isStaggered && !this.questManager.getFlag('sthula_encountered', false)) {
+          this.questManager.setFlag('sthula_encountered', true);
+          this.handleInteract();
+        }
+
+        if (this.stoneRakshasa.health <= 0) {
+          this.stoneRakshasa.destroy();
+          this.questManager.triggerObjectiveEvent('DEFEAT_TARGET', 'stone_rakshasa', 1);
+          this.questManager.setFlag('sthula_resolved', true);
         }
       }
     }
@@ -465,7 +554,7 @@ export class StoryCampaignScene implements IScene {
 
   private handleInteract(): void {
     // Altar consecration
-    if (Vector2D.distance(this.player.position, this.altar.position) <= 100) {
+    if (Vector2D.distance(this.player.position, this.altar.position) <= 120) {
       if (this.player.shardsCollected >= 3 && this.altar.state !== 'consecrated') {
         this.altar.depositShard();
         this.altar.depositShard();
@@ -473,18 +562,23 @@ export class StoryCampaignScene implements IScene {
         this.questManager.triggerObjectiveEvent('CONSECRATE_ALTAR', 'sun_altar', 1);
         this.engine.getAudio().playVictoryFanfare();
         this.engine.getAudio().playMantra('OM');
+        this.engine.getAudio().playSpatialSfx('ALTAR_HUM', this.altar.position);
+        this.engine.getRenderer().getCamera().triggerShake(8, 0.9);
         CelestialVFX.getInstance().emitShockwave(this.altar.position, 280, '#FFB703', '#00E5FF');
         CelestialVFX.getInstance().emitSanskritRunes(this.altar.position, 8, '#FFD166');
+        CelestialVFX.getInstance().emitSuryaSolarFlare(this.altar.position, 16);
+        CelestialVFX.getInstance().emitConsecrationLightPillar(this.altar.position, 650, 3.0);
         CelestialVFX.getInstance().triggerRadialDistortion(this.altar.position, 1.0);
         this.particles.emitBurst(this.altar.position.x, this.altar.position.y, 60, '#FFB703', 250);
 
         // Advance to Act II
         this.transitionToAct2();
+        return;
       }
     }
 
     // Confer with Kapi
-    if (Vector2D.distance(this.player.position, this.vanaraScout.position) <= 120) {
+    if (Vector2D.distance(this.player.position, this.vanaraScout.position) <= 130) {
       this.cinematicDirector.playSequence([
         {
           duration: 3.0,
@@ -493,6 +587,25 @@ export class StoryCampaignScene implements IScene {
           dialogueNodeId: 'kapi_standoff_1',
         },
       ]);
+      return;
+    }
+
+    // Confer with Sthula (Stone Rakshasa)
+    if (this.stoneRakshasa && Vector2D.distance(this.player.position, this.stoneRakshasa.position) <= 150) {
+      this.cinematicDirector.playSequence(
+        CinematicDirector.createSthulaStandoffSequence(this.stoneRakshasa.position, this.player.position, {
+          onRoar: () => {
+            this.engine.getAudio().playSpatialSfx('SHOCKWAVE', this.stoneRakshasa!.position);
+            this.engine.getRenderer().getCamera().triggerShake(8, 0.8);
+            this.dialogueTree.start('sthula_encounter_1');
+          },
+          onComplete: () => {
+            this.questManager.setFlag('sthula_resolved', true);
+            this.questManager.triggerObjectiveEvent('DEFEAT_TARGET', 'stone_rakshasa', 1);
+          },
+        })
+      );
+      return;
     }
   }
 
@@ -501,20 +614,14 @@ export class StoryCampaignScene implements IScene {
     this.checkpointManager.register('cp_act2', 'Dandaka Torana Gate', 0, -250);
     this.checkpointManager.activate('cp_act2');
     this.questManager.startMission('M3_DANDAKA_INFILTRATION');
-    this.engine.getAudio().startMusic('DARBARI', 0.25);
-    this.engine.getAudio().startAmbience('DANDAKA_GROVE');
+    this.engine.getAudio().fadeToRaga('DARBARI', 0.25, 2.0);
+    this.engine.getAudio().crossfadeAmbience('DANDAKA_GROVE', 2.0);
+    this.engine.getAudio().playShankhaFanfare();
+    CelestialVFX.getInstance().emitPranaWindVortex(new Vector2D(0, -320), 80);
 
-    this.cinematicDirector.playSequence([
-      {
-        duration: 3.5,
-        cameraTarget: new Vector2D(0, -350),
-        letterboxHeight: 64,
-        titleCard: {
-          title: 'ACT II: THE BLIGHTED GROVES',
-          subtitle: 'The Sacred Torana & Dandaka Forest',
-        },
-      },
-    ]);
+    this.cinematicDirector.playSequence(
+      CinematicDirector.createToranaUnsealingSequence(new Vector2D(0, -320), this.player.position)
+    );
   }
 
   private transitionToAct3(): void {
@@ -522,30 +629,41 @@ export class StoryCampaignScene implements IScene {
     this.checkpointManager.register('cp_act3', 'Caldera Precipice', 0, -1100);
     this.checkpointManager.activate('cp_act3');
     this.questManager.startMission('M5_OBSIDIAN_THRONE');
-    this.engine.getAudio().startMusic('MARWA', 0.65);
-    this.engine.getAudio().startAmbience('OBSIDIAN_CHASM');
+    this.engine.getAudio().fadeToRaga('MARWA', 0.75, 2.0);
+    this.engine.getAudio().crossfadeAmbience('OBSIDIAN_CHASM', 2.0);
+    this.engine.getAudio().playShankhaFanfare();
 
     // Spawn Titan Boss Mahishasura
     this.boss = new MahishasuraBoss('boss_mahisha_campaign', 0, -1350);
+    CelestialVFX.getInstance().emitTamasTendrils(new Vector2D(0, -1350), 16);
 
-    this.cinematicDirector.playSequence([
-      {
-        duration: 4.0,
-        cameraTarget: new Vector2D(0, -1300),
-        letterboxHeight: 64,
-        titleCard: {
-          title: 'ACT III: THE OBSIDIAN THRONE',
-          subtitle: "Mahishasura's Final Defiance",
+    this.cinematicDirector.playSequence(
+      CinematicDirector.createMahishasuraAwakeningSequence(new Vector2D(0, -1350), this.player.position, {
+        onRoar: () => {
+          this.engine.getAudio().playSpatialSfx('SHOCKWAVE', new Vector2D(0, -1350));
+          this.engine.getRenderer().getCamera().triggerShake(12, 1.2);
+          CelestialVFX.getInstance().emitShockwave(new Vector2D(0, -1350), 320, '#581C87', '#EF4444');
         },
-        dialogueNodeId: 'mahisha_manifest_1',
-      },
-    ]);
+      })
+    );
   }
 
   private handleChapterVictory(): void {
     this.isChapterComplete = true;
     this.particles.emitBurst(this.player.position.x, this.player.position.y, 100, '#FFD700', 350);
+    CelestialVFX.getInstance().emitConsecrationLightPillar(this.player.position, 700, 3.5);
+    CelestialVFX.getInstance().emitSuryaSolarFlare(this.player.position, 20);
     this.engine.getAudio().playVictoryFanfare();
+    this.engine.getAudio().fadeToRaga('BHAIRAV', 0.1, 2.5);
+
+    this.cinematicDirector.playSequence(
+      CinematicDirector.createDawnRestorationSequence(this.player.position, {
+        onSunrise: () => {
+          this.engine.getAudio().playMantra('OM');
+          this.engine.getRenderer().getCamera().triggerShake(4, 0.6);
+        },
+      })
+    );
 
     // Persist complete narrative state
     const narrativeState = this.questManager.exportSaveState();
@@ -561,7 +679,33 @@ export class StoryCampaignScene implements IScene {
   public update(dt: number): void {
     ToastManager.getInstance().update(dt);
     if (this.productionHUD) {
-      this.productionHUD.update(dt);
+      this.productionHUD.update(dt, this.player);
+
+      // Contextual prompt detection based on player proximity
+      let prompt: string | null = null;
+      if (Vector2D.distance(this.player.position, this.altar.position) <= 95 && this.altar.state !== 'consecrated') {
+        prompt = '[ E ] Consecrate the Sun Altar';
+      } else if (Vector2D.distance(this.player.position, this.vanaraScout.position) <= 100) {
+        prompt = '[ E ] Speak with Vanara Scout Kapi';
+      } else if (Vector2D.distance(this.player.position, this.pillarOm.position) <= 100 && this.pillarOm.state !== 'attuned') {
+        prompt = '[ J / Attack ] Strike to Attune Pillar Om';
+      } else if (Vector2D.distance(this.player.position, this.pillarKrim.position) <= 100 && this.pillarKrim.state !== 'attuned') {
+        prompt = '[ J / Attack ] Strike to Attune Pillar Krim';
+      } else if (this.stoneRakshasa && this.stoneRakshasa.isActive && Vector2D.distance(this.player.position, this.stoneRakshasa.position) <= 120) {
+        prompt = '[ E ] Confer with Sthula';
+      }
+      this.productionHUD.setContextualPrompt(prompt);
+
+      // Compass calculation towards active objective target
+      let targetAngle: number | null = null;
+      if (this.altar.state !== 'consecrated') {
+        targetAngle = Math.atan2(this.altar.position.y - this.player.position.y, this.altar.position.x - this.player.position.x);
+      } else if (this.currentAct === 2) {
+        targetAngle = Math.atan2(this.pillarOm.position.y - this.player.position.y, this.pillarOm.position.x - this.player.position.x);
+      } else if (this.boss && this.boss.isActive) {
+        targetAngle = Math.atan2(this.boss.position.y - this.player.position.y, this.boss.position.x - this.player.position.x);
+      }
+      this.productionHUD.setCompassAngle(targetAngle);
     }
 
     if (this.settingsModal && this.settingsModal.isOpen()) {
@@ -585,6 +729,19 @@ export class StoryCampaignScene implements IScene {
     CelestialVFX.getInstance().update(dt);
     this.damageNumbers.update(dt);
     this.engine.getAudio().update(dt);
+
+    this.scintillationTimer += dt;
+    if (this.scintillationTimer >= 0.45) {
+      this.scintillationTimer = 0;
+      const bounds = {
+        x: this.player ? this.player.position.x - 450 : -450,
+        y: this.player ? this.player.position.y - 350 : -350,
+        width: 900,
+        height: 700,
+      };
+      const type = this.currentAct === 3 ? 'VOLCANIC_EMBERS' : 'TEMPLE_DUST';
+      CelestialVFX.getInstance().emitAtmosphericScintillation(bounds, 3, type);
+    }
 
     if (this.cinematicDirector.isPlaying() || this.dialogueTree.isActive()) {
       return; // Pause world simulation during scripted cinematics
@@ -648,10 +805,146 @@ export class StoryCampaignScene implements IScene {
       }
     }
 
-    // Update Boss if spawned
+    // Update Stone Rakshasa Sthula
+    if (this.stoneRakshasa && this.stoneRakshasa.isActive) {
+      if (this.currentAct >= 2 && Vector2D.distance(this.player.position, this.stoneRakshasa.position) <= 450) {
+        const sw = this.stoneRakshasa.updateAI(this.player.position, dt);
+        if (sw) this.shockwaves.push(sw);
+      }
+      this.stoneRakshasa.update(dt);
+    }
+
+    // Update Boss if spawned & harvest events
     if (this.boss && this.boss.isActive) {
       this.boss.updateAI(this.player.position, dt);
       this.boss.update(dt);
+
+      while (this.boss.pendingEvents.length > 0) {
+        const ev = this.boss.pendingEvents.shift()!;
+        if (ev.shockwaves) this.shockwaves.push(...ev.shockwaves);
+        if (ev.projectiles) this.enemyProjectiles.push(...ev.projectiles);
+      }
+
+      // Check Boss Charge Impact with Player
+      if (this.boss.isCharging && this.boss.chargeWindupTimer <= 0) {
+        if (this.boss.bounds.intersects(this.player.bounds)) {
+          if (this.player.isGuarding) {
+            this.player.takeDamage(12);
+            this.engine.getAudio().playFoleyImpact('BRONZE', 'BLOCK');
+          } else {
+            this.player.takeDamage(32);
+            this.engine.getAudio().playEnemyHit();
+          }
+          if (this.player.health <= 0) this.isGameOver = true;
+        }
+      }
+    }
+
+    // Update Shockwaves
+    for (let i = this.shockwaves.length - 1; i >= 0; i--) {
+      const sw = this.shockwaves[i];
+      sw.update(dt);
+      if (sw.checkPlayerHit(this.player.position, this.player.isDashing)) {
+        if (this.player.isGuarding) {
+          this.player.takeDamage(sw.damage * 0.35);
+          this.engine.getAudio().playFoleyImpact('BRONZE', 'BLOCK');
+        } else {
+          this.player.takeDamage(sw.damage);
+          this.engine.getAudio().playEnemyHit();
+        }
+        if (this.player.health <= 0) this.isGameOver = true;
+      }
+      if (!sw.isActive) {
+        this.shockwaves.splice(i, 1);
+      }
+    }
+
+    // Update Enemy Projectiles with Perfect Parry Deflection
+    for (let i = this.enemyProjectiles.length - 1; i >= 0; i--) {
+      const proj = this.enemyProjectiles[i];
+      proj.update(dt);
+
+      if (proj.bounds.intersects(this.player.bounds)) {
+        // Perfect parry deflection window (120ms)
+        if (this.player.parryWindowTimer > 0) {
+          this.player.score += 200;
+          this.damageNumbers.spawn(this.player.position.x, this.player.position.y - 30, 'DEFLECTED!', '#FFD700');
+          CelestialVFX.getInstance().emitShockwave(this.player.position, 120, '#FFD700', '#00E5FF');
+          this.engine.getAudio().playFoleyImpact('CELESTIAL_GOLD', 'PARRY');
+          this.engine.getRenderer().getCamera().triggerShake(6.0, 0.15);
+
+          // Reverse velocity and magnify into counter-projectile
+          proj.velocity.scale(-1.4);
+          proj.damage = Math.round(proj.damage * 1.5);
+          this.enemyProjectiles.splice(i, 1);
+          this.playerProjectiles.push(proj);
+          continue;
+        }
+
+        // Check hit on player
+        if (this.player.isGuarding) {
+          this.player.takeDamage(proj.damage * 0.35);
+          this.engine.getAudio().playFoleyImpact('BRONZE', 'BLOCK');
+        } else {
+          this.player.takeDamage(proj.damage);
+          this.engine.getAudio().playEnemyHit();
+        }
+        proj.destroy();
+        this.enemyProjectiles.splice(i, 1);
+        if (this.player.health <= 0) this.isGameOver = true;
+        continue;
+      }
+
+      if (!proj.isActive) {
+        this.enemyProjectiles.splice(i, 1);
+      }
+    }
+
+    // Update Player Projectiles
+    for (let i = this.playerProjectiles.length - 1; i >= 0; i--) {
+      const p = this.playerProjectiles[i];
+      p.update(dt);
+
+      // Hit Sentinels
+      for (const s of this.sentinels) {
+        if (s.isActive && s.bounds.intersects(p.bounds)) {
+          s.takeDamage(p.damage);
+          this.damageNumbers.spawn(s.position.x, s.position.y - 20, p.damage.toString(), '#38BDF8');
+          p.destroy();
+          if (!s.isActive) {
+            this.questManager.triggerObjectiveEvent('DEFEAT_TARGET', 'corrupted_sentinel', 1);
+            this.player.score += 200;
+          }
+          break;
+        }
+      }
+
+      // Hit Stone Rakshasa Sthula
+      if (this.stoneRakshasa && this.stoneRakshasa.isActive && this.stoneRakshasa.bounds.intersects(p.bounds)) {
+        this.stoneRakshasa.takeDamage(p.damage, 15);
+        this.damageNumbers.spawn(this.stoneRakshasa.position.x, this.stoneRakshasa.position.y - 20, p.damage.toString(), '#38BDF8');
+        p.destroy();
+        if (this.stoneRakshasa.health <= 0) {
+          this.stoneRakshasa.destroy();
+          this.questManager.triggerObjectiveEvent('DEFEAT_TARGET', 'stone_rakshasa', 1);
+        }
+      }
+
+      // Hit Mahishasura Boss
+      if (this.boss && this.boss.isActive && this.boss.bounds.intersects(p.bounds)) {
+        this.boss.takeDamage(p.damage);
+        this.damageNumbers.spawn(this.boss.position.x, this.boss.position.y - 20, p.damage.toString(), '#FFD700');
+        p.destroy();
+        if (this.boss.health <= 0) {
+          this.boss.destroy();
+          this.questManager.triggerObjectiveEvent('DEFEAT_TARGET', 'boss_mahishasura', 1);
+          this.handleChapterVictory();
+        }
+      }
+
+      if (!p.isActive) {
+        this.playerProjectiles.splice(i, 1);
+      }
     }
   }
 
@@ -669,6 +962,9 @@ export class StoryCampaignScene implements IScene {
     for (const s of this.shards) s.render(renderer);
     for (const sen of this.sentinels) sen.render(renderer);
     this.vanaraScout.render(renderer);
+    if (this.stoneRakshasa && this.stoneRakshasa.isActive) {
+      this.stoneRakshasa.render(renderer);
+    }
     this.pillarOm.render(renderer);
     this.pillarKrim.render(renderer);
 
@@ -676,15 +972,20 @@ export class StoryCampaignScene implements IScene {
       this.boss.render(renderer);
     }
 
-    // 4. Render Player
+    // 4. Render Projectiles & Shockwaves
+    for (const sw of this.shockwaves) sw.render(renderer);
+    for (const p of this.playerProjectiles) p.render(renderer);
+    for (const ep of this.enemyProjectiles) ep.render(renderer);
+
+    // 5. Render Player
     this.player.render(renderer);
 
-    // 5. Particles, CelestialVFX & Damage Numbers
+    // 6. Particles, CelestialVFX & Damage Numbers
     this.particles.render(ctx, new Vector2D(0, 0));
     CelestialVFX.getInstance().render(renderer);
     this.damageNumbers.render(renderer);
 
-    // 6. Cinematic & Dialogue Overlays
+    // 7. Cinematic & Dialogue Overlays
     this.cinematicDirector.render(renderer);
     this.dialogueTree.render(renderer);
 
@@ -724,29 +1025,173 @@ export class StoryCampaignScene implements IScene {
 
   private renderWorldEnvironment(ctx: CanvasRenderingContext2D): void {
     ctx.save();
-    // Ambient floor
-    ctx.fillStyle = '#080C14';
-    ctx.fillRect(-1000, -1600, 2000, 2200);
 
-    // Sacred pathway paving
-    ctx.fillStyle = '#111827';
-    ctx.fillRect(-120, -1500, 240, 2000);
+    const texBackdrop =
+      AssetManager.getInstance().getTexture(ASSET_IDS.BHUMI_BACKDROP) ||
+      AssetManager.getInstance().getTexture(ASSET_IDS.SANCTUM_SKY);
+    const texFloor =
+      AssetManager.getInstance().getTexture(ASSET_IDS.BHUMI_FLOOR) ||
+      AssetManager.getInstance().getTexture(ASSET_IDS.SANCTUM_FLOOR);
+    const texLava = AssetManager.getInstance().getTexture(ASSET_IDS.BHUMI_LAVA);
+    const texBridge = AssetManager.getInstance().getTexture(ASSET_IDS.BHUMI_BRIDGE);
+    const texTorana = AssetManager.getInstance().getTexture(ASSET_IDS.SANCTUM_TORANA);
+    const texPillar = AssetManager.getInstance().getTexture(ASSET_IDS.SANCTUM_PILLAR);
+    const texCliff = AssetManager.getInstance().getTexture(ASSET_IDS.BHUMI_CLIFF);
 
-    // Pathway border lines
-    ctx.strokeStyle = 'rgba(245, 158, 11, 0.2)';
-    ctx.lineWidth = 2;
+    // 1. Deep Subterranean Parallax / Volcanic Cavern Backdrop
+    if (texBackdrop && (texBackdrop as any).naturalWidth) {
+      ctx.drawImage(texBackdrop as HTMLImageElement, -1200, -1800, 2400, 2400);
+    } else {
+      ctx.fillStyle = '#080C14';
+      ctx.fillRect(-1200, -1800, 2400, 2400);
+    }
+
+    // 2. Basalt & Granite Paved Sacred Causeway (-220 to +220 X, -1600 to +500 Y)
+    if (texFloor && (texFloor as any).naturalWidth) {
+      const ptrn = ctx.createPattern(texFloor as HTMLImageElement, 'repeat');
+      if (ptrn) {
+        ctx.fillStyle = ptrn;
+        ctx.fillRect(-220, -1600, 440, 2100);
+      }
+    } else {
+      ctx.fillStyle = '#111827';
+      ctx.fillRect(-220, -1600, 440, 2100);
+    }
+
+    // Outer Sanctum Courtyard Base (Y: -220 to +450)
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.4)';
+    ctx.fillRect(-500, -220, 1000, 680);
+
+    // Decorative Golden Mandala Inlays on the Floor
+    // Surya Kund Altar Dais (0, 80)
+    SacredGeometry.drawMandala(ctx, 0, 80, 140, 12, 0, 'rgba(255, 183, 3, 0.25)', 1.5);
+    SacredGeometry.drawSriYantraCentral(ctx, 0, 80, 50, 'rgba(0, 229, 255, 0.35)', 1);
+
+    // Torana Threshold Mandala (0, -220)
+    SacredGeometry.drawMandala(ctx, 0, -220, 90, 8, Math.PI / 4, 'rgba(245, 158, 11, 0.3)', 1.2);
+
+    // Brahmic Ridge Mandala (0, -750)
+    SacredGeometry.drawMandala(ctx, 0, -750, 110, 10, 0, 'rgba(217, 119, 6, 0.3)', 1.2);
+
+    // Caldera Obsidian Dais Mandala (0, -1350)
+    SacredGeometry.drawMandala(ctx, 0, -1350, 160, 16, -Math.PI / 8, 'rgba(239, 68, 68, 0.3)', 2);
+
+    // Causeway Edge Curbs & Carved Hoysala Border Inlays
+    ctx.strokeStyle = '#D97706';
+    ctx.lineWidth = 2.5;
     ctx.beginPath();
-    ctx.moveTo(-120, -1500);
-    ctx.lineTo(-120, 500);
-    ctx.moveTo(120, -1500);
-    ctx.lineTo(120, 500);
+    ctx.moveTo(-220, 460);
+    ctx.lineTo(-220, -920);
+    ctx.moveTo(220, 460);
+    ctx.lineTo(220, -920);
     ctx.stroke();
 
-    // Torana Gateway Arch (at Y = -200)
-    ctx.fillStyle = '#B45309';
-    ctx.fillRect(-140, -220, 28, 44);
-    ctx.fillRect(112, -220, 28, 44);
-    ctx.fillRect(-150, -236, 300, 16);
+    ctx.strokeStyle = '#EF4444';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(-220, -1080);
+    ctx.lineTo(-220, -1600);
+    ctx.moveTo(220, -1080);
+    ctx.lineTo(220, -1600);
+    ctx.stroke();
+
+    // 3. Great Molten Lava Chasm (-920 to -1080 Y)
+    if (texLava && (texLava as any).naturalWidth) {
+      const lavaPtrn = ctx.createPattern(texLava as HTMLImageElement, 'repeat');
+      if (lavaPtrn) {
+        ctx.fillStyle = lavaPtrn;
+        ctx.fillRect(-1000, -1080, 2000, 160);
+      }
+    } else {
+      ctx.fillStyle = '#7F1D1D';
+      ctx.fillRect(-1000, -1080, 2000, 160);
+    }
+
+    // Glowing Lava Thermal Heat Fog
+    const lavaGrad = ctx.createLinearGradient(0, -1080, 0, -920);
+    lavaGrad.addColorStop(0, 'rgba(239, 68, 68, 0.6)');
+    lavaGrad.addColorStop(0.5, 'rgba(245, 158, 11, 0.7)');
+    lavaGrad.addColorStop(1, 'rgba(239, 68, 68, 0.6)');
+    ctx.fillStyle = lavaGrad;
+    ctx.fillRect(-1000, -1080, 2000, 160);
+
+    // 4. Ancient Chiseled Granite Bridge Spanning the Chasm (Center X: 0, Width: 180)
+    if (texBridge && (texBridge as any).naturalWidth) {
+      ctx.drawImage(texBridge as HTMLImageElement, -90, -1080, 180, 160);
+    } else {
+      ctx.fillStyle = '#374151';
+      ctx.fillRect(-90, -1080, 180, 160);
+    }
+
+    // Bridge Balustrades
+    ctx.fillStyle = '#1F2937';
+    ctx.fillRect(-95, -1080, 10, 160);
+    ctx.fillRect(85, -1080, 10, 160);
+    ctx.strokeStyle = '#D97706';
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(-95, -1080, 10, 160);
+    ctx.strokeRect(85, -1080, 10, 160);
+
+    // Tamas Void Barrier or Golden Consecration Aura on the Bridge
+    const bridgeUnlocked = this.questManager.getFlag('chasm_bridge_accessible', false);
+    if (!bridgeUnlocked) {
+      ctx.fillStyle = 'rgba(76, 5, 25, 0.82)';
+      ctx.fillRect(-90, -1080, 180, 160);
+
+      // Void runes
+      SacredGeometry.drawSriYantraCentral(ctx, 0, -1000, 36, 'rgba(239, 68, 68, 0.85)', 1.5);
+      ctx.fillStyle = '#FCA5A5';
+      ctx.font = 'bold 10px "Cinzel", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('TAMASIC VOID BARRIER', 0, -1015);
+      ctx.font = '9px Inter, sans-serif';
+      ctx.fillText('HARMONIZE BRAHMIC PILLARS TO DISSOLVE', 0, -995);
+    } else {
+      // Golden Bridge Cleansed Aura
+      ctx.fillStyle = 'rgba(255, 183, 3, 0.2)';
+      ctx.fillRect(-90, -1080, 180, 160);
+    }
+
+    // 5. Torana Gateway Structure (Y = -220)
+    if (texTorana && (texTorana as any).naturalWidth) {
+      ctx.drawImage(texTorana as HTMLImageElement, -160, -260, 320, 80);
+    } else {
+      ctx.fillStyle = '#B45309';
+      ctx.fillRect(-150, -250, 30, 60);
+      ctx.fillRect(120, -250, 30, 60);
+      ctx.fillRect(-160, -264, 320, 18);
+    }
+
+    // 6. Hoysala Carved Pillars flanking key landmarks
+    const pillarPositions = [
+      { x: -160, y: 80 },
+      { x: 160, y: 80 },
+      { x: -180, y: -450 },
+      { x: 180, y: -450 },
+      { x: -160, y: -1350 },
+      { x: 160, y: -1350 },
+    ];
+
+    pillarPositions.forEach((p) => {
+      if (texPillar && (texPillar as any).naturalWidth) {
+        ctx.drawImage(texPillar as HTMLImageElement, p.x - 22, p.y - 48, 44, 96);
+      } else {
+        ctx.fillStyle = '#4B5563';
+        ctx.fillRect(p.x - 16, p.y - 36, 32, 72);
+      }
+
+      // Brazier flame on top
+      ctx.fillStyle = '#FFB703';
+      ctx.beginPath();
+      ctx.arc(p.x, p.y - 44, 6, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    // 7. Caldera Cliff Walls (Obsidian Throne enclosing perimeter)
+    if (texCliff && (texCliff as any).naturalWidth) {
+      ctx.drawImage(texCliff as HTMLImageElement, -600, -1620, 380, 220);
+      ctx.drawImage(texCliff as HTMLImageElement, 220, -1620, 380, 220);
+    }
 
     ctx.restore();
   }

@@ -1,0 +1,22 @@
+#!/bin/sh
+
+# Standard POSIX gradlew wrapper script
+set -e
+
+DIRNAME="$(cd "$(dirname "$0")" && pwd)"
+APP_HOME="$DIRNAME"
+APP_BASE_NAME="$(basename "$0")"
+
+# If gradle is already in PATH, use it
+if command -v gradle >/dev/null 2>&1; then
+    exec gradle "$@"
+fi
+
+# Fallback to gradle wrapper jar or direct execution
+if [ -n "$JAVA_HOME" ] && [ -x "$JAVA_HOME/bin/java" ]; then
+    JAVACMD="$JAVA_HOME/bin/java"
+else
+    JAVACMD="java"
+fi
+
+exec "$JAVACMD" -jar "$APP_HOME/gradle/wrapper/gradle-wrapper.jar" "$@"

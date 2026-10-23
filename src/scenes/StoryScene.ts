@@ -62,7 +62,10 @@ export class StoryScene implements IScene {
     });
   }
 
-  public onExit(): void {}
+  public onExit(): void {
+    const camera = this.engine.getRenderer().getCamera();
+    camera.reset(0, 0, 1.0);
+  }
 
   public update(dt: number): void {
     this.animTimer += dt;
@@ -102,6 +105,11 @@ export class StoryScene implements IScene {
   }
 
   public handleInput(input: InputManager): void {
+    if (input.isActionJustPressed('PAUSE') || input.isKeyJustPressed('KeyQ')) {
+      this.engine.getSceneManager().switchTo('SplashScene');
+      return;
+    }
+
     if (
       input.isActionJustPressed('DASH') ||
       input.isActionJustPressed('ATTACK') ||

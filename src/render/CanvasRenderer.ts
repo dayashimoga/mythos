@@ -1,6 +1,7 @@
 import { Camera, ViewportBounds } from './Camera';
 import { AABB } from '../physics/AABB';
 import { SacredGeometry } from './SacredGeometry';
+import { AssetManager } from '../assets/AssetManager';
 
 export interface IRenderer {
   clear(color: string): void;
@@ -14,11 +15,15 @@ export interface IRenderer {
   drawText(text: string, x: number, y: number, font: string, color: string, align?: CanvasTextAlign): void;
   drawAABB(bounds: AABB, color: string): void;
   drawMandala(x: number, y: number, radius: number, petals: number, angle: number, color: string): void;
+  drawImage?(image: CanvasImageSource, dx: number, dy: number, dw?: number, dh?: number): void;
+  drawSprite?(textureId: string, x: number, y: number, width: number, height: number, rotation?: number, opacity?: number): void;
+  drawContactShadow?(x: number, y: number, radiusX: number, radiusY: number, alpha?: number): void;
   getCamera(): Camera;
   getViewport(): ViewportBounds;
   getContext(): CanvasRenderingContext2D;
   beginWorldPass(): void;
   endWorldPass(): void;
+  resize?(width: number, height: number): void;
 }
 
 export class CanvasRenderer implements IRenderer {
@@ -53,7 +58,26 @@ export class CanvasRenderer implements IRenderer {
     };
   }
 
+  public resize(width: number, height: number): void {
+    this.canvas.width = width;
+    this.canvas.height = height;
+    this.camera.setViewport(width, height);
+  }
+
   public clear(color = '#080C14'): void {
+    // Enforce full render-state isolation and transform restoration
+    if (typeof this.ctx.setTransform === 'function') {
+      this.ctx.setTransform(1, 0, 0, 1, 0, 0);
+    }
+    this.ctx.globalAlpha = 1.0;
+    this.ctx.globalCompositeOperation = 'source-over';
+    if ('filter' in this.ctx) {
+      this.ctx.filter = 'none';
+    }
+    this.ctx.imageSmoothingEnabled = true;
+    if (typeof this.ctx.setLineDash === 'function') {
+      this.ctx.setLineDash([]);
+    }
     this.ctx.fillStyle = color;
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
   }
@@ -79,6 +103,7 @@ export class CanvasRenderer implements IRenderer {
   }
 
   public beginWorldPass(): void {
+    this.camera.setViewport(this.canvas.width, this.canvas.height);
     this.ctx.save();
     // Center of screen
     this.ctx.translate(
@@ -142,5 +167,64 @@ export class CanvasRenderer implements IRenderer {
 
   public drawMandala(x: number, y: number, radius: number, petals: number, angle: number, color: string): void {
     SacredGeometry.drawMandala(this.ctx, x, y, radius, petals, angle, color);
+  }
+
+  public drawImage(image: CanvasImageSource, dx: number, dy: number, dw?: number, dh?: number): void {
+    try {
+      if (dw !== undefined && dh !== undefined) {
+        this.ctx.drawImage(image, dx, dy, dw, dh);
+      } else {
+        this.ctx.drawImage(image, dx, dy);
+      }
+    } catch (e) {
+      // safe fallback in test environments
+    }
+  }
+
+  public drawSprite(
+    textureId: string,
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    rotation = 0,
+    opacity = 1.0
+  ): void {
+    const tex = AssetManager.getInstance().getTexture(textureId);
+    if (!tex) return;
+
+    this.ctx.save();
+    this.ctx.translate(x, y);
+    if (rotation !== 0) {
+      this.ctx.rotate(rotation);
+    }
+    if (opacity < 1.0) {
+      this.ctx.globalAlpha *= opacity;
+    }
+    try {
+      this.ctx.drawImage(tex as CanvasImageSource, -width / 2, -height / 2, width, height);
+    } catch (e) {
+      this.ctx.fillStyle = '#FFB703';
+      this.ctx.fillRect(-width / 2, -height / 2, width, height);
+    }
+    this.ctx.restore();
+  }
+
+  public drawContactShadow(x: number, y: number, radiusX: number, radiusY: number, alpha = 0.55): void {
+    this.ctx.save();
+    this.ctx.translate(x, y);
+    this.ctx.scale(1, radiusY / radiusX);
+
+    const grad = this.ctx.createRadialGradient(0, 0, 0, 0, 0, radiusX);
+    grad.addColorStop(0, `rgba(4, 6, 12, ${alpha})`);
+    grad.addColorStop(0.6, `rgba(4, 6, 12, ${alpha * 0.4})`);
+    grad.addColorStop(1, 'rgba(4, 6, 12, 0)');
+
+    this.ctx.fillStyle = grad;
+    this.ctx.beginPath();
+    this.ctx.arc(0, 0, radiusX, 0, Math.PI * 2);
+    this.ctx.fill();
+
+    this.ctx.restore();
   }
 }

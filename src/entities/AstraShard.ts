@@ -1,6 +1,7 @@
 import { Entity } from './Entity';
 import { Vector2D } from '../physics/Vector2D';
 import { IRenderer } from '../render/CanvasRenderer';
+import { AssetManager } from '../assets/AssetManager';
 
 export class AstraShard extends Entity {
   public basePositionY: number;
@@ -11,7 +12,7 @@ export class AstraShard extends Entity {
   private magneticSpeed = 280;
 
   constructor(id: string, x: number, y: number) {
-    super(id, x, y, 20, 20, 'shard');
+    super(id, x, y, 24, 24, 'shard');
     this.basePositionY = y;
   }
 
@@ -21,6 +22,11 @@ export class AstraShard extends Entity {
     this.floatTime += dt;
     this.position.y = this.basePositionY + Math.sin(this.floatTime * 4) * 6;
     this.syncBounds();
+  }
+
+  public collect(): void {
+    this.isCollected = true;
+    this.isActive = false;
   }
 
   public attractTowards(target: Vector2D, dt: number): void {
@@ -43,35 +49,73 @@ export class AstraShard extends Entity {
     ctx.save();
     ctx.translate(this.position.x, this.position.y);
 
-    // Outer pulsing ring
-    const pulse = 10 + Math.sin(this.floatTime * 6) * 3;
+    // 1. Soft Contact Shadow on ground (remains at ground level as shard bobs)
+    const bobOffset = this.position.y - this.basePositionY;
+    const shadowY = 18 - bobOffset;
+    if (renderer.drawContactShadow) {
+      renderer.drawContactShadow(0, shadowY, 14, 6, 0.45);
+    } else {
+      ctx.fillStyle = 'rgba(4, 6, 12, 0.4)';
+      ctx.beginPath();
+      ctx.ellipse(0, shadowY, 14, 6, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // 2. Render Illustrated Astra Shard Sprite
+    const shardTex = AssetManager.getInstance().getTexture('TEX_SANCTUM_SHARD');
+    if (shardTex) {
+      try {
+        const shardSize = 38;
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(0, 0, shardSize / 2 - 2, 0, Math.PI * 2);
+        ctx.clip();
+        ctx.drawImage(shardTex as CanvasImageSource, -shardSize / 2, -shardSize / 2, shardSize, shardSize);
+        ctx.restore();
+      } catch (e) {
+        this.renderProceduralShard(ctx);
+      }
+    } else {
+      this.renderProceduralShard(ctx);
+    }
+
+    // 3. Floating Crystalline Aura & Orbiting Rings
+    const pulse = 14 + Math.sin(this.floatTime * 6) * 3;
     ctx.strokeStyle = this.glowColor;
     ctx.lineWidth = 1.5;
     ctx.beginPath();
     ctx.arc(0, 0, pulse, 0, Math.PI * 2);
     ctx.stroke();
 
-    // Octahedral Crystal Diamond
-    ctx.fillStyle = '#FFD166';
+    // Central Core Glow
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    const coreGrad = ctx.createRadialGradient(0, 0, 0, 0, 0, 16);
+    coreGrad.addColorStop(0, 'rgba(255, 255, 255, 0.8)');
+    coreGrad.addColorStop(0.4, 'rgba(0, 229, 255, 0.5)');
+    coreGrad.addColorStop(1, 'rgba(0, 229, 255, 0)');
+    ctx.fillStyle = coreGrad;
     ctx.beginPath();
-    ctx.moveTo(0, -9);
-    ctx.lineTo(6, 0);
-    ctx.lineTo(0, 9);
-    ctx.lineTo(-6, 0);
-    ctx.closePath();
+    ctx.arc(0, 0, 16, 0, Math.PI * 2);
     ctx.fill();
-
-    // Central core sparkle
-    ctx.fillStyle = '#FFFFFF';
-    ctx.beginPath();
-    ctx.arc(0, 0, 2.5, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.restore();
 
     ctx.restore();
   }
 
-  public collect(): void {
-    this.isCollected = true;
-    this.isActive = false;
+  private renderProceduralShard(ctx: CanvasRenderingContext2D): void {
+    ctx.fillStyle = '#FFD166';
+    ctx.beginPath();
+    ctx.moveTo(0, -10);
+    ctx.lineTo(7, 0);
+    ctx.lineTo(0, 10);
+    ctx.lineTo(-7, 0);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.fillStyle = '#FFFFFF';
+    ctx.beginPath();
+    ctx.arc(0, 0, 3, 0, Math.PI * 2);
+    ctx.fill();
   }
 }

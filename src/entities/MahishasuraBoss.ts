@@ -5,6 +5,8 @@ import { PoiseData } from '../gameplay/CombatSystem';
 import { Projectile } from './Projectile';
 import { Shockwave } from './Shockwave';
 import { AsuraEliteVanguard } from './AsuraEliteVanguard';
+import { CharacterDefinitions } from '../animation/CharacterDefinitions';
+import { CharacterRig } from '../animation/CharacterRig';
 import {
   ActionNode,
   BehaviorNode,
@@ -31,6 +33,8 @@ export interface BossAttackEvent {
 export class MahishasuraBoss extends Entity {
   public health = 1000;
   public maxHealth = 1000;
+
+  public rig: CharacterRig = CharacterDefinitions.createMahishasuraRig();
 
   public poise: PoiseData = {
     current: 250,
@@ -64,6 +68,7 @@ export class MahishasuraBoss extends Entity {
   // Phase 2: Shadow Blink & Homing Orbs
   public isTeleporting = false;
   public teleportTimer = 0;
+  public teleportTarget: Vector2D = new Vector2D(0, 0);
   public orbCooldown = 7.0;
   public orbCooldownTimer = 3.0;
 
@@ -73,6 +78,10 @@ export class MahishasuraBoss extends Entity {
   public leapCooldown = 8.0;
   public leapCooldownTimer = 4.0;
   public leapTarget: Vector2D = new Vector2D(0, 0);
+
+  // Recovery & Vulnerability Windows
+  public recoveryTimer = 0;
+  public phaseTransitionTimer = 0;
 
   // Pending attacks to be harvested by the Scene
   public pendingEvents: BossAttackEvent[] = [];
@@ -97,18 +106,36 @@ export class MahishasuraBoss extends Entity {
     if (hpRatio <= 0.30) {
       if (this.phase !== 3) {
         this.phase = 3;
+        this.phaseTransitionTimer = 1.0;
+        this.recoveryTimer = 1.0;
         this.speed = 180; // Berserk speed
         this.poise.max = 300;
         this.poise.current = 300;
+        this.pendingEvents.push({
+          type: 'SHOCKWAVE',
+          origin: this.position.clone(),
+          damage: 15,
+          poiseDamage: 50,
+          shockwaves: [new Shockwave(`boss_roar_p3_${Date.now()}`, this.position.x, this.position.y, 220, 15)],
+        });
       }
     } else if (hpRatio <= 0.70) {
       if (this.phase !== 2) {
         this.phase = 2;
+        this.phaseTransitionTimer = 1.0;
+        this.recoveryTimer = 1.0;
         this.speed = 145;
         if (!this.hasSummonedPhase2Squad) {
           this.summonReinforcements();
           this.hasSummonedPhase2Squad = true;
         }
+        this.pendingEvents.push({
+          type: 'SHOCKWAVE',
+          origin: this.position.clone(),
+          damage: 10,
+          poiseDamage: 35,
+          shockwaves: [new Shockwave(`boss_roar_p2_${Date.now()}`, this.position.x, this.position.y, 180, 10)],
+        });
       }
     } else {
       this.phase = 1;
@@ -170,7 +197,7 @@ export class MahishasuraBoss extends Entity {
     }));
     root.addChild(leapSeq);
 
-    // 4. Phase 2: Shadow Blink & Tamas Orbs
+    // 4. Phase 2: Shadow Blink & Tamas Orbs (Deterministic Frame Timer)
     const sorcerySeq = new SequenceNode('phase2_sorcery');
     sorcerySeq.addChild(new ConditionNode('is_phase_2_or_3', () => this.phase >= 2));
     sorcerySeq.addChild(new ConditionNode('can_cast_orbs', () => this.orbCooldownTimer <= 0));
@@ -185,15 +212,9 @@ export class MahishasuraBoss extends Entity {
       const targetTeleport = Vector2D.add(playerPos, behindOffset);
 
       // Clamp target teleport to arena bounds
-      targetTeleport.x = Math.max(100, Math.min(1180, targetTeleport.x));
-      targetTeleport.y = Math.max(120, Math.min(760, targetTeleport.y));
-
-      setTimeout(() => {
-        this.position.set(targetTeleport.x, targetTeleport.y);
-        this.syncBounds();
-        this.isTeleporting = false;
-        this.spawnTamasOrbs(playerPos);
-      }, 350);
+      targetTeleport.x = Math.max(-500, Math.min(500, targetTeleport.x));
+      targetTeleport.y = Math.max(-380, Math.min(380, targetTeleport.y));
+      this.teleportTarget = targetTeleport;
 
       return NodeStatus.SUCCESS;
     }));
@@ -283,11 +304,28 @@ export class MahishasuraBoss extends Entity {
     this.animTimer += dt;
     this.updatePhase();
 
+    // Phase transition & recovery ticks
+    if (this.phaseTransitionTimer > 0) this.phaseTransitionTimer = Math.max(0, this.phaseTransitionTimer - dt);
+    if (this.recoveryTimer > 0) this.recoveryTimer = Math.max(0, this.recoveryTimer - dt);
+
     // Cooldown ticks
     if (this.chargeCooldownTimer > 0) this.chargeCooldownTimer -= dt;
     if (this.slamCooldownTimer > 0) this.slamCooldownTimer -= dt;
     if (this.orbCooldownTimer > 0) this.orbCooldownTimer -= dt;
     if (this.leapCooldownTimer > 0) this.leapCooldownTimer -= dt;
+
+    // Handle Shadow Blink Teleportation (Deterministic Frame Timer)
+    if (this.isTeleporting) {
+      this.teleportTimer -= dt;
+      if (this.teleportTimer <= 0) {
+        this.position.set(this.teleportTarget.x, this.teleportTarget.y);
+        this.syncBounds();
+        this.isTeleporting = false;
+        this.recoveryTimer = 0.35; // Brief recovery post-teleport
+        this.spawnTamasOrbs(playerPos);
+      }
+      return;
+    }
 
     // Handle Buffalo Horn Charge
     if (this.isCharging) {
@@ -304,6 +342,7 @@ export class MahishasuraBoss extends Entity {
 
       if (this.chargeDurationTimer <= 0) {
         this.isCharging = false;
+        this.recoveryTimer = 0.60; // 600ms fair vulnerability window!
       }
       return;
     }
@@ -313,6 +352,7 @@ export class MahishasuraBoss extends Entity {
       this.slamWindupTimer -= dt;
       if (this.slamWindupTimer <= 0) {
         this.isHammerSlamming = false;
+        this.recoveryTimer = 0.50; // 500ms recovery window
         const wave = new Shockwave(
           `boss_slam_wave_${Date.now()}`,
           this.position.x,
@@ -342,6 +382,7 @@ export class MahishasuraBoss extends Entity {
 
       if (this.leapTimer <= 0) {
         this.isLeaping = false;
+        this.recoveryTimer = 0.75; // 750ms recovery window after cataclysm slam!
         this.position.set(this.leapTarget.x, this.leapTarget.y);
         this.syncBounds();
 
@@ -388,12 +429,35 @@ export class MahishasuraBoss extends Entity {
     this.blackboard.set('isStaggered', this.poise.isStaggered);
 
     this.behaviorTree.tick(this.blackboard, dt);
+
+    // Sync Skeletal Character Rig
+    this.rig.position.set(this.position.x, this.position.y);
+    this.rig.facing = this.facing.x >= 0 ? 1 : -1;
+    if (this.isCharging) {
+      this.rig.stateMachine.setTrigger('trigger_charge');
+    }
+    if (this.isHammerSlamming) {
+      this.rig.stateMachine.setTrigger('trigger_slam');
+    }
+    if (this.poise.isStaggered) {
+      this.rig.stateMachine.setTrigger('trigger_stagger');
+    }
+    if (this.phase === 3) {
+      this.rig.stateMachine.setTrigger('trigger_enrage');
+    }
+    const speedNorm = this.isCharging ? 1.0 : this.velocity.magnitude() / Math.max(1, this.speed);
+    this.rig.stateMachine.setFloat('speed', speedNorm);
+    this.rig.update(dt);
   }
 
   public update(dt: number): void {
+    this.animTimer += dt;
     this.position.x += this.velocity.x * dt;
     this.position.y += this.velocity.y * dt;
     this.syncBounds();
+
+    this.rig.position.set(this.position.x, this.position.y);
+    this.rig.update(dt);
   }
 
   public takeDamage(amount: number): void {
@@ -403,6 +467,36 @@ export class MahishasuraBoss extends Entity {
 
   public render(renderer: IRenderer): void {
     const ctx = renderer.getContext();
+
+    // 1. Render World-Space Telegraphs (Leap Target Marker & Teleport Destination)
+    if (this.isLeaping) {
+      ctx.save();
+      ctx.translate(this.leapTarget.x, this.leapTarget.y);
+      ctx.strokeStyle = '#DC2626';
+      ctx.lineWidth = 3;
+      ctx.setLineDash([8, 6]);
+      ctx.beginPath();
+      ctx.arc(0, 0, 110, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.fillStyle = 'rgba(220, 38, 38, 0.22)';
+      ctx.fill();
+      ctx.restore();
+    }
+
+    if (this.isTeleporting) {
+      ctx.save();
+      ctx.translate(this.teleportTarget.x, this.teleportTarget.y);
+      ctx.strokeStyle = '#9333EA';
+      ctx.lineWidth = 2.5;
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      ctx.arc(0, 0, 48, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.fillStyle = 'rgba(147, 51, 234, 0.25)';
+      ctx.fill();
+      ctx.restore();
+    }
+
     ctx.save();
     ctx.translate(this.position.x, this.position.y);
 
@@ -437,6 +531,29 @@ export class MahishasuraBoss extends Entity {
       ctx.stroke();
     }
 
+    // Phase Transition Roar Invulnerability Aura
+    if (this.phaseTransitionTimer > 0) {
+      ctx.strokeStyle = '#F59E0B';
+      ctx.shadowColor = '#DC2626';
+      ctx.shadowBlur = 20;
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.arc(0, 0, 64 + Math.sin(this.animTimer * 12) * 6, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+    }
+
+    // Vulnerable Recovery Window Indicator (Golden Sparks / Open Guard)
+    if (this.recoveryTimer > 0) {
+      ctx.strokeStyle = '#FDE047';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      ctx.arc(0, -10, 48, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
     // Phase 3 Eclipse Berserk Aura
     if (this.phase === 3) {
       ctx.strokeStyle = '#9333EA';
@@ -460,60 +577,10 @@ export class MahishasuraBoss extends Entity {
       ctx.setLineDash([]);
     }
 
-    // Titan Torso (Obsidian Carapace)
-    ctx.fillStyle = this.phase === 3 ? '#450A0A' : '#1C1917';
-    ctx.fillRect(-28, -32, 56, 64);
-
-    // Glowing Magma Fissures on Chest
-    ctx.strokeStyle = this.phase === 3 ? '#F97316' : '#EF4444';
-    ctx.lineWidth = 2.5;
-    ctx.beginPath();
-    ctx.moveTo(-16, -20);
-    ctx.lineTo(0, -6);
-    ctx.lineTo(16, -20);
-    ctx.moveTo(0, -6);
-    ctx.lineTo(0, 18);
-    ctx.stroke();
-
-    // Spiked Bronze Shoulders
-    ctx.fillStyle = '#78350F';
-    ctx.fillRect(-40, -42, 22, 26);
-    ctx.fillRect(18, -42, 22, 26);
-
-    // Massive Buffalo Head
-    ctx.fillStyle = '#0C0A09';
-    ctx.beginPath();
-    ctx.arc(0, -42, 24, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Colossal Swept Buffalo Horns
-    ctx.fillStyle = '#D97706';
-    ctx.beginPath();
-    ctx.moveTo(-18, -48);
-    ctx.quadraticCurveTo(-44, -78, -34, -92);
-    ctx.quadraticCurveTo(-26, -72, -12, -54);
-    ctx.closePath();
-    ctx.fill();
-
-    ctx.beginPath();
-    ctx.moveTo(18, -48);
-    ctx.quadraticCurveTo(44, -78, 34, -92);
-    ctx.quadraticCurveTo(26, -72, 12, -54);
-    ctx.closePath();
-    ctx.fill();
-
-    // Demonic Glowing Crimson Eyes
-    ctx.fillStyle = this.phase === 3 ? '#A855F7' : '#EF4444';
-    ctx.beginPath();
-    ctx.arc(8, -44, 4, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Great Obsidian War Club
-    ctx.fillStyle = '#292524';
-    ctx.fillRect(26, -20, 16, 52);
-    ctx.fillStyle = '#DC2626';
-    ctx.fillRect(24, -30, 20, 14);
-
     ctx.restore();
+
+    // Render Skeletal Character Rig (Production Titan Carapace & Void Gada)
+    this.rig.render(renderer);
   }
 }
+

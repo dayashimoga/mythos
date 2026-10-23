@@ -11,6 +11,12 @@ export class AmbientSoundscape {
   private windTimer = 0;
   private eventTimer = 0;
 
+  // Crossfade state
+  private isCrossfading = false;
+  private targetEnvironment: EnvironmentPreset | null = null;
+  private fadeTimer = 0;
+  private fadeDuration = 0;
+
   // Background Wind Drone
   private windOsc: OscillatorNode | null = null;
   private windGain: GainNode | null = null;
@@ -18,7 +24,7 @@ export class AmbientSoundscape {
 
   constructor(ctx: AudioContext | null, outputNode?: AudioNode) {
     this.ctx = ctx;
-    this.outputNode = outputNode ?? null;
+    this.outputNode = outputNode ?? (this.ctx ? (this.ctx.destination as any) : null);
   }
 
   public setOutput(outputNode: AudioNode): void {
@@ -32,6 +38,19 @@ export class AmbientSoundscape {
     }
   }
 
+  public crossfadeEnvironment(preset: EnvironmentPreset, duration = 1.5): void {
+    if (!this.isRunning) {
+      this.setEnvironment(preset);
+      this.start();
+      return;
+    }
+    if (this.activeEnvironment === preset) return;
+    this.isCrossfading = true;
+    this.targetEnvironment = preset;
+    this.fadeDuration = Math.max(0.2, duration);
+    this.fadeTimer = this.fadeDuration;
+  }
+
   public setVolume(vol: number): void {
     this.volume = Math.max(0, Math.min(1, vol));
     if (this.windGain && this.ctx) {
@@ -40,7 +59,10 @@ export class AmbientSoundscape {
     }
   }
 
-  public start(): void {
+  public start(preset?: EnvironmentPreset): void {
+    if (preset) {
+      this.setEnvironment(preset);
+    }
     if (this.isRunning) return;
     this.isRunning = true;
     this.windTimer = 1.0;
@@ -51,6 +73,8 @@ export class AmbientSoundscape {
   public stop(): void {
     if (!this.isRunning) return;
     this.isRunning = false;
+    this.isCrossfading = false;
+    this.targetEnvironment = null;
     this.stopDrone();
   }
 
@@ -58,8 +82,40 @@ export class AmbientSoundscape {
     return this.isRunning;
   }
 
+  public isPlaying(): boolean {
+    return this.isRunning;
+  }
+
+  public getCurrentPreset(): EnvironmentPreset {
+    return this.activeEnvironment;
+  }
+
   public update(dt: number): void {
     if (!this.isRunning || !this.ctx || !this.outputNode) return;
+
+    // Crossfade ambient drone processing
+    if (this.isCrossfading) {
+      this.fadeTimer -= dt;
+      const halfFade = this.fadeDuration / 2;
+      const droneBase = this.activeEnvironment === 'OBSIDIAN_CHASM' ? 0.2 : 0.12;
+      if (this.fadeTimer > halfFade) {
+        const factor = (this.fadeTimer - halfFade) / halfFade;
+        if (this.windGain && this.ctx) {
+          this.windGain.gain.setValueAtTime(this.volume * droneBase * factor, this.ctx.currentTime);
+        }
+      } else if (this.targetEnvironment) {
+        this.setEnvironment(this.targetEnvironment);
+        this.targetEnvironment = null;
+      } else {
+        const factor = 1.0 - (this.fadeTimer / halfFade);
+        if (this.windGain && this.ctx) {
+          this.windGain.gain.setValueAtTime(this.volume * droneBase * Math.max(0, Math.min(1, factor)), this.ctx.currentTime);
+        }
+        if (this.fadeTimer <= 0) {
+          this.isCrossfading = false;
+        }
+      }
+    }
 
     // Periodic wind gust modulation
     this.windTimer -= dt;

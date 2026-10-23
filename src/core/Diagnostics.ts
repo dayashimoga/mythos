@@ -63,6 +63,10 @@ export class Diagnostics {
     return this.isVisible;
   }
 
+  public toggle(): boolean {
+    return this.toggleVisible();
+  }
+
   public toggleColliders(): boolean {
     this.showColliders = !this.showColliders;
     return this.showColliders;

@@ -62,6 +62,7 @@ export interface DialogueNodeData {
   speaker: string;
   speakerRole: string;
   portraitColor: string;
+  portraitAssetId?: string;
   expression?: 'neutral' | 'focused' | 'determined' | 'surprised' | 'sorrowful' | 'wrathful';
   text: string;
   voiceCue?: 'oracle_gentle' | 'guardian_firm' | 'scout_chatter' | 'titan_rumble';

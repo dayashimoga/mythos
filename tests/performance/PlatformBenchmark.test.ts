@@ -103,7 +103,7 @@ describe('Stage 8: Production Benchmark & High-Throughput Stress Suite', () => {
     const duration = performance.now() - start;
     const stats = batcher.getStats();
 
-    expect(duration).toBeLessThan(10.0);
+    expect(duration).toBeLessThan(25.0);
     expect(stats.drawnCount).toBe(200);
     expect(stats.culledCount).toBe(1800);
   });

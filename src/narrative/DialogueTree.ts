@@ -1,5 +1,7 @@
 import { DialogueChoice, DialogueNodeData } from './NarrativeTypes';
 import { IRenderer } from '../render/CanvasRenderer';
+import { AssetManager } from '../assets/AssetManager';
+import { ASSET_IDS } from '../assets/AssetManifest';
 
 export class DialogueTree {
   private nodes: Map<string, DialogueNodeData> = new Map();
@@ -8,11 +10,16 @@ export class DialogueTree {
   private typewriterTimer = 0;
   private charSpeed = 0.022; // 22ms per char
   private isLineComplete = false;
-  private isAwaitingChoice = false;
+  public isAwaitingChoice = false;
+
+  public getIsAwaitingChoice(): boolean {
+    return this.isAwaitingChoice;
+  }
 
   public onNodeChange?: (node: DialogueNodeData) => void;
   public onChoiceSelected?: (choice: DialogueChoice) => void;
   public onDialogueComplete?: () => void;
+  public onPlayVoiceCue?: (cue?: string) => void;
 
   constructor(nodes: DialogueNodeData[] = []) {
     this.registerNodes(nodes);
@@ -44,6 +51,10 @@ export class DialogueTree {
     this.typewriterTimer = 0;
     this.isLineComplete = false;
     this.isAwaitingChoice = false;
+
+    if (this.onPlayVoiceCue && node.voiceCue) {
+      this.onPlayVoiceCue(node.voiceCue);
+    }
 
     if (this.onNodeChange) {
       this.onNodeChange(node);
@@ -154,6 +165,52 @@ export class DialogueTree {
     }
   }
 
+  public handlePointerDown(
+    screenX: number,
+    screenY: number,
+    viewportWidth: number,
+    viewportHeight: number,
+    storyFlags: Record<string, any> = {}
+  ): boolean {
+    const node = this.getCurrentNode();
+    if (!node) return false;
+
+    const boxWidth = Math.min(840, viewportWidth - 60);
+    const boxHeight = 150;
+    const boxX = (viewportWidth - boxWidth) / 2;
+    const boxY = viewportHeight - boxHeight - 24;
+
+    if (this.isAwaitingChoice && node.choices) {
+      const choices = this.getAvailableChoices(storyFlags);
+      const choiceStartY = boxY - (choices.length * 38) - 10;
+
+      for (let i = 0; i < choices.length; i++) {
+        const cY = choiceStartY + i * 38;
+        if (
+          screenX >= boxX + 20 &&
+          screenX <= boxX + boxWidth - 20 &&
+          screenY >= cY &&
+          screenY <= cY + 32
+        ) {
+          return this.selectChoice(i, storyFlags);
+        }
+      }
+      return false;
+    }
+
+    // If clicking dialogue box or anywhere on screen, advance
+    if (
+      screenX >= boxX &&
+      screenX <= boxX + boxWidth &&
+      screenY >= boxY &&
+      screenY <= boxY + boxHeight
+    ) {
+      return this.advance();
+    }
+
+    return false;
+  }
+
   public render(renderer: IRenderer): void {
     const node = this.getCurrentNode();
     if (!node) return;
@@ -171,47 +228,131 @@ export class DialogueTree {
     const boxX = (vp.width - boxWidth) / 2;
     const boxY = vp.height - boxHeight - 24;
 
-    // Background Container
-    ctx.fillStyle = 'rgba(15, 23, 42, 0.92)';
+    // Background Container with Vedic ornamental border
+    ctx.fillStyle = 'rgba(10, 16, 28, 0.94)';
     ctx.strokeStyle = '#D97706';
     ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.roundRect(boxX, boxY, boxWidth, boxHeight, 8);
-    ctx.fill();
+    if (typeof (ctx as any).roundRect === 'function') {
+      ctx.beginPath();
+      (ctx as any).roundRect(boxX, boxY, boxWidth, boxHeight, 10);
+      ctx.fill();
+    } else {
+      ctx.fillRect(boxX, boxY, boxWidth, boxHeight);
+    }
     ctx.stroke();
 
-    // Speaker Portrait Frame
-    const portraitSize = 74;
-    const portraitX = boxX + 18;
-    const portraitY = boxY + 18;
+    // Subtle inner golden border
+    ctx.strokeStyle = 'rgba(255, 183, 3, 0.25)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(boxX + 4, boxY + 4, boxWidth - 8, boxHeight - 8);
 
-    ctx.fillStyle = node.portraitColor;
+    // Speaker Portrait Frame (80x80)
+    const portraitSize = 80;
+    const portraitX = boxX + 16;
+    const portraitY = boxY + 16;
+    const pCenterX = portraitX + portraitSize / 2;
+    const pCenterY = portraitY + portraitSize / 2;
+    const pRadius = portraitSize / 2 - 2;
+
+    // Portrait backplate
+    ctx.fillStyle = node.portraitColor || '#0F172A';
     ctx.fillRect(portraitX, portraitY, portraitSize, portraitSize);
-    ctx.strokeStyle = '#FFFFFF';
-    ctx.lineWidth = 1.5;
-    ctx.strokeRect(portraitX, portraitY, portraitSize, portraitSize);
 
-    // Initial Letter of Speaker
-    ctx.fillStyle = '#FFFFFF';
-    ctx.font = 'bold 28px Outfit, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText(node.speaker.charAt(0), portraitX + portraitSize / 2, portraitY + 48);
+    // Determine character asset ID
+    let assetId = node.portraitAssetId;
+    if (!assetId) {
+      const sp = node.speaker.toLowerCase();
+      if (sp.includes('tara')) assetId = ASSET_IDS.CHAR_DEVI_TARA;
+      else if (sp.includes('veer')) assetId = ASSET_IDS.CHAR_VEER;
+      else if (sp.includes('kapi') || sp.includes('vanara')) assetId = ASSET_IDS.CHAR_VANARA_KAPI;
+      else if (sp.includes('sthula') || sp.includes('rakshasa')) assetId = ASSET_IDS.CHAR_STONE_RAKSHASA;
+      else if (sp.includes('mahisha')) assetId = ASSET_IDS.CHAR_MAHISHASURA;
+    }
+
+    const portraitTexture = assetId ? AssetManager.getInstance().getTexture(assetId) : null;
+    const isImageReady =
+      portraitTexture &&
+      (portraitTexture as any).complete !== false &&
+      (portraitTexture as any).naturalWidth !== 0;
+
+    // Expression Halo Glow
+    let haloColor = 'rgba(217, 119, 6, 0.4)';
+    if (node.expression === 'sorrowful') haloColor = 'rgba(56, 189, 248, 0.45)';
+    else if (node.expression === 'wrathful') haloColor = 'rgba(239, 68, 68, 0.5)';
+    else if (node.expression === 'determined') haloColor = 'rgba(245, 158, 11, 0.5)';
+    else if (node.expression === 'focused') haloColor = 'rgba(16, 185, 129, 0.45)';
+
+    const haloGrad = ctx.createRadialGradient(pCenterX, pCenterY, pRadius * 0.7, pCenterX, pCenterY, pRadius + 8);
+    haloGrad.addColorStop(0, haloColor);
+    haloGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    ctx.fillStyle = haloGrad;
+    ctx.beginPath();
+    ctx.arc(pCenterX, pCenterY, pRadius + 8, 0, Math.PI * 2);
+    ctx.fill();
+
+    if (isImageReady && portraitTexture && typeof ctx.drawImage === 'function') {
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(pCenterX, pCenterY, pRadius, 0, Math.PI * 2);
+      if (typeof ctx.clip === 'function') {
+        ctx.clip();
+      }
+
+      // Center-crop draw the portrait
+      const img = portraitTexture as HTMLImageElement;
+      const srcW = img.naturalWidth || img.width;
+      const srcH = img.naturalHeight || img.height;
+      const cropSize = Math.min(srcW, srcH);
+      const cropX = (srcW - cropSize) / 2;
+      const cropY = (srcH - cropSize) * 0.15; // Focus on face/upper bust
+
+      ctx.drawImage(img, cropX, cropY, cropSize, cropSize, portraitX, portraitY, portraitSize, portraitSize);
+      ctx.restore();
+    } else {
+      // Fallback stylized monogram & vector plate
+      ctx.fillStyle = node.portraitColor || '#1E293B';
+      ctx.beginPath();
+      ctx.arc(pCenterX, pCenterY, pRadius, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = '#FFFFFF';
+      ctx.font = 'bold 30px "Cinzel", Outfit, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(node.speaker.charAt(0), pCenterX, pCenterY);
+      ctx.textBaseline = 'alphabetic';
+    }
+
+    // Double Golden Rim with concentric ornamental border
+    ctx.strokeStyle = '#FFB703';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.arc(pCenterX, pCenterY, pRadius, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.strokeStyle = 'rgba(255, 209, 102, 0.5)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.arc(pCenterX, pCenterY, pRadius - 3, 0, Math.PI * 2);
+    ctx.stroke();
 
     // Speaker Name & Role
+    const textStartX = portraitX + portraitSize + 18;
     ctx.textAlign = 'left';
     ctx.fillStyle = '#F59E0B';
-    ctx.font = 'bold 15px Outfit, sans-serif';
-    ctx.fillText(node.speaker.toUpperCase(), portraitX + portraitSize + 18, boxY + 30);
+    ctx.font = 'bold 15px "Cinzel", Outfit, sans-serif';
+    ctx.fillText(node.speaker.toUpperCase(), textStartX, boxY + 28);
 
     ctx.fillStyle = '#94A3B8';
     ctx.font = '11px Inter, sans-serif';
-    ctx.fillText(node.speakerRole, portraitX + portraitSize + 18, boxY + 46);
+    ctx.fillText(node.speakerRole, textStartX, boxY + 44);
 
     // Expression Badge
     if (node.expression) {
+      const roleWidth = ctx.measureText(node.speakerRole).width;
       ctx.fillStyle = '#38BDF8';
       ctx.font = 'italic 10px Inter, sans-serif';
-      ctx.fillText(`[ ${node.expression} ]`, portraitX + portraitSize + 18 + ctx.measureText(node.speakerRole).width + 12, boxY + 46);
+      ctx.fillText(`[ ${node.expression.toUpperCase()} ]`, textStartX + roleWidth + 12, boxY + 44);
     }
 
     // Typewritten Text Body
@@ -220,43 +361,43 @@ export class DialogueTree {
     ctx.font = '14px Inter, sans-serif';
 
     // Word Wrap
-    const maxWidth = boxWidth - portraitSize - 60;
+    const maxWidth = boxWidth - portraitSize - 50;
     const words = currentText.split(' ');
     let line = '';
-    let lineY = boxY + 74;
-    const lineHeight = 20;
+    let lineY = boxY + 70;
+    const lineHeight = 21;
 
     for (let n = 0; n < words.length; n++) {
       const testLine = line + words[n] + ' ';
       const metrics = ctx.measureText(testLine);
       if (metrics.width > maxWidth && n > 0) {
-        ctx.fillText(line, portraitX + portraitSize + 18, lineY);
+        ctx.fillText(line, textStartX, lineY);
         line = words[n] + ' ';
         lineY += lineHeight;
       } else {
         line = testLine;
       }
     }
-    ctx.fillText(line, portraitX + portraitSize + 18, lineY);
+    ctx.fillText(line, textStartX, lineY);
 
     // Branching Choices Display
     if (this.isAwaitingChoice && node.choices) {
       const choices = node.choices;
-      const choiceStartY = boxY - (choices.length * 36) - 10;
+      const choiceStartY = boxY - (choices.length * 38) - 10;
 
       choices.forEach((choice, idx) => {
-        const cY = choiceStartY + idx * 36;
-        ctx.fillStyle = 'rgba(30, 41, 59, 0.95)';
+        const cY = choiceStartY + idx * 38;
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.96)';
         ctx.strokeStyle = '#F59E0B';
-        ctx.lineWidth = 1;
+        ctx.lineWidth = 1.5;
         ctx.beginPath();
-        ctx.roundRect(boxX + 20, cY, boxWidth - 40, 30, 6);
+        ctx.roundRect(boxX + 20, cY, boxWidth - 40, 32, 6);
         ctx.fill();
         ctx.stroke();
 
         ctx.fillStyle = '#FFD166';
         ctx.font = 'bold 12px Inter, sans-serif';
-        ctx.fillText(`[ ${idx + 1} ]  ${choice.text}`, boxX + 35, cY + 20);
+        ctx.fillText(`[ ${idx + 1} ]  ${choice.text}`, boxX + 35, cY + 21);
       });
     } else {
       // Advance prompt

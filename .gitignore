@@ -31,6 +31,8 @@ Thumbs.db
 .vitest/
 junit.xml
 test-results/
+playwright-report/
+screenshots/
 
 # Temporary / OS
 tmp/

@@ -2,11 +2,15 @@ import { Entity } from './Entity';
 import { Vector2D } from '../physics/Vector2D';
 import { Projectile } from './Projectile';
 import { IRenderer } from '../render/CanvasRenderer';
+import { CharacterDefinitions } from '../animation/CharacterDefinitions';
+import { CharacterRig } from '../animation/CharacterRig';
 
 export class VanaraScout extends Entity {
   public health = 45;
   public maxHealth = 45;
   public speed = 150;
+
+  public rig: CharacterRig = CharacterDefinitions.createVanaraScoutRig();
 
   private shootCooldown = 2.4;
   private shootTimer = 1.0;
@@ -86,6 +90,13 @@ export class VanaraScout extends Entity {
       }
     }
 
+    // Sync Skeletal Rig
+    this.rig.position.set(this.position.x, this.position.y);
+    this.rig.facing = targetPos.x >= this.position.x ? 1 : -1;
+    this.rig.stateMachine.setFloat('speed', moveDir.magnitudeSquared() > 0 ? 0.7 : 0.0);
+    this.rig.expression = this.hitFlashTimer > 0 ? 'hurt' : 'combat';
+    this.rig.update(dt);
+
     return null;
   }
 
@@ -93,46 +104,38 @@ export class VanaraScout extends Entity {
     if (this.hitFlashTimer > 0) {
       this.hitFlashTimer -= dt;
     }
+    this.rig.position.set(this.position.x, this.position.y);
+    this.rig.update(dt);
   }
 
   public render(renderer: IRenderer): void {
     if (!this.isActive) return;
     const ctx = renderer.getContext();
-    ctx.save();
-    ctx.translate(this.position.x, this.position.y);
-
-    const isFlashing = this.hitFlashTimer > 0;
 
     // Telegraphing charge ring
     if (this.isTelegraphing) {
+      ctx.save();
+      ctx.translate(this.position.x, this.position.y);
       ctx.strokeStyle = '#8338EC';
       ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.arc(0, 0, 20 + this.telegraphTimer * 20, 0, Math.PI * 2);
       ctx.stroke();
+      ctx.restore();
     }
 
-    // Agile Scout Body (Shadow Violet)
-    ctx.fillStyle = isFlashing ? '#FFFFFF' : '#3A0CA3';
-    ctx.strokeStyle = '#4CC9F0';
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.moveTo(0, -14);
-    ctx.lineTo(12, 12);
-    ctx.lineTo(0, 6);
-    ctx.lineTo(-12, 12);
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
+    // Render Skeletal Character Rig (Production Vanara Asset)
+    this.rig.render(renderer);
 
     // Health Bar
+    ctx.save();
+    ctx.translate(this.position.x, this.position.y);
     if (this.health < this.maxHealth) {
       ctx.fillStyle = '#080C14';
       ctx.fillRect(-14, -20, 28, 3);
       ctx.fillStyle = '#EF476F';
       ctx.fillRect(-14, -20, (28 * this.health) / this.maxHealth, 3);
     }
-
     ctx.restore();
   }
 }
