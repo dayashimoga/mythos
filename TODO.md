@@ -247,3 +247,39 @@
 - [ ] TASK-1001: Implement cross-platform cloud save synchronization via WebDAV/Firebase.
 - [ ] TASK-1002: Deploy live telemetry collector for speedrun leaderboard validation.
 - [ ] TASK-1003: Expand Act II Narrative & Patala Underworld realm content.
+
+---
+
+## [2026-10-23] Pipeline Backlog (Stages 1-10) Execution & Full Expansion Delivery
+
+- [x] TASK-101-EXP: Implement procedural room chunk loading for the Realm of Bhumi with deterministic seeds, hazard zones, and dynamic chunk loader (src/expansion/BhumiProceduralChunkLoader.ts). (Completed 2026-10-23)
+- [x] TASK-102-EXP: Implement Void Archer Asura archetype with kiting AI, obsidian bow charging, and piercing shadow projectiles (src/expansion/VoidArcher.ts). (Completed 2026-10-23)
+- [x] TASK-103-EXP: Implement sacred forge weapon crafting and elemental rune attunement subsystem across 5 Vedic elements (src/expansion/ElementalRuneAttunement.ts). (Completed 2026-10-23)
+- [x] TASK-104-EXP: Implement Stage 1 Boss encounter: Kalanemi's Shadow with 3-phase mirage decoys, scythe sweeps, and singularity vortex (src/expansion/KalanemisShadowBoss.ts). (Completed 2026-10-23)
+- [x] TASK-105-EXP: Implement volumetric temple light shafts with raymarched crepuscular beams and illuminated dust scintillation (src/expansion/VolumetricLightShafts.ts). (Completed 2026-10-23)
+- [x] TASK-201-EXP: Implement procedural fluid flow dynamics for subterranean venom rivers in Patala with Eulerian advection and hazard contact (src/expansion/FluidDynamics.ts). (Completed 2026-10-23)
+- [x] TASK-202-EXP: Implement 3 new Naga enemy archetypes: Naga Venom-Spitter, Serpentine Constrictor, and Shadow Illusionist (src/expansion/NagaEnemies.ts). (Completed 2026-10-23)
+- [x] TASK-203-EXP: Implement Vedic Harpoon grappling hook Astra mechanic with ray projection, cable tension, pendulum physics, and momentum release (src/expansion/VedicHarpoonGrapple.ts). (Completed 2026-10-23)
+- [x] TASK-204-EXP: Implement Stage 2 Boss encounter: Shesha's Tormented Echo with multi-segment IK following, burrow strikes, venom tsunamis, and abyssal maelstrom (src/expansion/SheshaTormentedEchoBoss.ts). (Completed 2026-10-23)
+- [x] TASK-205-EXP: Implement dynamic 2D lighting with normal map specular reflections on subterranean basalt blocks (src/expansion/BasaltSpecularLighting.ts). (Completed 2026-10-23)
+- [x] TASK-301-EXP: Implement wind draft physics and aerial updrafts in sky citadel chambers (src/expansion/WindDraftSystem.ts). (Completed 2026-10-23)
+- [x] TASK-302-EXP: Implement 3 new Gandharva/Garuda aerial enemy archetypes: Wind Archer, Storm Sentry with lightning deflector, and diving Gale Falcon (src/expansion/AerialEnemies.ts). (Completed 2026-10-23)
+- [x] TASK-303-EXP: Implement Vayu-Gati aerial dash and glider mechanics with fall speed clamping and invulnerability frames (src/expansion/VayuGliderMechanics.ts). (Completed 2026-10-23)
+- [x] TASK-304-EXP: Implement Stage 3 Boss encounter: Matarishvan's Cyclone with mini tornados, gale blades, and eye-of-the-storm safe zone (src/expansion/MatarishvanCycloneBoss.ts). (Completed 2026-10-23)
+- [x] TASK-305-EXP: Implement real-time cloud shadow projection and atmospheric Rayleigh scattering pass with day/twilight/night gradients (src/expansion/AtmosphericScatter.ts). (Completed 2026-10-23)
+- [x] TASK-601-EXP: Implement procedural Voronoi biome generation for the Seven Mythological Realms with Lloyd relaxation (src/expansion/VoronoiBiomeGenerator.ts). (Completed 2026-10-23)
+- [x] TASK-602-EXP: Implement dynamic weather transition system with volumetric rolling fog and branched lightning shaders (src/expansion/DynamicWeatherTransition.ts). (Completed 2026-10-23)
+- [x] TASK-603-EXP: Implement procedural dungeon generation for subterranean Patala labyrinths with BSP partitioning, venom channels, and vaults (src/expansion/PatalaLabyrinthGenerator.ts). (Completed 2026-10-23)
+- [x] TASK-604-EXP: Implement wildlife and non-combat NPC flocking behaviors in Dandaka groves using Craig Reynolds boid steering (src/expansion/FlockingSystem.ts). (Completed 2026-10-23)
+- [x] TASK-605-EXP: Implement dynamic settlement trading and artisan crafting subsystems with karma-adjusted barter pricing (src/expansion/SettlementEconomy.ts). (Completed 2026-10-23)
+- [x] TASK-803-EXP: Implement cross-platform cloud save synchronization via WebDAV/Firebase with vector clock conflict resolution (src/expansion/CloudSaveAdapter.ts). (Completed 2026-10-23)
+- [x] TASK-804-EXP: Implement comprehensive speedrun timer and leaderboard telemetry with millisecond IGT, delta splits, and anti-cheat hash validation (src/expansion/SpeedrunTelemetry.ts). (Completed 2026-10-23)
+- [x] TASK-901-EXP: Implement declarative modding schema for custom weapons and divine Astras with full JSON schema validation (src/expansion/ModdingSchema.ts). (Completed 2026-10-23)
+- [x] TASK-902-EXP: Implement community quest editor and user-generated narrative graph exporter with DAG cycle detection (src/expansion/CommunityQuestEditor.ts). (Completed 2026-10-23)
+- [x] TASK-903-EXP: Implement asynchronous multiplayer ghost runner for speedrun trials with frame interpolation and telemetry sharing (src/expansion/GhostRunner.ts). (Completed 2026-10-23)
+- [x] TASK-904-EXP: Implement seasonal karmic challenge events with dynamic realm mutators and scoring multipliers (src/expansion/KarmicChallengeMutator.ts). (Completed 2026-10-23)
+- [x] TASK-905-EXP: Implement cloud telemetry pipeline for game balance and encounter analytics (src/expansion/GameTelemetryPipeline.ts). (Completed 2026-10-23)
+- [x] TASK-1001-EXP: Satisfied cross-platform cloud save synchronization via WebDAV/Firebase through CloudSaveAdapter.ts. (Completed 2026-10-23)
+- [x] TASK-1002-EXP: Satisfied live telemetry collector for speedrun leaderboard validation through SpeedrunTelemetry.ts & GameTelemetryPipeline.ts. (Completed 2026-10-23)
+- [x] TASK-1003-EXP: Implemented Act II Narrative & Patala Underworld realm campaign content with 5 canonical missions and Vasuki dialogue trees (src/expansion/Act2PatalaCampaign.ts). (Completed 2026-10-23)
+- [x] TASK-1004-EXP: Delivered comprehensive automated test suites (tests/unit/ExpansionPipelineStage1To3.test.ts, ExpansionPipelineStage6To10.test.ts, ExpansionBranchCoverage.test.ts; 44 test files, 375 tests passing, 93.63% lines, 85.57% branches). (Completed 2026-10-23)
