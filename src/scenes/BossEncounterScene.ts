@@ -18,6 +18,7 @@ import { SaveGameManager } from '../state/SaveGameManager';
 import { PauseMenuModal } from '../ui/modals/PauseMenuModal';
 import { SettingsModal } from '../ui/modals/SettingsModal';
 import { ToastManager } from '../ui/components/ToastManager';
+import { CelestialVFX } from '../render/CelestialVFX';
 
 export class BossEncounterScene implements IScene {
   public readonly id = 'BossEncounterScene';
@@ -85,12 +86,24 @@ export class BossEncounterScene implements IScene {
       }
     });
 
+    this.engine.getAudio().startMusic('MARWA', 0.65);
+    this.engine.getAudio().startAmbience('OBSIDIAN_CHASM');
+
     this.resetEncounter();
+  }
+
+  public onExit(): void {
+    this.collisionSystem.clear();
+    this.particles.clear();
+    CelestialVFX.getInstance().clear();
+    this.engine.getAudio().stopMusic();
+    this.engine.getAudio().stopAmbience();
   }
 
   public resetEncounter(): void {
     this.collisionSystem.clear();
     this.particles.clear();
+    CelestialVFX.getInstance().clear();
     this.shockwaves = [];
     this.enemyProjectiles = [];
     this.playerProjectiles = [];
@@ -138,11 +151,6 @@ export class BossEncounterScene implements IScene {
       tag: 'boss',
       isStatic: false,
     });
-  }
-
-  public onExit(): void {
-    this.collisionSystem.clear();
-    this.particles.clear();
   }
 
   public handleInput(input: InputManager): void {
@@ -274,6 +282,10 @@ export class BossEncounterScene implements IScene {
       140
     );
 
+    const facingAngle = Math.atan2(this.player.facing.y, this.player.facing.x || 1);
+    CelestialVFX.getInstance().emitSlashTrail(this.player.position, facingAngle, burstColor);
+    this.engine.getAudio().playFoleyImpact('CELESTIAL_GOLD', 'SLASH');
+
     // 1. Check Hit Against Boss
     if (this.boss.isActive) {
       const distToBoss = Vector2D.distance(this.player.position, this.boss.position);
@@ -375,7 +387,13 @@ export class BossEncounterScene implements IScene {
     if (this.isPaused) return;
 
     this.particles.update(dt);
+    CelestialVFX.getInstance().update(dt);
     this.damageNumbers.update(dt);
+    this.engine.getAudio().update(dt);
+    this.engine.getAudio().spatial.setListener(this.player.position, this.player.velocity);
+
+    const tension = this.boss.phase === 3 ? 1.0 : (this.boss.phase === 2 ? 0.85 : 0.65);
+    this.engine.getAudio().setCombatTension(tension);
 
     if (this.isGameOver || this.isVictory) return;
 
@@ -581,8 +599,9 @@ export class BossEncounterScene implements IScene {
 
     this.player.render(renderer);
 
-    // 5. Particles & Damage Numbers
+    // 5. Particles, CelestialVFX & Damage Numbers
     this.particles.render(ctx, new Vector2D(0, 0));
+    CelestialVFX.getInstance().render(renderer);
     this.damageNumbers.render(renderer);
 
     // 6. Boss HUD & Overlays

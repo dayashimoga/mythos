@@ -2,6 +2,7 @@ import { Camera } from '../render/Camera';
 import { Vector2D } from '../physics/Vector2D';
 import { IRenderer } from '../render/CanvasRenderer';
 import { DialogueTree } from '../narrative/DialogueTree';
+import { AccessibilityManager } from '../ui/accessibility/AccessibilityManager';
 
 export interface CinematicShot {
   duration: number; // Duration of shot in seconds
@@ -9,6 +10,14 @@ export interface CinematicShot {
   cameraZoom?: number;
   letterboxHeight?: number; // Target letterbox bar height (0 for gameplay, ~64 for cinematic)
   dialogueNodeId?: string;
+  orbitCenter?: Vector2D;
+  orbitRadius?: number;
+  orbitSpeed?: number; // rad/s
+  dollyZoom?: {
+    startZoom: number;
+    endZoom: number;
+  };
+  focusBlur?: number;
   titleCard?: {
     title: string;
     subtitle?: string;
@@ -23,6 +32,7 @@ export class CinematicDirector {
   private shots: CinematicShot[] = [];
   private currentShotIndex = 0;
   private shotTimer = 0;
+  private shotElapsed = 0;
   private state: CinematicState = 'IDLE';
 
   // Smooth letterbox transition
@@ -36,6 +46,9 @@ export class CinematicDirector {
 
   // Title Card Overlay
   private currentTitleCard: { title: string; subtitle?: string; alpha: number } | null = null;
+
+  // Active Orbit tracking
+  private currentOrbitAngle = 0;
 
   public onSequenceComplete?: () => void;
 
@@ -62,6 +75,8 @@ export class CinematicDirector {
     this.shots = shots;
     this.currentShotIndex = 0;
     this.shotTimer = 0;
+    this.shotElapsed = 0;
+    this.currentOrbitAngle = 0;
     this.state = 'PLAYING';
     this.startShot(0);
   }
@@ -74,10 +89,15 @@ export class CinematicDirector {
 
     const shot = this.shots[index];
     this.shotTimer = shot.duration;
+    this.shotElapsed = 0;
     this.targetLetterbox = shot.letterboxHeight !== undefined ? shot.letterboxHeight : 64;
 
     if (shot.cameraTarget && this.camera) {
       this.camera.setTarget(shot.cameraTarget);
+    }
+
+    if (shot.cameraZoom !== undefined && this.camera) {
+      this.camera.setZoom(shot.cameraZoom);
     }
 
     if (shot.titleCard) {
@@ -126,6 +146,28 @@ export class CinematicDirector {
     if (this.state !== 'PLAYING') return;
 
     this.shotTimer -= dt;
+    this.shotElapsed += dt;
+
+    const currentShot = this.shots[this.currentShotIndex];
+    if (currentShot) {
+      // Dynamic Orbit
+      if (currentShot.orbitCenter && currentShot.orbitRadius && this.camera) {
+        const speed = currentShot.orbitSpeed ?? 0.5;
+        this.currentOrbitAngle += speed * dt;
+        const orbitX = currentShot.orbitCenter.x + Math.cos(this.currentOrbitAngle) * currentShot.orbitRadius;
+        const orbitY = currentShot.orbitCenter.y + Math.sin(this.currentOrbitAngle) * currentShot.orbitRadius;
+        this.camera.setTarget(new Vector2D(orbitX, orbitY));
+      }
+
+      // Dolly Zoom interpolation
+      if (currentShot.dollyZoom && this.camera && currentShot.duration > 0) {
+        const t = Math.min(1.0, this.shotElapsed / currentShot.duration);
+        const { startZoom, endZoom } = currentShot.dollyZoom;
+        const interpolatedZoom = startZoom + (endZoom - startZoom) * t;
+        this.camera.setZoom(interpolatedZoom);
+      }
+    }
+
     if (this.shotTimer <= 0) {
       this.nextShot();
     }
@@ -181,15 +223,30 @@ export class CinematicDirector {
       // Bottom bar
       ctx.fillRect(0, vp.height - this.currentLetterbox, vp.width, this.currentLetterbox);
 
-      // Gold Accent Edge Lines
-      ctx.strokeStyle = '#D97706';
-      ctx.lineWidth = 1;
+      // Gold Accent Edge Lines with Brahmic Center Diamond Knots
+      ctx.strokeStyle = '#FFB703';
+      ctx.lineWidth = 1.5;
       ctx.beginPath();
       ctx.moveTo(0, this.currentLetterbox);
       ctx.lineTo(vp.width, this.currentLetterbox);
       ctx.moveTo(0, vp.height - this.currentLetterbox);
       ctx.lineTo(vp.width, vp.height - this.currentLetterbox);
       ctx.stroke();
+
+      // Top & Bottom Center Brahmic Diamond Knots
+      const midX = vp.width / 2;
+      const drawKnot = (y: number) => {
+        ctx.fillStyle = '#FFB703';
+        ctx.beginPath();
+        ctx.moveTo(midX, y - 4);
+        ctx.lineTo(midX + 5, y);
+        ctx.lineTo(midX, y + 4);
+        ctx.lineTo(midX - 5, y);
+        ctx.closePath();
+        ctx.fill();
+      };
+      drawKnot(this.currentLetterbox);
+      drawKnot(vp.height - this.currentLetterbox);
     }
 
     // 2. Title Card Overlay
@@ -197,13 +254,16 @@ export class CinematicDirector {
       ctx.save();
       ctx.globalAlpha = this.currentTitleCard.alpha;
 
-      ctx.font = 'bold 32px "Cinzel", Georgia, serif';
+      const isDyslexic = AccessibilityManager.getInstance().isDyslexiaFont();
+      const fontFace = isDyslexic ? 'OpenDyslexic, sans-serif' : '"Cinzel", Georgia, serif';
+
+      ctx.font = `bold 32px ${fontFace}`;
       ctx.fillStyle = '#FFB703';
       ctx.textAlign = 'center';
       ctx.fillText(this.currentTitleCard.title, vp.width / 2, vp.height / 2 - 20);
 
       if (this.currentTitleCard.subtitle) {
-        ctx.font = '600 15px "Cinzel", Georgia, serif';
+        ctx.font = `600 15px ${fontFace}`;
         ctx.fillStyle = '#E2E8F0';
         ctx.fillText(this.currentTitleCard.subtitle, vp.width / 2, vp.height / 2 + 16);
       }
@@ -213,11 +273,79 @@ export class CinematicDirector {
     // 3. Skip Prompt
     if (this.isPlaying()) {
       ctx.font = '10px Inter, sans-serif';
-      ctx.fillStyle = 'rgba(148, 163, 184, 0.6)';
+      ctx.fillStyle = 'rgba(148, 163, 184, 0.75)';
       ctx.textAlign = 'right';
       ctx.fillText('Press [ ESC ] to Skip Cinematic', vp.width - 24, 28);
     }
 
     ctx.restore();
+  }
+
+  // --- Canonical Sequence Generators ---
+
+  public static createSanctumAwakeningSequence(
+    altarPos: Vector2D,
+    playerPos: Vector2D,
+    callbacks?: { onAwaken?: () => void; onComplete?: () => void }
+  ): CinematicShot[] {
+    return [
+      {
+        duration: 2.2,
+        cameraTarget: playerPos,
+        cameraZoom: 1.15,
+        titleCard: {
+          title: 'SANCTUM OF ASTRA',
+          subtitle: 'The Dawning Awakening of Surya-Kund',
+        },
+      },
+      {
+        duration: 3.0,
+        cameraTarget: altarPos,
+        orbitCenter: altarPos,
+        orbitRadius: 40,
+        orbitSpeed: 0.35,
+        cameraZoom: 1.3,
+        onShotStart: callbacks?.onAwaken,
+      },
+      {
+        duration: 1.5,
+        cameraTarget: playerPos,
+        cameraZoom: 1.0,
+        onShotEnd: callbacks?.onComplete,
+      },
+    ];
+  }
+
+  public static createMahishasuraAwakeningSequence(
+    bossPos: Vector2D,
+    playerPos: Vector2D,
+    callbacks?: { onRoar?: () => void; onComplete?: () => void }
+  ): CinematicShot[] {
+    return [
+      {
+        duration: 2.0,
+        cameraTarget: bossPos,
+        cameraZoom: 1.25,
+        titleCard: {
+          title: 'TITAN OF ECLIPSE',
+          subtitle: 'Mahishasura Primordial Awakening',
+        },
+        onShotStart: callbacks?.onRoar,
+      },
+      {
+        duration: 2.5,
+        cameraTarget: bossPos,
+        dollyZoom: {
+          startZoom: 1.25,
+          endZoom: 0.9,
+        },
+      },
+      {
+        duration: 1.5,
+        cameraTarget: playerPos,
+        cameraZoom: 1.0,
+        onShotEnd: callbacks?.onComplete,
+      },
+    ];
   }
 }

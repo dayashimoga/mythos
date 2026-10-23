@@ -39,6 +39,10 @@ export class Camera {
     this.target = target;
   }
 
+  public setZoom(zoom: number): void {
+    this.zoom = zoom;
+  }
+
   public setWorldBounds(minX: number, minY: number, maxX: number, maxY: number): void {
     this.worldMinX = minX;
     this.worldMinY = minY;

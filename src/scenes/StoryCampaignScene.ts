@@ -26,6 +26,7 @@ import { CodexQuestModal } from '../ui/modals/CodexQuestModal';
 import { SettingsModal } from '../ui/modals/SettingsModal';
 import { ProductionHUD } from '../ui/ProductionHUD';
 import { ToastManager } from '../ui/components/ToastManager';
+import { CelestialVFX } from '../render/CelestialVFX';
 
 export class StoryCampaignScene implements IScene {
   public readonly id = 'StoryCampaignScene';
@@ -145,11 +146,15 @@ export class StoryCampaignScene implements IScene {
       },
     });
 
+    this.engine.getAudio().startMusic('BHAIRAV', 0.1);
+    this.engine.getAudio().startAmbience('SANCTUM_DAWN');
+
     this.resetCampaign();
   }
 
   public resetCampaign(): void {
     this.particles.clear();
+    CelestialVFX.getInstance().clear();
     this.playerProjectiles = [];
     this.enemyProjectiles = [];
     this.shockwaves = [];
@@ -206,6 +211,9 @@ export class StoryCampaignScene implements IScene {
 
   public onExit(): void {
     this.particles.clear();
+    CelestialVFX.getInstance().clear();
+    this.engine.getAudio().stopMusic();
+    this.engine.getAudio().stopAmbience();
     this.cinematicDirector.finishSequence();
   }
 
@@ -383,6 +391,15 @@ export class StoryCampaignScene implements IScene {
   private handlePlayerMelee(arc: any): void {
     this.questManager.triggerObjectiveEvent('DEFEAT_TARGET', 'training_strike', 1);
 
+    // Audio & VFX Slash Trail
+    const activeWeapon = this.player.equipmentManager.getActiveWeapon();
+    const trailColor = activeWeapon === 'AGNI_CHAKRAM' ? '#FFB703' : '#00E5FF';
+    const facingAngle = this.player.velocity.length() > 0.1
+      ? Math.atan2(this.player.velocity.y, this.player.velocity.x)
+      : 0;
+    CelestialVFX.getInstance().emitSlashTrail(this.player.position, facingAngle, trailColor);
+    this.engine.getAudio().playFoleyImpact('CELESTIAL_GOLD', 'SLASH');
+
     // Check hit against Sentinels
     for (let i = this.sentinels.length - 1; i >= 0; i--) {
       const s = this.sentinels[i];
@@ -393,6 +410,8 @@ export class StoryCampaignScene implements IScene {
         s.takeDamage(arc.damage);
         this.damageNumbers.spawn(s.position.x, s.position.y - 20, arc.damage.toString(), '#FFD166');
         this.particles.emitBurst(s.position.x, s.position.y, 12, '#EF4444', 120);
+        this.engine.getAudio().playFoleyImpact('BRONZE', 'IMPACT');
+        CelestialVFX.getInstance().emitMaterialDebris(s.position, s.position.subtract(this.player.position));
 
         if (!s.isActive) {
           this.questManager.triggerObjectiveEvent('DEFEAT_TARGET', 'corrupted_sentinel', 1);
@@ -407,6 +426,9 @@ export class StoryCampaignScene implements IScene {
         this.pillarOm.attune();
         this.questManager.triggerObjectiveEvent('CONSECRATE_ALTAR', 'pillar_om', 1);
         this.engine.getAudio().playAltarResonate();
+        this.engine.getAudio().playMantra('KRIM');
+        CelestialVFX.getInstance().emitSanskritRunes(this.pillarOm.position, 6, '#FFB703');
+        CelestialVFX.getInstance().emitShockwave(this.pillarOm.position, 180, '#FFB703', '#00E5FF');
       }
     }
 
@@ -415,6 +437,9 @@ export class StoryCampaignScene implements IScene {
         this.pillarKrim.attune();
         this.questManager.triggerObjectiveEvent('CONSECRATE_ALTAR', 'pillar_krim', 1);
         this.engine.getAudio().playAltarResonate();
+        this.engine.getAudio().playMantra('KRIM');
+        CelestialVFX.getInstance().emitSanskritRunes(this.pillarKrim.position, 6, '#FFB703');
+        CelestialVFX.getInstance().emitShockwave(this.pillarKrim.position, 180, '#FFB703', '#00E5FF');
       }
     }
 
@@ -423,6 +448,7 @@ export class StoryCampaignScene implements IScene {
       if (Vector2D.distance(this.player.position, this.boss.position) <= arc.radius + 40) {
         this.boss.takeDamage(arc.damage);
         this.damageNumbers.spawn(this.boss.position.x, this.boss.position.y - 20, arc.damage.toString(), '#FFD700');
+        this.engine.getAudio().playFoleyImpact('GRANITE', 'IMPACT');
 
         if (this.boss.poise.isStaggered) {
           this.questManager.triggerObjectiveEvent('DEFEAT_TARGET', 'boss_stagger', 1);
@@ -446,6 +472,10 @@ export class StoryCampaignScene implements IScene {
         this.altar.depositShard();
         this.questManager.triggerObjectiveEvent('CONSECRATE_ALTAR', 'sun_altar', 1);
         this.engine.getAudio().playVictoryFanfare();
+        this.engine.getAudio().playMantra('OM');
+        CelestialVFX.getInstance().emitShockwave(this.altar.position, 280, '#FFB703', '#00E5FF');
+        CelestialVFX.getInstance().emitSanskritRunes(this.altar.position, 8, '#FFD166');
+        CelestialVFX.getInstance().triggerRadialDistortion(this.altar.position, 1.0);
         this.particles.emitBurst(this.altar.position.x, this.altar.position.y, 60, '#FFB703', 250);
 
         // Advance to Act II
@@ -471,6 +501,8 @@ export class StoryCampaignScene implements IScene {
     this.checkpointManager.register('cp_act2', 'Dandaka Torana Gate', 0, -250);
     this.checkpointManager.activate('cp_act2');
     this.questManager.startMission('M3_DANDAKA_INFILTRATION');
+    this.engine.getAudio().startMusic('DARBARI', 0.25);
+    this.engine.getAudio().startAmbience('DANDAKA_GROVE');
 
     this.cinematicDirector.playSequence([
       {
@@ -490,6 +522,8 @@ export class StoryCampaignScene implements IScene {
     this.checkpointManager.register('cp_act3', 'Caldera Precipice', 0, -1100);
     this.checkpointManager.activate('cp_act3');
     this.questManager.startMission('M5_OBSIDIAN_THRONE');
+    this.engine.getAudio().startMusic('MARWA', 0.65);
+    this.engine.getAudio().startAmbience('OBSIDIAN_CHASM');
 
     // Spawn Titan Boss Mahishasura
     this.boss = new MahishasuraBoss('boss_mahisha_campaign', 0, -1350);
@@ -548,7 +582,9 @@ export class StoryCampaignScene implements IScene {
     this.cinematicDirector.update(dt);
     this.dialogueTree.update(dt);
     this.particles.update(dt);
+    CelestialVFX.getInstance().update(dt);
     this.damageNumbers.update(dt);
+    this.engine.getAudio().update(dt);
 
     if (this.cinematicDirector.isPlaying() || this.dialogueTree.isActive()) {
       return; // Pause world simulation during scripted cinematics
@@ -558,6 +594,12 @@ export class StoryCampaignScene implements IScene {
 
     // Update Player
     this.player.update(dt);
+    this.engine.getAudio().spatial.setListener(this.player.position, this.player.velocity);
+
+    const activeSentinels = this.sentinels.filter(s => s.isActive && Vector2D.distance(this.player.position, s.position) < 320).length;
+    const bossTension = (this.boss && this.boss.isActive) ? 0.65 : 0.0;
+    this.engine.getAudio().setCombatTension(Math.min(1.0, 0.1 + activeSentinels * 0.25 + bossTension));
+
     if (this.player.health <= 0) {
       this.isGameOver = true;
       return;
@@ -637,8 +679,9 @@ export class StoryCampaignScene implements IScene {
     // 4. Render Player
     this.player.render(renderer);
 
-    // 5. Particles & Damage Numbers
+    // 5. Particles, CelestialVFX & Damage Numbers
     this.particles.render(ctx, new Vector2D(0, 0));
+    CelestialVFX.getInstance().render(renderer);
     this.damageNumbers.render(renderer);
 
     // 6. Cinematic & Dialogue Overlays

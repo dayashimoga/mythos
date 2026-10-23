@@ -141,6 +141,22 @@ export class AccessibilityManager {
     return baseShake * this.settings.screenShakeFactor;
   }
 
+  public isReducedMotion(): boolean {
+    return this.settings.reducedMotion;
+  }
+
+  public isHighContrast(): boolean {
+    return this.settings.highContrast;
+  }
+
+  public isDyslexiaFont(): boolean {
+    return this.settings.dyslexiaFont;
+  }
+
+  public getScreenShakeFactor(): number {
+    return this.settings.screenShakeFactor;
+  }
+
   public getSubtitleFontSize(basePx = 14): number {
     switch (this.settings.subtitleScale) {
       case 'large':

@@ -47,6 +47,18 @@ export class Vector2D {
     return Math.sqrt(this.magnitudeSquared());
   }
 
+  public length(): number {
+    return this.magnitude();
+  }
+
+  public subtract(other: Vector2D): Vector2D {
+    return new Vector2D(this.x - other.x, this.y - other.y);
+  }
+
+  public multiply(scalar: number): Vector2D {
+    return new Vector2D(this.x * scalar, this.y * scalar);
+  }
+
   public normalize(): this {
     const mag = this.magnitude();
     if (mag > 0.00001) {

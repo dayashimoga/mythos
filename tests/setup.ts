@@ -55,23 +55,51 @@ if (typeof HTMLCanvasElement !== 'undefined') {
 // WebAudio Mock
 class MockAudioParam {
   value = 0;
-  setValueAtTime = vi.fn();
-  linearRampToValueAtTime = vi.fn();
-  exponentialRampToValueAtTime = vi.fn();
+  setValueAtTime = vi.fn((val: number) => { this.value = val; });
+  linearRampToValueAtTime = vi.fn((val: number) => { this.value = val; });
+  exponentialRampToValueAtTime = vi.fn((val: number) => { this.value = val; });
 }
 
 class MockGainNode {
   gain = new MockAudioParam();
   connect = vi.fn();
+  disconnect = vi.fn();
+}
+
+class MockStereoPannerNode {
+  pan = new MockAudioParam();
+  connect = vi.fn();
+  disconnect = vi.fn();
+}
+
+class MockBiquadFilterNode {
+  type = 'lowpass';
+  frequency = new MockAudioParam();
+  Q = new MockAudioParam();
+  gain = new MockAudioParam();
+  connect = vi.fn();
+  disconnect = vi.fn();
+}
+
+class MockBufferSourceNode {
+  buffer: any = null;
+  playbackRate = new MockAudioParam();
+  loop = false;
+  connect = vi.fn();
+  disconnect = vi.fn();
+  start = vi.fn();
+  stop = vi.fn();
+  onended: (() => void) | null = null;
 }
 
 class MockOscillatorNode {
   type = 'sine';
   frequency = new MockAudioParam();
   connect = vi.fn();
+  disconnect = vi.fn();
   start = vi.fn();
   stop = vi.fn();
-  onended = null;
+  onended: (() => void) | null = null;
 }
 
 class MockAudioContext {
@@ -80,6 +108,15 @@ class MockAudioContext {
   destination = {};
   createOscillator = vi.fn(() => new MockOscillatorNode());
   createGain = vi.fn(() => new MockGainNode());
+  createStereoPanner = vi.fn(() => new MockStereoPannerNode());
+  createBiquadFilter = vi.fn(() => new MockBiquadFilterNode());
+  createBufferSource = vi.fn(() => new MockBufferSourceNode());
+  createBuffer = vi.fn((channels: number, length: number, sampleRate: number) => ({
+    numberOfChannels: channels,
+    length,
+    sampleRate,
+    getChannelData: vi.fn(() => new Float32Array(length)),
+  }));
   resume = vi.fn().mockResolvedValue(undefined);
   close = vi.fn().mockResolvedValue(undefined);
 }
