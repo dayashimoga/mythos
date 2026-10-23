@@ -37,3 +37,9 @@ screenshots/
 # Temporary / OS
 tmp/
 temp/
+
+# Godot Engine Cache & Builds
+.godot/
+godot/.godot/
+builds/
+tools/

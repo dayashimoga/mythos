@@ -148,3 +148,51 @@ mythologicalgame/
 - When returning to `SplashScene`, invoke `sceneManager.clearNavigationStack()` and `camera.reset(0, 0, 1.0)`.
 - Scenes must clean up event listeners, pooled particle references, and transient UI states in `onExit()`.
 
+---
+
+## 5. Stage 3D-0 Godot 3D Project Structure & Developer Workflows
+
+### 5.1 Directory Layout (`godot/`)
+```
+godot/
+├── project.godot               # Master Godot 4.3 configuration
+├── export_presets.cfg          # Export definitions (Windows, Linux, Web)
+├── icon.svg                    # Sacred Surya 8-pointed solar icon
+├── scenes/
+│   ├── levels/
+│   │   └── TestChamber3D.tscn  # Complete 3D Sanctum test environment
+│   ├── player/
+│   │   └── Player3D.tscn       # CharacterBody3D, SpringArm3D orbit camera, avatar mesh
+│   ├── interactables/
+│   │   ├── SunShrine3D.tscn    # Area3D Sun Altar shrine with rotating mandala
+│   │   └── AstraShard3D.tscn   # Area3D floating crystal pickups
+│   └── ui/
+│       └── HUD3D.tscn          # CanvasLayer HUD (HP, shards, objectives, hotkeys)
+├── scripts/
+│   ├── camera/
+│   │   └── orbit_camera_3d.gd  # Third-person spherical orbit camera controller
+│   ├── domain/
+│   │   ├── combat_math.gd      # Ported combat formulas, parry, block, poise, criticals
+│   │   ├── quest_manager.gd    # Ported quest state machine and objectives
+│   │   ├── dialogue_runner.gd  # Ported dialogue graph traversal
+│   │   └── save_system.gd      # Ported JSON persistence with SHA-256 checksums
+│   ├── interactables/
+│   │   ├── shrine_3d.gd        # Proximity prompt and flame ignition logic
+│   │   └── astra_shard_3d.gd   # Continuous rotation, bobbing, and pickup detection
+│   ├── levels/
+│   │   └── test_chamber_3d.gd  # Scene controller, lighting, and quest events
+│   └── player/
+│       └── player_controller_3d.gd # Locomotion, gravity, stairs, dash, combo slash
+└── tests/
+    ├── runner.gd               # Headless test runner script (exits 0 on success)
+    ├── unit/                   # Unit test suites (combat, quests, save, dialogue)
+    └── integration/            # 3D traversal, stairs elevation, camera orbit tests
+```
+
+### 5.2 Developer Commands
+- `npm run test:godot`: Executes Godot headless test runner natively on Windows (`tools/godot/Godot_v4.3-stable_win64_console.exe`).
+- `npm run test:godot:podman`: Executes Godot headless test runner in containerized Podman environment (`barichello/godot-ci:4.3`).
+- `npm run test`: Executes full Vitest suite (including `Stage3D0MigrationAndParity.test.ts`).
+- `npm run build`: Builds TypeScript production bundles for dual-runtime web support.
+
+

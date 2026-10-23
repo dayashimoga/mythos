@@ -108,3 +108,28 @@ When troubleshooting gameplay or performance anomalies, press **`F3`** (or click
 - **Root Cause:** `SceneManager.navigationStack` retained stale scene references, and camera transform/shake parameters were not reset.
 - **Resolution:** Added `clearNavigationStack()` and `camera.reset(0, 0, 1.0)` whenever transitioning to `SplashScene`. Wrapped scene rendering in `try...finally` with transform stack and composite operation resets.
 
+---
+
+## 5. Stage 3D-0 Godot 3D Architecture & Build Troubleshooting
+
+### 5.1 Podman Container Volume Rename Error (`rename_error != 0`)
+- **Symptom:** During Godot export inside a Podman container, error appears: `Condition "rename_error != 0" is true. Failed to copy export template.`
+- **Root Cause:** WSL / Windows 9P filesystem mounts do not support atomic temporary file renaming across host directory mounts.
+- **Resolution:** Export first to a native container path (`/tmp/export/binary_name`), then `cp` the resulting binaries onto the mounted `/workspace/builds/` directory.
+
+### 5.2 Standalone Headless Test Runner Script Parse Errors
+- **Symptom:** Running `godot --headless -s runner.gd` fails with `Identifier "TestCombatMath" not declared in current scope`.
+- **Root Cause:** Godot's `global_script_class_cache.cfg` has not yet been generated because the graphical editor hasn't indexed scripts.
+- **Resolution:** Either run `godot --headless --path ./godot --editor --quit` first to compile the cache, or use `load("res://path/to/script.gd")` directly in the runner. Both mechanisms are supported.
+
+### 5.3 WebAssembly 3D Browser Loading Issues (SharedArrayBuffer)
+- **Symptom:** Browser canvas fails to initialize with security error regarding cross-origin isolation.
+- **Root Cause:** Godot 4 Web exports utilize WebAssembly and optional threading models requiring specific HTTP security headers.
+- **Resolution:** Ensure the local dev server or host serves responses with:
+  ```http
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Embedder-Policy: require-corp
+  ```
+  This is pre-configured in `vite.config.ts` and `podman-compose.yml`.
+
+

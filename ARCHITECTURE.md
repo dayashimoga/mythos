@@ -325,4 +325,54 @@ The reconstructed Sanctum scene utilizes multi-pass lighting:
 4. **Point-Light Radial Pass:** Harmonic flickering firelight from 4 bronze braziers and 4 pillar Diya lamps casting warm illumination ($r=140\text{px}-240\text{px}$) onto the surrounding environment.
 5. **Screen-Space HUD Pass:** Production HUD and modals drawn with clean vector contrast.
 
+---
+
+## 8. Stage 3D-0 Genuine 3D Architecture Transformation
+
+### 8.1 3D Engine Architecture & Pinned Version
+- **Canonical Engine:** Godot Engine 4.3 Stable Official (`4.3.stable.official.77dcf97d8`) with Standard GDScript.
+- **Rendering Architecture:** `gl_compatibility` (WebGL 2.0 / OpenGL ES 3.0) and `forward_plus` (Vulkan) dual-profile configuration in `godot/project.godot`.
+- **Coordinate System:** Right-handed 3D Cartesian coordinates ($+X$ East, $+Y$ Up, $+Z$ South / toward default camera).
+- **Physics Engine:** GodotPhysics3D with discrete collision detection, floor snapping length $0.4\text{m}$, and maximum slope angle $48.0^\circ$ allowing continuous physical stair climbing.
+
+### 8.2 Scene Graph & Node Structure
+```
+TestChamber3D (Node3D, test_chamber_3d.gd)
+├── WorldEnvironment (Procedural twilight sky dome & glow bloom)
+├── DirectionalLight3D (Sunlight with soft shadow cascades)
+├── HUD3D (CanvasLayer, hud_3d.gd)
+│   ├── TopBar (HealthBar & ShardsPanel)
+│   ├── ObjectivePanel (Mission objective label)
+│   └── ControlsPanel (3D traversal & combat hotkey guide)
+├── Player (CharacterBody3D, player_controller_3d.gd)
+│   ├── CollisionShape3D (CapsuleShape3D, radius 0.42m, height 1.8m)
+│   ├── CameraArm (SpringArm3D, orbit_camera_3d.gd)
+│   │   └── Camera3D (Perspective FOV 72.0)
+│   ├── InteractDetector (Area3D, radius 2.2m)
+│   └── Visual (Articulated 3D mesh hierarchy with sockets)
+└── Environment (StaticBody3D structures & Area3D interactables)
+    ├── GroundFloor (36m x 36m basalt platform)
+    ├── ElevatedStage (16m x 12m, raised +2.4m)
+    ├── Stairs (8 physical steps, height 0.30m, depth 0.60m, width 4.2m)
+    ├── Pillars (4 carved Hoysala stone columns with cylinder collision)
+    ├── SunShrine (SunShrine3D, rotating golden Surya mandala, point light flare)
+    └── Shards (3 floating, rotating AstraShard3D crystal pickups)
+```
+
+### 8.3 Third-Person Camera & Camera-Relative Locomotion
+The camera controller (`orbit_camera_3d.gd`) is mounted on a `SpringArm3D` attached at $Y = 1.45\text{m}$:
+1. **Camera Orbit:** Right-click mouse dragging orbits the arm horizontally (yaw) and vertically (pitch). Pitch is clamped to $[-70.0^\circ, 25.0^\circ]$ to prevent disorienting camera flips.
+2. **Obstruction Occlusion Raycasting:** The SpringArm3D raycasts against Layer 1 (Environment) with margin $0.25\text{m}$, automatically pulling the camera inward when near walls or obstacles.
+3. **Camera-Relative Movement:** Input vector $(x_{in}, y_{in})$ is projected along the camera's world $Y$-rotation angle $\theta_{cam}$:
+   $$\vec{v}_{move} = \left(\cos\theta_{cam} \cdot x_{in} + \sin\theta_{cam} \cdot y_{in}\right) \hat{i} + \left(-\sin\theta_{cam} \cdot x_{in} + \cos\theta_{cam} \cdot y_{in}\right) \hat{k}$$
+   Avatar smoothly rotates to face $\vec{v}_{move}$ using `lerp_angle(rotation.y, target_angle, 14.0 * delta)`.
+
+### 8.4 Domain Systems Architecture
+Pure gameplay logic is decoupled from rendering and implemented in modular GDScript domain classes:
+- `combat_math.gd`: Authoritative damage, 120ms parry, directional block, poise breakdown, stagger timers, and +35% critical multiplier.
+- `quest_manager.gd`: Objective progress state machine (Sanctum Calibration, Shard collection, Altar consecration).
+- `dialogue_runner.gd`: Branching dialogue graph with speaker attributions and history.
+- `save_system.gd`: JSON persistence with 32-bit polynomial checksum integrity verification.
+
+
 

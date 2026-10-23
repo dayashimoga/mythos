@@ -16,7 +16,9 @@
     "verify:append-only": "node scripts/verify-append-only.js",
     "build:platforms": "node scripts/build-platforms.js",
     "validate:artifacts": "node scripts/validate-artifacts.js",
-    "generate:sbom": "node scripts/generate-sbom.js"
+    "generate:sbom": "node scripts/generate-sbom.js",
+    "test:godot": "tools\\godot\\Godot_v4.3-stable_win64_console.exe --headless --path ./godot -s res://tests/runner.gd",
+    "test:godot:podman": "podman run --rm -v \".:/workspace:Z\" -w /workspace docker.io/barichello/godot-ci:4.3 godot --headless --path ./godot -s res://tests/runner.gd"
   },
   "devDependencies": {
     "@playwright/test": "^1.64.1",

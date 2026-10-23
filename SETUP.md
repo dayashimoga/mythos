@@ -114,3 +114,39 @@ All distribution bundles, binary formats, and cryptographic hashes will be gener
 - `mythos-astra-ios-v0.1.0-unsigned.xcarchive.zip` (Genuine Xcode archive with Mach-O ARM64)
 - `SHA256SUMS.txt`
 - `RELEASE_MANIFEST.json`
+
+---
+
+## 7. Stage 3D-0 Godot 3D Engine Setup & Workflows
+
+### 7.1 Running Godot Tests Natively (Windows)
+```bash
+# Execute Godot 4.3 headless test runner (20 tests)
+npm run test:godot
+```
+
+### 7.2 Running Godot Tests via Podman Container (Host-Independent)
+```bash
+# Execute Godot in official barichello/godot-ci:4.3 container
+npm run test:godot:podman
+```
+
+### 7.3 Multiplatform 3D Exports
+```bash
+# Run multiplatform export (Windows, Linux, Web) via Podman
+podman-compose run godot-export
+```
+Exported binaries will be generated in:
+- `builds/windows/mythos_3d.exe` (Windows x86_64)
+- `builds/linux/mythos_3d.x86_64` (Linux x86_64)
+- `builds/web/index.html` (WebAssembly / WebGL 2.0 bundle)
+
+### 7.4 Live Browser 3D Runtime Preview
+```bash
+# Start local dev server (with COOP/COEP WebAssembly headers)
+npm run dev
+
+# Open browser to:
+http://localhost:3000/3d/index.html
+```
+

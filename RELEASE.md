@@ -60,3 +60,16 @@ Every release contains two automated dependency audits in the distribution root:
 1. `SBOM.json`: CycloneDX 1.4 compliant Software Bill of Materials.
 2. `DEPENDENCY_MANIFEST.json`: Complete inventory of runtime and development dependencies with licensed declarations.
 3. `RELEASE_MANIFEST.json`: Machine-readable catalogue of artifact filenames, binary architectures, SHA-256 hashes, and execution formats.
+
+---
+
+## 5. Stage 3D-0 Multiplatform 3D Releases
+
+In addition to legacy 2D distributions (tagged `v1.14.0-legacy-2d`), Stage 3D-0 delivers genuine 3D native and web releases:
+
+| Target Platform | Binary File | Architecture | Packaging Format | Notes |
+| :--- | :--- | :--- | :--- | :--- |
+| **Windows Desktop** | `builds/windows/mythos_3d.exe` | x86_64 | PE32+ Executable + PCK | Direct 3D execution on Windows 10/11 |
+| **Linux Desktop** | `builds/linux/mythos_3d.x86_64` | x86_64 | ELF 64-bit LSB Executable + PCK | Direct execution on Ubuntu/Debian/Fedora |
+| **Web Browser** | `builds/web/index.html` + `index.wasm` | Wasm32 / WebGL 2.0 | HTML5 / WebAssembly Bundle | High-performance 3D in browser |
+

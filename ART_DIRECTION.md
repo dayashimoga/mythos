@@ -110,3 +110,20 @@ To guarantee ultra-fast initial load times without waiting for multi-megabyte im
 - **Mandala Flower Generator:** Parametric polar curve equation $r(\theta) = R_0 + A \cdot \cos(k \theta)$.
 - **Sri Yantra Interlocking Triangles:** Centered geometric matrix with alternating up/down apexes.
 - **Energy Conduits:** Pulsing linear bezier curves connecting the altar to perimeter pillars.
+
+---
+
+## 7. Stage 3D-0 3D Spatial Art Direction & Environmental Staging
+
+### 7.1 Real Perspective Spatial Hierarchy
+Transitioning from 2D isometric/oblique projection to authentic 3D spatial perspective:
+- **Verticality & Monumentality:** Elevated sanctum platforms ($+2.4\text{m}$) and flights of real physical stone steps create a commanding sense of scale. Characters physically look up towards shrines and monuments.
+- **Silhouette Readability:** High-contrast color values (dark basalt paver floors `#1E2430`, golden Surya medallions `#FFB703`, and bright cyan Astra crystal emissions `#00E5FF`) ensure instant gameplay readability from any camera orbit angle.
+- **Lighting & Shadow Composition:** Directional sunlight with soft cascaded shadow mapping projects dramatic angular shadows across steps and platforms, communicating height and depth to the player.
+
+### 7.2 3D Material System (`StandardMaterial3D`)
+- **Basalt Flagstone:** Low metallic ($0.0$), high roughness ($0.8$), subtle dark blue-gray albedo.
+- **Temple Gold Trim:** High metallic ($0.85$), low roughness ($0.25$), emissive bloom multiplier $1.2-1.5$.
+- **Astra Crystals:** Translucent refractive cyan surface with high emission energy ($2.0-2.5$) and rim lighting ($0.8$).
+- **Hero Cuirass & Khadga:** Deep bronze metallic cuirass accented by radiant golden sun scimitar blade.
+

@@ -1,0 +1,124 @@
+[gd_scene load_steps=4 format=3 uid="uid://c6hu83mdu3e1a"]
+
+[ext_resource type="Script" path="res://scripts/ui/hud_3d.gd" id="1_hud3d"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hp_bg"]
+bg_color = Color(0.08, 0.1, 0.16, 0.85)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hp_fill"]
+bg_color = Color(0.85, 0.2, 0.2, 0.95)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[node name="HUD3D" type="CanvasLayer"]
+script = ExtResource("1_hud3d")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 20
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="TopBar" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="HealthBar" type="ProgressBar" parent="MarginContainer/VBoxContainer/TopBar"]
+custom_minimum_size = Vector2(240, 24)
+layout_mode = 2
+theme_override_styles/background = SubResource("StyleBoxFlat_hp_bg")
+theme_override_styles/fill = SubResource("StyleBoxFlat_hp_fill")
+value = 100.0
+show_percentage = false
+
+[node name="Label" type="Label" parent="MarginContainer/VBoxContainer/TopBar/HealthBar"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 13
+text = "HP: 100 / 100"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ShardsPanel" type="PanelContainer" parent="MarginContainer/VBoxContainer/TopBar"]
+layout_mode = 2
+
+[node name="ShardsLabel" type="Label" parent="MarginContainer/VBoxContainer/TopBar/ShardsPanel"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.2, 0.9, 1, 1)
+theme_override_font_sizes/font_size = 14
+text = "✦ ASTRA SHARDS: 0 / 3"
+
+[node name="ObjectivePanel" type="PanelContainer" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 0
+
+[node name="ObjectiveLabel" type="Label" parent="MarginContainer/VBoxContainer/ObjectivePanel"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0.3, 1)
+theme_override_font_sizes/font_size = 14
+text = "MISSION: Recover 3 Astra Shards & Kindle the Sun Altar"
+
+[node name="ControlsPanel" type="PanelContainer" parent="MarginContainer"]
+layout_mode = 2
+size_flags_horizontal = 8
+size_flags_vertical = 8
+
+[node name="Margin" type="MarginContainer" parent="MarginContainer/ControlsPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 8
+
+[node name="ControlsLabel" type="Label" parent="MarginContainer/ControlsPanel/Margin"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.85, 0.9, 0.9)
+theme_override_font_sizes/font_size = 12
+text = "[W/A/S/D] Camera-Relative Move
+[Right-Click Drag] 3D Camera Orbit
+[Space] Jump   [Shift] Prana Dash
+[Left-Click / K] Surya Combo Slash
+[E] Interact / Kindle Altar
+[Scroll Wheel] Camera Zoom"
+
+[node name="BannerPanel" type="PanelContainer" parent="."]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -280.0
+offset_top = -60.0
+offset_right = 280.0
+offset_bottom = 60.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="BannerLabel" type="Label" parent="BannerPanel"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.9, 0.3, 1)
+theme_override_font_sizes/font_size = 16
+text = "✦ SANCTUM OF ASTRA ✦"
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 2

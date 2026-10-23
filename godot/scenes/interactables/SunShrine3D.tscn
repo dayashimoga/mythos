@@ -1,0 +1,81 @@
+[gd_scene load_steps=8 format=3 uid="uid://b28x74msu1v8q"]
+
+[ext_resource type="Script" path="res://scripts/interactables/shrine_3d.gd" id="1_shrine"]
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_trigger"]
+height = 2.5
+radius = 2.8
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_basalt"]
+albedo_color = Color(0.12, 0.1, 0.15, 1)
+roughness = 0.85
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_base"]
+material = SubResource("StandardMaterial3D_basalt")
+top_radius = 1.4
+bottom_radius = 1.6
+height = 0.6
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_gold"]
+albedo_color = Color(1, 0.72, 0.01, 1)
+metallic = 0.85
+roughness = 0.25
+emission_enabled = true
+emission = Color(1, 0.7, 0, 1)
+emission_energy_multiplier = 1.5
+
+[sub_resource type="TorusMesh" id="TorusMesh_mandala_ring"]
+material = SubResource("StandardMaterial3D_gold")
+inner_radius = 0.9
+outer_radius = 1.1
+
+[sub_resource type="BoxMesh" id="BoxMesh_mandala_ray"]
+material = SubResource("StandardMaterial3D_gold")
+size = Vector3(2.4, 0.06, 0.12)
+
+[node name="SunShrine" type="Area3D"]
+collision_layer = 16
+collision_mask = 2
+script = ExtResource("1_shrine")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, 0)
+shape = SubResource("CylinderShape3D_trigger")
+
+[node name="AltarBase" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0)
+mesh = SubResource("CylinderMesh_base")
+
+[node name="MandalaRoot" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.65, 0)
+
+[node name="Ring" type="MeshInstance3D" parent="MandalaRoot"]
+mesh = SubResource("TorusMesh_mandala_ring")
+
+[node name="Ray1" type="MeshInstance3D" parent="MandalaRoot"]
+mesh = SubResource("BoxMesh_mandala_ray")
+
+[node name="Ray2" type="MeshInstance3D" parent="MandalaRoot"]
+transform = Transform3D(0.707107, 0, 0.707107, 0, 1, 0, -0.707107, 0, 0.707107, 0, 0, 0)
+mesh = SubResource("BoxMesh_mandala_ray")
+
+[node name="Ray3" type="MeshInstance3D" parent="MandalaRoot"]
+transform = Transform3D(0, 0, 1, 0, 1, 0, -1, 0, 0, 0, 0, 0)
+mesh = SubResource("BoxMesh_mandala_ray")
+
+[node name="Ray4" type="MeshInstance3D" parent="MandalaRoot"]
+transform = Transform3D(0.707107, 0, -0.707107, 0, 1, 0, 0.707107, 0, 0.707107, 0, 0, 0)
+mesh = SubResource("BoxMesh_mandala_ray")
+
+[node name="SunLight" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.4, 0)
+light_color = Color(1, 0.78, 0.15, 1)
+light_energy = 1.0
+omni_range = 8.0
+
+[node name="PromptLabel" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.2, 0)
+billboard = 1
+text = "[E] Kindle Sun Altar"
+font_size = 32
+outline_size = 6

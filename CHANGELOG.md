@@ -1046,3 +1046,69 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Unit and Integration Test Suite Expansion:**
   - Added `tests/unit/StageR1AssetPipelineAndSanctum.test.ts` (5 tests passing).
   - Total Vitest suite expanded to 56 test files and 486 tests (100% passing).
+
+---
+
+## [1.14.0] - 2026-10-23 - STAGE R2: Full Character Design, Rigging & Animation Overhaul
+
+### Added
+- **Production Character Model Sheets & Articulated Rigs (`STAGE_R2_CHARACTER_ANIMATION_SPECIFICATION.md`):**
+  - Formally specified model sheets, anatomy, proportions, face, hair, costume, armor, and weapons for Veer (Solar Guardian, 21 bones), Devi Tara (Celestial Sage, 18 bones), Stone Rakshasa (Basalt Juggernaut, 15 bones), Vanara Scout (Agile Skirmisher, 16 bones), and Mahishasura (Titan Asura Emperor, 21 bones).
+  - Designed weapon socket synchronization (`socket_right_hand`, `socket_bindi`, `socket_crown`, `socket_forehead`) and dynamic combat visual effects.
+- **Legacy 2D Engine Baseline Preservation:**
+  - Tagged `v1.14.0-legacy-2d` and created branch `legacy/2d-canvas` permanently preserving 2D Canvas engine, 56 test files (486 tests), and 45 Playwright E2E tests in a runnable state.
+
+---
+
+## [1.15.0] - 2026-10-23 - STAGE 3D-0: Complete 3D Architecture Transformation
+
+### Added
+- **Full Legacy Architecture Audit & Migration Matrix (`MIGRATION_PLAN.md`):**
+  - Forensic audit of all legacy subsystems classified into REUSABLE, PORTABLE LOGIC, REQUIRES 3D REIMPLEMENTATION, DEPRECATED, and MISSING.
+  - Authored comprehensive source-to-target migration matrix mapping every 2D module to its 3D Godot counterpart.
+  - Defined regression prevention plan preserving 100% of narrative lore, combat math, quest rules, and development history.
+- **Engine Feasibility Evaluation & Godot 4.3 Pinned Architecture (`MIGRATION_PLAN.md`):**
+  - Evaluated Godot 4.3 Standard (GDScript) vs. Babylon.js/TypeScript across native binaries, CharacterBody3D physics, headless containerization, and web assembly exports.
+  - Formally pinned Godot Engine 4.3 Stable Official (`4.3.stable.official.77dcf97d8`) with Standard GDScript as the canonical 3D engine for *Mythos*.
+  - Excluded C# for Web builds to eliminate threading dependencies and ensure clean cross-platform execution.
+- **Genuine 3D Godot Project Foundation (`godot/`):**
+  - Structured project with `project.godot` configured with standard 3D rendering (`gl_compatibility` / `forward_plus`), 3D physics layers (Environment, Player, Enemies, Hitboxes, Interactables), and comprehensive input mapping (`move_forward`, `move_backward`, `move_left`, `move_right`, `jump`, `dash`, `attack`, `interact`, `camera_orbit`).
+  - Authored `icon.svg` featuring sacred golden 8-pointed Surya solar motif.
+- **Ported Domain Systems in GDScript (`godot/scripts/domain/`):**
+  - `combat_math.gd`: Ported authoritative combat mathematics (damage formulas, 120ms perfect parry, directional shield block, poise breakdown, stagger timers, and +35% critical multiplier).
+  - `quest_manager.gd`: Ported quest state machine (Sanctum Calibration, Astra Shard tracking, Altar Kindle objectives, and rewards).
+  - `dialogue_runner.gd`: Ported dialogue tree traversal (Devi Tara, Veer, choices, branching nodes, and history).
+  - `save_system.gd`: Ported save state persistence with 32-bit polynomial checksum integrity verification.
+- **Genuine 3D Character Controller & Orbit Camera (`godot/scripts/player/`, `godot/scripts/camera/`):**
+  - `player_controller_3d.gd`: Real 3D physics with gravity, camera-relative locomotion, floor snapping, smooth stair stepping, jump, Prana Dash, and 3-hit Surya combo attack.
+  - `orbit_camera_3d.gd`: Spherical 3D orbit camera using `SpringArm3D` with collision raycasting margin, mouse orbit, zoom, and pitch constraints (`-70°` to `+25°`).
+- **Complete 3D Technical Demonstration Level (`godot/scenes/levels/TestChamber3D.tscn`):**
+  - 36m x 36m basalt floor platform with physical perimeter walls.
+  - Elevated Sanctum stage raised +2.4m above ground level.
+  - Monumental flight of 8 individual physical steps with real height and box collision hulls.
+  - 4 carved Hoysala stone columns (`CylinderShape3D`) providing physical collision obstacles.
+  - Sacred Sun Shrine (`SunShrine3D.tscn`) with rotating golden Surya mandala, point light flare, and `[E] Kindle Sun Altar` proximity prompt.
+  - 3 floating, rotating crystal Astra Shard pickups (`AstraShard3D.tscn`).
+  - Procedural sky with warm Vedic twilight horizon and soft directional shadow casting.
+- **3D In-Game HUD (`godot/scenes/ui/HUD3D.tscn`, `godot/scripts/ui/hud_3d.gd`):**
+  - Real-time Health bar (HP: 100/100), Astra Shards counter (0/3), Mission Banner, and 3D controls guide overlay.
+- **Godot Headless Test Suite & Master Test Runner (`godot/tests/`):**
+  - `runner.gd`: Standalone headless test runner executing 5 test suites (20 tests) with formatted reporting and exit codes.
+  - `test_combat_math.gd` (7 unit tests).
+  - `test_quest_manager.gd` (3 unit tests).
+  - `test_save_system.gd` (3 unit tests).
+  - `test_dialogue_runner.gd` (2 unit tests).
+  - `test_player_traversal_3d.gd` (5 integration tests validating hierarchy, gravity, orbit, stair elevation, and shrine proximity).
+  - Achieved 100% pass rate: 20 of 20 tests passing on both native Windows and Podman container.
+- **Cross-Validation Vitest Suite (`tests/unit/Stage3D0MigrationAndParity.test.ts`):**
+  - 7 comprehensive tests asserting specification presence, file structure, mathematical parity with TypeScript combat formulas, save state checksums, quest states, and build artifacts.
+- **Multiplatform Export Builds (`builds/` & `public/3d/`):**
+  - Windows Desktop native x86_64 binary (`builds/windows/mythos_3d.exe`, 81 MB).
+  - Linux Desktop native x86_64 binary (`builds/linux/mythos_3d.x86_64`, 64 MB).
+  - Web export bundle (`builds/web/` and `public/3d/` containing `index.html`, `index.js`, `index.pck`, `index.wasm` 34 MB).
+  - Verified live in browser subagent on `http://localhost:3000/3d/index.html` with moving 3D traversal and recorded WebP evidence.
+- **DevOps, Containerization & CI/CD Pipelines:**
+  - `Containerfile` and `podman-compose.yml` for zero-host-dependency Podman workflows.
+  - `.github/workflows/godot-ci.yml` configuring headless validation and multiplatform export builds on GitHub Actions.
+  - Updated `package.json` with `npm run test:godot` and `npm run test:godot:podman`.
+

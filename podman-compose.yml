@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  godot-test:
+    image: docker.io/barichello/godot-ci:4.3
+    container_name: mythos-3d-test
+    volumes:
+      - .:/workspace:Z
+    working_dir: /workspace
+    command: >
+      bash -c "godot --headless --path ./godot --editor --quit &&
+               godot --headless --path ./godot -s res://tests/runner.gd"
+
+  godot-export:
+    image: docker.io/barichello/godot-ci:4.3
+    container_name: mythos-3d-export
+    volumes:
+      - .:/workspace:Z
+    working_dir: /workspace
+    command: >
+      bash -c "mkdir -p /tmp/linux /tmp/win /tmp/web builds/linux builds/windows builds/web &&
+               godot --headless --path ./godot --export-release 'Linux/X11' /tmp/linux/mythos_3d.x86_64 &&
+               cp -r /tmp/linux/* builds/linux/ &&
+               godot --headless --path ./godot --export-release 'Windows Desktop' /tmp/win/mythos_3d.exe &&
+               cp -r /tmp/win/* builds/windows/ &&
+               godot --headless --path ./godot --export-release 'Web' /tmp/web/index.html &&
+               cp -r /tmp/web/* builds/web/"
+
+  web-preview:
+    image: docker.io/library/caddy:2-alpine
+    container_name: mythos-3d-web-preview
+    ports:
+      - "8080:80"
+    volumes:
+      - ./builds/web:/usr/share/caddy:ro

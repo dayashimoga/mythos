@@ -18,6 +18,10 @@ export default defineConfig({
     port: 3000,
     open: false,
     host: true,
+    headers: {
+      'Cross-Origin-Opener-Policy': 'same-origin',
+      'Cross-Origin-Embedder-Policy': 'require-corp',
+    },
   },
   test: {
     globals: true,

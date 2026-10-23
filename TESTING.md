@@ -112,4 +112,29 @@ Automated verification performed inside clean sandbox:
   - Moving gameplay video recorded: `sanctum_gameplay_recording_v3_1792768254747.webp`.
   - Reconstructed visual captures: `sanctum_reconstructed_1792768282161.png` and `sanctum_attack_1792768356028.png`.
 
+---
+
+## 7. Stage 3D-0 Godot 3D Testing, Parity & Traversal Verification
+
+### 7.1 Godot Headless Test Runner (`godot/tests/runner.gd`)
+- Executed via `npm run test:godot` (native Windows) or `npm run test:godot:podman` (Podman container).
+- Exits with return code 0 on clean pass; return code 1 on failure.
+- Test matrix (20 total tests, 100% passing):
+  1. `TestCombatMath` (7 tests): Normal attack, 120ms parry, directional block, guard break, poise breakdown, stagger timers, +35% critical punish.
+  2. `TestQuestManager` (3 tests): Mission registration, activation, objective progress, and Sanctum Calibration completion.
+  3. `TestSaveSystem` (3 tests): Checksum polynomial calculation, default state validity, tamper detection.
+  4. `TestDialogueRunner` (2 tests): Multi-step node advancement (Devi Tara, Veer), dialogue history.
+  5. `TestPlayerTraversal3D` (5 tests): CharacterBody3D node hierarchy, vertical gravity acceleration, SpringArm3D orbit and pitch clamping, physical stair elevation height check, and Area3D spatial proximity detection.
+
+### 7.2 Cross-Validation Vitest Suite (`tests/unit/Stage3D0MigrationAndParity.test.ts`)
+- 7 comprehensive tests verifying specification documents, Godot project structure, ported domain scripts, mathematical parity with TypeScript formulas, and multiplatform build artifact presence (`mythos_3d.exe`, `mythos_3d.x86_64`, `index.wasm`).
+
+### 7.3 Live Browser 3D WebAssembly Runtime Verification
+- Navigated to `http://localhost:3000/3d/index.html` via browser subagent.
+- Verified WebGL 2.0 / OpenGL ES 3.0 Compatibility rendering of the 3D Test Chamber.
+- Avatar controlled in real 3D coordinates, walked forward up physical stairs to the Sun Altar, and interacted with environment.
+- Captured visual evidence: `godot_3d_loading_1792771598582.png`, `avatar_moving_jumping_1792771747293.png`, and `final_3d_interaction_1792771782538.png`.
+- Recorded WebP gameplay traversal video: `mythos_3d_gameplay_traversal_1792771701194.webp`.
+
+
 

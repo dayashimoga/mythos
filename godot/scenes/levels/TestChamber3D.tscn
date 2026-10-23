@@ -1,0 +1,329 @@
+[gd_scene load_steps=22 format=3 uid="uid://c8mvu19k4qxe1"]
+
+[ext_resource type="Script" path="res://scripts/levels/test_chamber_3d.gd" id="1_chamber"]
+[ext_resource type="PackedScene" uid="uid://b7vyu9s2km13a" path="res://scenes/player/Player3D.tscn" id="2_player"]
+[ext_resource type="PackedScene" uid="uid://b28x74msu1v8q" path="res://scenes/interactables/SunShrine3D.tscn" id="3_shrine"]
+[ext_resource type="PackedScene" uid="uid://df7283ns81xma" path="res://scenes/interactables/AstraShard3D.tscn" id="4_shard"]
+[ext_resource type="PackedScene" uid="uid://c6hu83mdu3e1a" path="res://scenes/ui/HUD3D.tscn" id="5_hud"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sanctum"]
+sky_top_color = Color(0.06, 0.08, 0.18, 1)
+sky_horizon_color = Color(0.85, 0.45, 0.15, 1)
+ground_bottom_color = Color(0.08, 0.06, 0.1, 1)
+ground_horizon_color = Color(0.45, 0.25, 0.12, 1)
+
+[sub_resource type="Sky" id="Sky_env"]
+sky_material = SubResource("ProceduralSkyMaterial_sanctum")
+
+[sub_resource type="Environment" id="Environment_sanctum"]
+background_mode = 2
+sky = SubResource("Sky_env")
+ambient_light_source = 3
+ambient_light_color = Color(0.65, 0.7, 0.8, 1)
+ambient_light_sky_contribution = 0.65
+tonemap_mode = 2
+glow_enabled = true
+glow_intensity = 0.8
+glow_bloom = 0.2
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_floor"]
+albedo_color = Color(0.14, 0.16, 0.2, 1)
+roughness = 0.8
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_floor"]
+size = Vector3(36, 1, 36)
+
+[sub_resource type="BoxMesh" id="BoxMesh_floor"]
+material = SubResource("StandardMaterial3D_floor")
+size = Vector3(36, 1, 36)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_stage"]
+albedo_color = Color(0.22, 0.18, 0.26, 1)
+roughness = 0.7
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_stage"]
+size = Vector3(16, 2.4, 12)
+
+[sub_resource type="BoxMesh" id="BoxMesh_stage"]
+material = SubResource("StandardMaterial3D_stage")
+size = Vector3(16, 2.4, 12)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_step"]
+albedo_color = Color(0.3, 0.24, 0.18, 1)
+roughness = 0.65
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_step"]
+size = Vector3(4.2, 0.3, 0.6)
+
+[sub_resource type="BoxMesh" id="BoxMesh_step"]
+material = SubResource("StandardMaterial3D_step")
+size = Vector3(4.2, 0.3, 0.6)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_pillar"]
+albedo_color = Color(0.18, 0.2, 0.24, 1)
+roughness = 0.75
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_pillar"]
+height = 6.0
+radius = 0.65
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_pillar"]
+material = SubResource("StandardMaterial3D_pillar")
+top_radius = 0.65
+bottom_radius = 0.65
+height = 6.0
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_wall_ns"]
+size = Vector3(36, 4, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_wall_ns"]
+material = SubResource("StandardMaterial3D_floor")
+size = Vector3(36, 4, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_wall_ew"]
+size = Vector3(1, 4, 36)
+
+[sub_resource type="BoxMesh" id="BoxMesh_wall_ew"]
+material = SubResource("StandardMaterial3D_floor")
+size = Vector3(1, 4, 36)
+
+[node name="TestChamber3D" type="Node3D"]
+script = ExtResource("1_chamber")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_sanctum")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.707107, -0.45452, 0.541675, 0, 0.766044, 0.642788, -0.707107, -0.45452, 0.541675, 0, 16, 0)
+light_color = Color(1, 0.94, 0.85, 1)
+light_energy = 1.35
+shadow_enabled = true
+directional_shadow_max_distance = 60.0
+
+[node name="HUD3D" parent="." instance=ExtResource("5_hud")]
+
+[node name="Player" parent="." instance=ExtResource("2_player")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1, 8)
+
+[node name="Environment" type="Node3D" parent="."]
+
+[node name="GroundFloor" type="StaticBody3D" parent="Environment"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Environment/GroundFloor"]
+shape = SubResource("BoxShape3D_floor")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Environment/GroundFloor"]
+mesh = SubResource("BoxMesh_floor")
+
+[node name="ElevatedStage" type="StaticBody3D" parent="Environment"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, -8)
+collision_layer = 1
+collision_mask = 0
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Environment/ElevatedStage"]
+shape = SubResource("BoxShape3D_stage")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Environment/ElevatedStage"]
+mesh = SubResource("BoxMesh_stage")
+
+[node name="Stairs" type="Node3D" parent="Environment"]
+
+[node name="Step1" type="StaticBody3D" parent="Environment/Stairs"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.15, -2.3)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape3D" parent="Environment/Stairs/Step1"]
+shape = SubResource("BoxShape3D_step")
+
+[node name="Mesh" type="MeshInstance3D" parent="Environment/Stairs/Step1"]
+mesh = SubResource("BoxMesh_step")
+
+[node name="Step2" type="StaticBody3D" parent="Environment/Stairs"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.45, -2.9)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape3D" parent="Environment/Stairs/Step2"]
+shape = SubResource("BoxShape3D_step")
+
+[node name="Mesh" type="MeshInstance3D" parent="Environment/Stairs/Step2"]
+mesh = SubResource("BoxMesh_step")
+
+[node name="Step3" type="StaticBody3D" parent="Environment/Stairs"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.75, -3.5)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape3D" parent="Environment/Stairs/Step3"]
+shape = SubResource("BoxShape3D_step")
+
+[node name="Mesh" type="MeshInstance3D" parent="Environment/Stairs/Step3"]
+mesh = SubResource("BoxMesh_step")
+
+[node name="Step4" type="StaticBody3D" parent="Environment/Stairs"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.05, -4.1)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape3D" parent="Environment/Stairs/Step4"]
+shape = SubResource("BoxShape3D_step")
+
+[node name="Mesh" type="MeshInstance3D" parent="Environment/Stairs/Step4"]
+mesh = SubResource("BoxMesh_step")
+
+[node name="Step5" type="StaticBody3D" parent="Environment/Stairs"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.35, -4.7)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape3D" parent="Environment/Stairs/Step5"]
+shape = SubResource("BoxShape3D_step")
+
+[node name="Mesh" type="MeshInstance3D" parent="Environment/Stairs/Step5"]
+mesh = SubResource("BoxMesh_step")
+
+[node name="Step6" type="StaticBody3D" parent="Environment/Stairs"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.65, -5.3)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape3D" parent="Environment/Stairs/Step6"]
+shape = SubResource("BoxShape3D_step")
+
+[node name="Mesh" type="MeshInstance3D" parent="Environment/Stairs/Step6"]
+mesh = SubResource("BoxMesh_step")
+
+[node name="Step7" type="StaticBody3D" parent="Environment/Stairs"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.95, -5.9)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape3D" parent="Environment/Stairs/Step7"]
+shape = SubResource("BoxShape3D_step")
+
+[node name="Mesh" type="MeshInstance3D" parent="Environment/Stairs/Step7"]
+mesh = SubResource("BoxMesh_step")
+
+[node name="Step8" type="StaticBody3D" parent="Environment/Stairs"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.25, -6.5)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape3D" parent="Environment/Stairs/Step8"]
+shape = SubResource("BoxShape3D_step")
+
+[node name="Mesh" type="MeshInstance3D" parent="Environment/Stairs/Step8"]
+mesh = SubResource("BoxMesh_step")
+
+[node name="Pillars" type="Node3D" parent="Environment"]
+
+[node name="PillarNW" type="StaticBody3D" parent="Environment/Pillars"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 3, -4)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape3D" parent="Environment/Pillars/PillarNW"]
+shape = SubResource("CylinderShape3D_pillar")
+
+[node name="Mesh" type="MeshInstance3D" parent="Environment/Pillars/PillarNW"]
+mesh = SubResource("CylinderMesh_pillar")
+
+[node name="PillarNE" type="StaticBody3D" parent="Environment/Pillars"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 3, -4)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape3D" parent="Environment/Pillars/PillarNE"]
+shape = SubResource("CylinderShape3D_pillar")
+
+[node name="Mesh" type="MeshInstance3D" parent="Environment/Pillars/PillarNE"]
+mesh = SubResource("CylinderMesh_pillar")
+
+[node name="PillarSW" type="StaticBody3D" parent="Environment/Pillars"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 3, 4)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape3D" parent="Environment/Pillars/PillarSW"]
+shape = SubResource("CylinderShape3D_pillar")
+
+[node name="Mesh" type="MeshInstance3D" parent="Environment/Pillars/PillarSW"]
+mesh = SubResource("CylinderMesh_pillar")
+
+[node name="PillarSE" type="StaticBody3D" parent="Environment/Pillars"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 3, 4)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape3D" parent="Environment/Pillars/PillarSE"]
+shape = SubResource("CylinderShape3D_pillar")
+
+[node name="Mesh" type="MeshInstance3D" parent="Environment/Pillars/PillarSE"]
+mesh = SubResource("CylinderMesh_pillar")
+
+[node name="SunShrine" parent="Environment" instance=ExtResource("3_shrine")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.4, -9)
+
+[node name="Shards" type="Node3D" parent="Environment"]
+
+[node name="Shard1" parent="Environment/Shards" instance=ExtResource("4_shard")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 1.2, 4)
+shard_id = "shard_west"
+
+[node name="Shard2" parent="Environment/Shards" instance=ExtResource("4_shard")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 1.2, 4)
+shard_id = "shard_east"
+
+[node name="Shard3" parent="Environment/Shards" instance=ExtResource("4_shard")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 3.6, -9)
+shard_id = "shard_altar"
+
+[node name="Walls" type="Node3D" parent="Environment"]
+
+[node name="WallNorth" type="StaticBody3D" parent="Environment/Walls"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, -18)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape3D" parent="Environment/Walls/WallNorth"]
+shape = SubResource("BoxShape3D_wall_ns")
+
+[node name="Mesh" type="MeshInstance3D" parent="Environment/Walls/WallNorth"]
+mesh = SubResource("BoxMesh_wall_ns")
+
+[node name="WallSouth" type="StaticBody3D" parent="Environment/Walls"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 18)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape3D" parent="Environment/Walls/WallSouth"]
+shape = SubResource("BoxShape3D_wall_ns")
+
+[node name="Mesh" type="MeshInstance3D" parent="Environment/Walls/WallSouth"]
+mesh = SubResource("BoxMesh_wall_ns")
+
+[node name="WallWest" type="StaticBody3D" parent="Environment/Walls"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18, 2, 0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape3D" parent="Environment/Walls/WallWest"]
+shape = SubResource("BoxShape3D_wall_ew")
+
+[node name="Mesh" type="MeshInstance3D" parent="Environment/Walls/WallWest"]
+mesh = SubResource("BoxMesh_wall_ew")
+
+[node name="WallEast" type="StaticBody3D" parent="Environment/Walls"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 2, 0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="Collision" type="CollisionShape3D" parent="Environment/Walls/WallEast"]
+shape = SubResource("BoxShape3D_wall_ew")
+
+[node name="Mesh" type="MeshInstance3D" parent="Environment/Walls/WallEast"]
+mesh = SubResource("BoxMesh_wall_ew")

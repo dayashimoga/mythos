@@ -218,4 +218,19 @@ At the twilight of the Dvapara Yuga, the cosmic anchor binding the realm of shad
 | **REQ-R1-006** | Multi-Pass Dynamic Lighting, Contact Shadows & Shading Optimization | Stage R1 | `src/scenes/GameScene.ts`, `src/assets/AssetManager.ts` | `tests/unit/StageR1AssetPipelineAndSanctum.test.ts` | **VERIFIED** |
 | **REQ-R1-007** | Automated Visual & Functional Validation with Video Recordings | Stage R1 | Playwright E2E (`scene-runtime.spec.ts`), Vitest test suite (56 suites, 486 tests) | Playwright E2E (45/45 passing), WebP gameplay recording | **VERIFIED** |
 
+---
+
+## 14. Stage 3D-0 — Complete 3D Architecture Transformation Matrix
+
+| Req ID | Requirement Description | Stage | Source Implementation | Test Verification | Status |
+| :--- | :--- | :---: | :--- | :--- | :---: |
+| **REQ-3D0-001** | Full Legacy Architecture Audit & Source-to-Target Migration Matrix | Stage 3D-0 | `MIGRATION_PLAN.md` | `tests/unit/Stage3D0MigrationAndParity.test.ts` | **VERIFIED** |
+| **REQ-3D0-002** | Engine Feasibility Evaluation & Godot 4.3 Pinned Architecture | Stage 3D-0 | `MIGRATION_PLAN.md`, `ARCHITECTURE.md` | `tools/godot/Godot_v4.3-stable_win64_console.exe --version` | **VERIFIED** |
+| **REQ-3D0-003** | Genuine 3D Godot Project Construction (`godot/`) | Stage 3D-0 | `godot/project.godot`, `godot/export_presets.cfg`, `godot/icon.svg` | `npm run test:godot`, `podman` headless validation | **VERIFIED** |
+| **REQ-3D0-004** | Domain Systems Porting in GDScript (Combat, Quests, Dialogue, Save) | Stage 3D-0 | `godot/scripts/domain/` (`combat_math.gd`, `quest_manager.gd`, `dialogue_runner.gd`, `save_system.gd`) | `godot/tests/unit/` (15 unit tests), `Stage3D0MigrationAndParity.test.ts` | **VERIFIED** |
+| **REQ-3D0-005** | Genuine 3D Third-Person Character Controller & Orbit Camera | Stage 3D-0 | `godot/scenes/player/Player3D.tscn`, `player_controller_3d.gd`, `orbit_camera_3d.gd` | `test_player_traversal_3d.gd`, browser live traversal | **VERIFIED** |
+| **REQ-3D0-006** | Complete 3D Technical Demonstration Level with Elevated Stairs & Shrine | Stage 3D-0 | `godot/scenes/levels/TestChamber3D.tscn`, `SunShrine3D.tscn`, `AstraShard3D.tscn`, `HUD3D.tscn` | `test_stair_elevation_geometry`, browser gameplay verification | **VERIFIED** |
+| **REQ-3D0-007** | Automated Headless CI, Multiplatform Exports & Dual Runtime Verification | Stage 3D-0 | `.github/workflows/godot-ci.yml`, `Containerfile`, `podman-compose.yml`, `builds/` | Windows exe (81MB), Linux binary (64MB), Web wasm (34MB), 20/20 Godot tests | **VERIFIED** |
+
+
 
