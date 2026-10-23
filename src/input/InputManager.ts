@@ -23,6 +23,7 @@ export class InputManager {
   private mousePosition: Vector2D = new Vector2D(0, 0);
   private mouseButtonsHeld: Set<number> = new Set();
   private mouseButtonsJustPressed: Set<number> = new Set();
+  private mouseButtonsJustReleased: Set<number> = new Set();
 
   private virtualAxis: Vector2D = new Vector2D(0, 0);
   private virtualActionJustPressed: Set<GameAction> = new Set();
@@ -90,6 +91,7 @@ export class InputManager {
 
   private handleMouseUp(e: MouseEvent): void {
     this.mouseButtonsHeld.delete(e.button);
+    this.mouseButtonsJustReleased.add(e.button);
   }
 
   public setVirtualMovement(x: number, y: number): void {
@@ -120,6 +122,20 @@ export class InputManager {
     if (action === 'ATTACK' && this.mouseButtonsJustPressed.has(0)) return true;
     if (action === 'MELEE_ATTACK' && this.mouseButtonsJustPressed.has(2)) return true;
     return false;
+  }
+
+  public isActionJustReleased(action: GameAction): boolean {
+    const keys = this.actionKeyMap[action];
+    for (const k of keys) {
+      if (this.keysJustReleased.has(k)) return true;
+    }
+    if (action === 'ATTACK' && this.mouseButtonsJustReleased.has(0)) return true;
+    if (action === 'MELEE_ATTACK' && this.mouseButtonsJustReleased.has(2)) return true;
+    return false;
+  }
+
+  public isMouseButtonJustReleased(button: number): boolean {
+    return this.mouseButtonsJustReleased.has(button);
   }
 
   public isKeyHeld(code: string): boolean {
@@ -170,6 +186,7 @@ export class InputManager {
     this.keysJustPressed.clear();
     this.keysJustReleased.clear();
     this.mouseButtonsJustPressed.clear();
+    this.mouseButtonsJustReleased.clear();
     this.virtualActionJustPressed.clear();
   }
 
@@ -179,6 +196,7 @@ export class InputManager {
     this.keysJustReleased.clear();
     this.mouseButtonsHeld.clear();
     this.mouseButtonsJustPressed.clear();
+    this.mouseButtonsJustReleased.clear();
     this.virtualAxis.set(0, 0);
     this.virtualActionJustPressed.clear();
   }

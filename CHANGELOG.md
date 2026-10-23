@@ -262,6 +262,63 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Global test coverage: 93.46% statements/lines ($\ge 90\%$ requirement), 85.74% branch coverage ($\ge 85\%$ requirement).
   - Multi-platform packaging builds verified for Web, Windows x64, Linux x64, macOS, Android, and iOS.
 
+---
+
+## [0.7.0] - 2026-10-23
+
+### Added
+- **Vedic Celestial Design System & Design Tokens (`src/ui/design/DesignTokens.ts`):**
+  - Brand and aesthetic color palettes: Solar (`#FFB703`), Astral (`#00E5FF`), Prana (`#06D6A0`), Tamas (`#DC2626`), and Brahma (`#8338EC`).
+  - Mathematical WCAG 2.1 contrast ratio and relative luminance validation functions (`calculateContrastRatio`, `getRelativeLuminance`).
+  - Responsive layout breakpoints for mobile (<640px), tablet (<1024px), desktop (>=1024px), and 4px baseline grid spacing tokens.
+  - Motion duration tokens for micro-interactions (120ms), standard transitions (250ms), and deliberate modal choreography (400ms).
+- **Spatial Navigation & Focus Management (`src/ui/design/FocusManager.ts`):**
+  - Bidirectional keyboard (`Tab`, `Shift-Tab`, `Arrow` keys) and gamepad focus traversal with wrapping.
+  - Skipping disabled interactive elements with state preservation.
+  - Distinct accessible focus rings (`#00E5FF` standard, `#00FFFF` high-contrast) rendered outside component bounding boxes.
+- **Accessibility Subsystem & Live Announcement Manager (`src/ui/accessibility/AccessibilityManager.ts`):**
+  - Reduced-motion toggle automatically suppressing screen shake, camera tilts, and harmonic pulsing.
+  - Continuous screen shake dampening factor ($0.0 \to 1.0$) with default safety clamping.
+  - High-Contrast Theme (WCAG AAA compliant with pure black `#05070D` backdrops and high-luminance borders).
+  - Subtitle scale selector (`normal` 14px, `large` 18px, `extra-large` 22px).
+  - Dyslexia-friendly typography support with automatic fallback to OpenDyslexic / sans-serif.
+  - Colorblind compensation profiles (`protanopia`, `deuteranopia`, `tritanopia`).
+  - Screen-reader live region (`aria-live="polite"` / `aria-live="assertive"`) announcing modal status and toast cues.
+- **Reusable Production UI Component Library (`src/ui/components/`):**
+  - `UIButton.ts`: Accessible button with 5 visual variants (`solar`, `astral`, `prana`, `tamas`, `surface`), hover/focus rings, hotkey badges, and disabled states.
+  - `UISlider.ts`: Interactive continuous/stepped slider with drag manipulation, arrow key stepping, formatted readouts, and track glow.
+  - `UIToggle.ts`: Accessible toggle switch with animated sliding pill knob and clear on/off states.
+  - `UITabs.ts`: Tab navigation bar with active indicators, arrow navigation, and click hit testing.
+  - `UIModal.ts`: Glassmorphism modal container with focus trap, backdrop dimming, close button, title bar, and outside-click dismissal.
+  - `ToastManager.ts`: Non-intrusive feedback toast queue with entrance/exit transitions, variant color badges, and screen-reader integration.
+- **Cosmic Settings & Configuration Hub (`src/ui/modals/SettingsModal.ts` & `src/scenes/SettingsScene.ts`):**
+  - 5 comprehensive configuration tabs:
+    - *Audio*: Master volume, Music harmony, Sound effects, Divine voice cues, and Mute All toggle.
+    - *Display*: Quality presets (Performance, Balanced, Cinematic), Fullscreen toggle, and Aura Particle Density slider.
+    - *Controls*: Virtual touch sticks toggle, Invert Y-axis, Haptic vibration, and visual Command Mappings reference card.
+    - *Accessibility*: Reduced motion, Screen shake intensity, High contrast theme, Subtitle scale, Dyslexia font, and Colorblind profiles.
+    - *Data & Saves*: Manual quick save, Reload last checkpoint, Reset settings to defaults, and Purge save data.
+  - Instant persistence to `localStorage` via `AccessibilityManager` and `SaveGameManager`.
+  - Guaranteed click depth $\le 3$ clicks for any setting adjustment.
+- **In-Game Meditation Pause Menu (`src/ui/modals/PauseMenuModal.ts`):**
+  - In-game pause overlay featuring realm summary, shard count, and health readouts.
+  - 1-click accessible button stack: Resume Journey (`[ ESC ]`), Quest Codex (`[ O ]`), Settings (`[ ⚙ ]`), Restart Realm (`[ 🔄 ]`), and Return to Title (`[ 🚪 ]`).
+- **Sacred Codex & Quest Log (`src/ui/modals/CodexQuestModal.ts`):**
+  - 4 interactive annals tabs:
+    - *Quests*: Live quest chronicle displaying active and completed missions, DAG prerequisites, objectives with checkboxes, and rewards.
+    - *Affinities*: Dynamic moral alignment bars for Devi Tara, Vanara Guardians, and Karmic Dharma Balance.
+    - *Cosmic Lore*: Illustrated compendium cards for Sapta-Loka, Prana vs. Tamas, and Brahmastra invocations.
+    - *Tutorials*: Tactical combat guides covering Agni-Dash i-frames, combo multipliers, and shrine consecration rituals.
+- **Responsive Production HUD (`src/ui/ProductionHUD.ts`):**
+  - Adaptive safe area vitals card displaying Prana (health), Agni (energy), and collected Astra Shards.
+  - Dynamic combo multiplier badge ($1.0\text{x} \to 3.0\text{x}$) with 3.5s decay timer.
+  - Centered objective banner with subtitle scaling and high-contrast support.
+  - Dedicated 1-click `[ ⏸ PAUSE ]` and `[ 📖 CODEX ]` header buttons for mouse and touch players.
+- **Quality Assurance & Verification:**
+  - Expanded automated test suite across 36 test files and 274 tests with 100% pass rate.
+  - Overall code coverage: 93.95% statements/lines ($\ge 90\%$ requirement) and 85.55% branch coverage ($\ge 85\%$ requirement).
+  - Multi-platform packaging builds validated across Web, Windows x64, Linux x64, macOS, Android, and iOS.
+
 
 
 

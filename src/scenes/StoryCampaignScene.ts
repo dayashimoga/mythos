@@ -21,6 +21,11 @@ import { DialogueTree } from '../narrative/DialogueTree';
 import { CampaignChapter1 } from '../narrative/CampaignChapter1';
 import { CinematicDirector } from '../cinematics/CinematicDirector';
 import { SaveGameManager } from '../state/SaveGameManager';
+import { PauseMenuModal } from '../ui/modals/PauseMenuModal';
+import { CodexQuestModal } from '../ui/modals/CodexQuestModal';
+import { SettingsModal } from '../ui/modals/SettingsModal';
+import { ProductionHUD } from '../ui/ProductionHUD';
+import { ToastManager } from '../ui/components/ToastManager';
 
 export class StoryCampaignScene implements IScene {
   public readonly id = 'StoryCampaignScene';
@@ -52,6 +57,11 @@ export class StoryCampaignScene implements IScene {
   public isGameOver = false;
   public isChapterComplete = false;
   public showQuestLog = false;
+
+  public pauseModal!: PauseMenuModal;
+  public codexModal!: CodexQuestModal;
+  public settingsModal!: SettingsModal;
+  public productionHUD!: ProductionHUD;
 
   private currentAct = 1;
 
@@ -86,6 +96,54 @@ export class StoryCampaignScene implements IScene {
     // Register primary checkpoint
     this.checkpointManager.clear();
     this.checkpointManager.register('cp_campaign_start', 'Sanctum Threshold', 0, 80);
+
+    // Initialize Production UI Modals and HUD
+    this.pauseModal = new PauseMenuModal({
+      onResume: () => {
+        this.isPaused = false;
+      },
+      onOpenCodex: () => {
+        const vp = this.engine.getRenderer().getViewport();
+        this.codexModal.open(vp.width, vp.height);
+      },
+      onOpenSettings: () => {
+        const vp = this.engine.getRenderer().getViewport();
+        this.settingsModal.open(vp.width, vp.height);
+      },
+      onRestartRealm: () => {
+        this.resetCampaign();
+      },
+      onExitToTitle: () => {
+        this.engine.getSceneManager().switchTo('SplashScene');
+      },
+    });
+
+    this.codexModal = new CodexQuestModal(this.questManager, () => {
+      this.showQuestLog = false;
+      if (this.isPaused) {
+        const vp = this.engine.getRenderer().getViewport();
+        this.pauseModal.open(vp.width, vp.height);
+      }
+    });
+
+    this.settingsModal = new SettingsModal(() => {
+      if (this.isPaused) {
+        const vp = this.engine.getRenderer().getViewport();
+        this.pauseModal.open(vp.width, vp.height);
+      }
+    });
+
+    this.productionHUD = new ProductionHUD({
+      onPauseClick: () => {
+        const vp = this.engine.getRenderer().getViewport();
+        this.isPaused = true;
+        this.pauseModal.open(vp.width, vp.height);
+      },
+      onCodexClick: () => {
+        const vp = this.engine.getRenderer().getViewport();
+        this.codexModal.open(vp.width, vp.height);
+      },
+    });
 
     this.resetCampaign();
   }
@@ -152,19 +210,65 @@ export class StoryCampaignScene implements IScene {
   }
 
   public handleInput(input: InputManager): void {
-    // 1. Cinematic skip or Pause
-    if (input.isActionJustPressed('PAUSE')) {
-      if (this.cinematicDirector.isPlaying()) {
-        this.cinematicDirector.skip();
-        return;
+    const mousePos = input.getMousePosition();
+
+    // 0. Active Modals Input Interception
+    if (this.settingsModal && this.settingsModal.isOpen()) {
+      this.settingsModal.handlePointerMove(mousePos);
+      if (input.isActionJustPressed('ATTACK')) {
+        this.settingsModal.handlePointerDown(mousePos);
+      } else if (input.isActionJustReleased('ATTACK')) {
+        this.settingsModal.handlePointerUp(mousePos);
       }
-      this.isPaused = !this.isPaused;
+      if (input.isActionJustPressed('PAUSE')) {
+        this.settingsModal.close();
+      }
       return;
     }
 
+    if (this.codexModal && this.codexModal.isOpen()) {
+      this.codexModal.handlePointerMove(mousePos);
+      if (input.isActionJustPressed('ATTACK')) {
+        this.codexModal.handlePointerDown(mousePos);
+      } else if (input.isActionJustReleased('ATTACK')) {
+        this.codexModal.handlePointerUp(mousePos);
+      }
+      if (input.isActionJustPressed('PAUSE') || input.isKeyJustPressed('KeyO') || input.isKeyJustPressed('Tab')) {
+        this.codexModal.close();
+      }
+      return;
+    }
+
+    if (this.pauseModal && this.pauseModal.isOpen()) {
+      this.pauseModal.handlePointerMove(mousePos);
+      if (input.isActionJustPressed('ATTACK')) {
+        this.pauseModal.handlePointerDown(mousePos);
+      } else if (input.isActionJustReleased('ATTACK')) {
+        this.pauseModal.handlePointerUp(mousePos);
+      }
+      if (input.isActionJustPressed('PAUSE')) {
+        this.pauseModal.close();
+        this.isPaused = false;
+      }
+      return;
+    }
+
+    // 1-Click Fast HUD Actions (only on actual mouse button click)
+    if (input.isMouseButtonJustPressed(0)) {
+      if (this.productionHUD && this.productionHUD.handlePointerDown(mousePos)) {
+        return;
+      }
+    }
+
     if (this.isPaused) {
-      if (input.isKeyJustPressed('KeyM')) {
+      if (input.isKeyJustPressed('KeyM') || input.isKeyJustPressed('Backspace')) {
         this.engine.getSceneManager().switchTo('SplashScene');
+        return;
+      }
+      if (input.isActionJustPressed('PAUSE')) {
+        this.isPaused = false;
+        if (this.pauseModal) this.pauseModal.close();
+        return;
       }
       return;
     }
@@ -181,9 +285,28 @@ export class StoryCampaignScene implements IScene {
       return;
     }
 
+    // 1. Cinematic skip or Pause
+    if (input.isActionJustPressed('PAUSE')) {
+      if (this.cinematicDirector.isPlaying()) {
+        this.cinematicDirector.skip();
+        return;
+      }
+      this.isPaused = true;
+      const vp = this.engine.getRenderer().getViewport();
+      this.pauseModal.open(vp.width, vp.height);
+      return;
+    }
+
     // 2. Toggle Quest Log Modal (Tab / O)
     if (input.isKeyJustPressed('KeyO') || input.isKeyJustPressed('Tab')) {
       this.showQuestLog = !this.showQuestLog;
+      const vp = this.engine.getRenderer().getViewport();
+      if (this.showQuestLog) {
+        this.codexModal.open(vp.width, vp.height);
+      } else {
+        this.codexModal.close();
+      }
+      return;
     }
 
     // 3. Branching Dialogue Choice Keys (1, 2, 3)
@@ -402,6 +525,24 @@ export class StoryCampaignScene implements IScene {
   }
 
   public update(dt: number): void {
+    ToastManager.getInstance().update(dt);
+    if (this.productionHUD) {
+      this.productionHUD.update(dt);
+    }
+
+    if (this.settingsModal && this.settingsModal.isOpen()) {
+      this.settingsModal.update(dt);
+      return;
+    }
+    if (this.codexModal && this.codexModal.isOpen()) {
+      this.codexModal.update(dt);
+      return;
+    }
+    if (this.pauseModal && this.pauseModal.isOpen()) {
+      this.pauseModal.update(dt);
+      return;
+    }
+
     if (this.isPaused) return;
 
     this.cinematicDirector.update(dt);
@@ -513,9 +654,29 @@ export class StoryCampaignScene implements IScene {
       this.renderVictoryOverlay(ctx);
     } else if (this.isGameOver) {
       this.renderDefeatOverlay(ctx);
-    } else if (this.isPaused) {
-      this.renderPauseOverlay(ctx);
     }
+
+    // 8. Production Responsive HUD & Modals
+    if (this.productionHUD) {
+      const activeMission = this.questManager.getActiveMission();
+      const objDesc =
+        activeMission && activeMission.objectives[0]
+          ? activeMission.objectives[0].description
+          : 'Purify Sapta-Loka';
+      this.productionHUD.render(renderer, this.player, objDesc);
+    }
+
+    if (this.pauseModal && this.pauseModal.isOpen()) {
+      this.pauseModal.render(renderer);
+    }
+    if (this.codexModal && this.codexModal.isOpen()) {
+      this.codexModal.render(renderer);
+    }
+    if (this.settingsModal && this.settingsModal.isOpen()) {
+      this.settingsModal.render(renderer);
+    }
+
+    ToastManager.getInstance().render(renderer);
   }
 
   private renderWorldEnvironment(ctx: CanvasRenderingContext2D): void {
@@ -710,26 +871,6 @@ export class StoryCampaignScene implements IScene {
     ctx.font = '14px Inter, sans-serif';
     ctx.fillStyle = '#FCA5A5';
     ctx.fillText('Press [ R ] to Respawn at Chapter Checkpoint  |  [ ESC / M ] Return to Menu', cam.viewportWidth / 2, cam.viewportHeight / 2 + 25);
-
-    ctx.restore();
-  }
-
-  private renderPauseOverlay(ctx: CanvasRenderingContext2D): void {
-    const cam = this.engine.getRenderer().getCamera();
-    ctx.save();
-    ctx.translate(cam.position.x - cam.viewportWidth / 2, cam.position.y - cam.viewportHeight / 2);
-
-    ctx.fillStyle = 'rgba(15, 23, 42, 0.8)';
-    ctx.fillRect(0, 0, cam.viewportWidth, cam.viewportHeight);
-
-    ctx.font = 'bold 32px Outfit, sans-serif';
-    ctx.fillStyle = '#F8FAFC';
-    ctx.textAlign = 'center';
-    ctx.fillText('CAMPAIGN PAUSED', cam.viewportWidth / 2, cam.viewportHeight / 2 - 20);
-
-    ctx.font = '14px Inter, sans-serif';
-    ctx.fillStyle = '#94A3B8';
-    ctx.fillText('Press [ ESC ] to Resume  |  [ M ] Return to Menu', cam.viewportWidth / 2, cam.viewportHeight / 2 + 25);
 
     ctx.restore();
   }

@@ -15,6 +15,9 @@ import { DamageNumberSystem } from '../render/DamageNumberSystem';
 import { CombatSystem, AttackSpec, DefenseSpec } from '../gameplay/CombatSystem';
 import { CheckpointManager } from '../gameplay/CheckpointManager';
 import { SaveGameManager } from '../state/SaveGameManager';
+import { PauseMenuModal } from '../ui/modals/PauseMenuModal';
+import { SettingsModal } from '../ui/modals/SettingsModal';
+import { ToastManager } from '../ui/components/ToastManager';
 
 export class BossEncounterScene implements IScene {
   public readonly id = 'BossEncounterScene';
@@ -40,6 +43,9 @@ export class BossEncounterScene implements IScene {
   public damageTakenTotal = 0;
   public parriesPerformed = 0;
 
+  public pauseModal!: PauseMenuModal;
+  public settingsModal!: SettingsModal;
+
   // Arena Bounds
   private arenaBounds: AABB = new AABB(-650, -500, 1300, 1000);
 
@@ -51,6 +57,33 @@ export class BossEncounterScene implements IScene {
     // Register primary checkpoint
     this.checkpointManager.clear();
     this.checkpointManager.register('cp_throne_sanctum', 'Throne Sanctum Gateway', 0, 280);
+
+    // Initialize UI Modals
+    this.pauseModal = new PauseMenuModal({
+      onResume: () => {
+        this.isPaused = false;
+      },
+      onOpenCodex: () => {
+        ToastManager.getInstance().show('Codex sealed during active titan confrontation!', 'warning');
+      },
+      onOpenSettings: () => {
+        const vp = this.engine.getRenderer().getViewport();
+        this.settingsModal.open(vp.width, vp.height);
+      },
+      onRestartRealm: () => {
+        this.resetEncounter();
+      },
+      onExitToTitle: () => {
+        this.engine.getSceneManager().switchTo('SplashScene');
+      },
+    });
+
+    this.settingsModal = new SettingsModal(() => {
+      if (this.isPaused) {
+        const vp = this.engine.getRenderer().getViewport();
+        this.pauseModal.open(vp.width, vp.height);
+      }
+    });
 
     this.resetEncounter();
   }
@@ -113,6 +146,21 @@ export class BossEncounterScene implements IScene {
   }
 
   public handleInput(input: InputManager): void {
+    const mousePos = input.getMousePosition();
+
+    if (this.settingsModal && this.settingsModal.isOpen()) {
+      this.settingsModal.handlePointerMove(mousePos);
+      if (input.isActionJustPressed('ATTACK')) {
+        this.settingsModal.handlePointerDown(mousePos);
+      } else if (input.isActionJustReleased('ATTACK')) {
+        this.settingsModal.handlePointerUp(mousePos);
+      }
+      if (input.isActionJustPressed('PAUSE')) {
+        this.settingsModal.close();
+      }
+      return;
+    }
+
     if (this.isPaused) {
       if (input.isKeyJustPressed('KeyM') || input.isKeyJustPressed('Backspace')) {
         this.engine.getSceneManager().switchTo('SplashScene');
@@ -120,7 +168,21 @@ export class BossEncounterScene implements IScene {
       }
       if (input.isActionJustPressed('PAUSE')) {
         this.isPaused = false;
+        if (this.pauseModal) this.pauseModal.close();
         return;
+      }
+    }
+
+    if (this.pauseModal && this.pauseModal.isOpen()) {
+      this.pauseModal.handlePointerMove(mousePos);
+      if (input.isActionJustPressed('ATTACK')) {
+        this.pauseModal.handlePointerDown(mousePos);
+      } else if (input.isActionJustReleased('ATTACK')) {
+        this.pauseModal.handlePointerUp(mousePos);
+      }
+      if (input.isActionJustPressed('PAUSE')) {
+        this.pauseModal.close();
+        this.isPaused = false;
       }
       return;
     }
@@ -139,6 +201,8 @@ export class BossEncounterScene implements IScene {
 
     if (input.isActionJustPressed('PAUSE')) {
       this.isPaused = true;
+      const vp = this.engine.getRenderer().getViewport();
+      this.pauseModal.open(vp.width, vp.height);
       return;
     }
 
@@ -297,6 +361,17 @@ export class BossEncounterScene implements IScene {
   }
 
   public update(dt: number): void {
+    ToastManager.getInstance().update(dt);
+
+    if (this.settingsModal && this.settingsModal.isOpen()) {
+      this.settingsModal.update(dt);
+      return;
+    }
+    if (this.pauseModal && this.pauseModal.isOpen()) {
+      this.pauseModal.update(dt);
+      return;
+    }
+
     if (this.isPaused) return;
 
     this.particles.update(dt);
@@ -517,9 +592,16 @@ export class BossEncounterScene implements IScene {
       this.renderVictoryOverlay(ctx);
     } else if (this.isGameOver) {
       this.renderDefeatOverlay(ctx);
-    } else if (this.isPaused) {
-      this.renderPauseOverlay(ctx);
     }
+
+    if (this.pauseModal && this.pauseModal.isOpen()) {
+      this.pauseModal.render(renderer);
+    }
+    if (this.settingsModal && this.settingsModal.isOpen()) {
+      this.settingsModal.render(renderer);
+    }
+
+    ToastManager.getInstance().render(renderer);
   }
 
   private renderArena(ctx: CanvasRenderingContext2D): void {
@@ -732,26 +814,6 @@ export class BossEncounterScene implements IScene {
     ctx.font = 'bold 15px Inter, sans-serif';
     ctx.fillStyle = '#FFFFFF';
     ctx.fillText('Press [R] to Respawn at Sanctum Checkpoint  |  [ESC] Return to Menu', cam.viewportWidth / 2, cam.viewportHeight / 2 + 50);
-
-    ctx.restore();
-  }
-
-  private renderPauseOverlay(ctx: CanvasRenderingContext2D): void {
-    const cam = this.engine.getRenderer().getCamera();
-    ctx.save();
-    ctx.translate(cam.position.x - cam.viewportWidth / 2, cam.position.y - cam.viewportHeight / 2);
-
-    ctx.fillStyle = 'rgba(15, 23, 42, 0.75)';
-    ctx.fillRect(0, 0, cam.viewportWidth, cam.viewportHeight);
-
-    ctx.font = 'bold 32px Outfit, sans-serif';
-    ctx.fillStyle = '#F8FAFC';
-    ctx.textAlign = 'center';
-    ctx.fillText('BATTLE PAUSED', cam.viewportWidth / 2, cam.viewportHeight / 2 - 20);
-
-    ctx.font = '14px Inter, sans-serif';
-    ctx.fillStyle = '#94A3B8';
-    ctx.fillText('Press [ESC] to Resume  |  [Q] Swap Weapon  |  [C/X] Guard & Parry', cam.viewportWidth / 2, cam.viewportHeight / 2 + 25);
 
     ctx.restore();
   }
