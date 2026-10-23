@@ -135,3 +135,42 @@ At the twilight of the Dvapara Yuga, the cosmic anchor binding the realm of shad
 - **AC-08 (Diagnostics Overlay):** Pressing `F3` or tapping the Diagnostics button displays a live readout of FPS, entities, audio status, and viewport dimensions.
 - **AC-09 (State Roundtrip):** State persistence saves player shard count, altar state, and high scores to LocalStorage and loads them correctly across sessions.
 - **AC-10 (Multi-Platform CI Workflows):** GitHub Actions CI and Release workflows validate multi-platform compilation across Windows, Linux, macOS, Android, and iOS runners with SHA-256 artifact hashing.
+
+---
+
+## 10. Comprehensive Requirements Traceability Matrix (Stages 0–8 Audit)
+
+| Req ID | Requirement Description | Stage | Source Implementation | Test Verification | Status |
+| :--- | :--- | :---: | :--- | :--- | :---: |
+| **REQ-001** | Deterministic Fixed-Timestep Simulation Loop | Stage 0 | `src/engine/GameLoop.ts` | `tests/unit/BranchCoverage.test.ts` | **COMPLETE** |
+| **REQ-002** | 2D/2.5D Canvas Rendering & Visual Diagnostics | Stage 0 | `src/render/CanvasRenderer.ts`, `Diagnostics.ts` | `tests/unit/RendererAndGeometry.test.ts` | **COMPLETE** |
+| **REQ-003** | Spatial Partitioning & AABB Collision System | Stage 0 | `src/physics/SpatialHash.ts`, `CollisionSystem.ts` | `tests/unit/SpatialHash.test.ts` | **COMPLETE** |
+| **REQ-004** | Bhumi Sunken Temple Vertical Slice Experience | Stage 1 | `src/scenes/BhumiTempleScene.ts` | `tests/integration/BhumiTempleFlow.test.ts` | **COMPLETE** |
+| **REQ-005** | Resonance Pillars, Agni-Forge & Tamas Spire | Stage 1 | `src/entities/ResonancePillar.ts`, `AgniForge.ts` | `tests/integration/BhumiTempleFlow.test.ts` | **COMPLETE** |
+| **REQ-006** | 21-Bone Skeletal Rigging & Dual-Bone IK | Stage 2 | `src/animation/CharacterRig.ts`, `InverseKinematics.ts` | `tests/unit/CharacterRigAndShowcase.test.ts` | **COMPLETE** |
+| **REQ-007** | Character Animation Studio & Showcase Scene | Stage 2 | `src/scenes/CharacterShowcaseScene.ts` | `tests/unit/CharacterRigAndShowcase.test.ts` | **COMPLETE** |
+| **REQ-008** | Dynamic 2D Lighting, Shadow Penumbra & Weather | Stage 3 | `src/environment/2DLightingEngine.ts`, `AtmosphericSystem.ts` | `tests/unit/EnvironmentSystems.test.ts` | **COMPLETE** |
+| **REQ-009** | 2D NavMesh & A* Pathfinding Grid | Stage 3 | `src/environment/NavMesh.ts` | `tests/unit/NavMeshAndPathfinding.test.ts` | **COMPLETE** |
+| **REQ-010** | Open-World Exploration Experience | Stage 3 | `src/scenes/WorldExplorationScene.ts` | `tests/unit/WorldExplorationScene.test.ts` | **COMPLETE** |
+| **REQ-011** | Authoritative Combat, Parrying & Shield Block | Stage 4 | `src/gameplay/CombatSystem.ts`, `EquipmentManager.ts` | `tests/unit/CombatAndEquipment.test.ts` | **COMPLETE** |
+| **REQ-012** | Behavior Tree AI & Blackboard Perception | Stage 4 | `src/gameplay/BehaviorTree.ts` | `tests/unit/BehaviorTree.test.ts` | **COMPLETE** |
+| **REQ-013** | Mahishasura Titan Boss & Asura Vanguard AI | Stage 4 | `src/entities/MahishasuraBoss.ts`, `AsuraEliteVanguard.ts` | `tests/unit/BossAndVanguardAI.test.ts` | **COMPLETE** |
+| **REQ-014** | Narrative Architecture, Screenplay & Dialogue Trees | Stage 5 | `src/narrative/DialogueTree.ts`, `CampaignChapter1.ts` | `tests/unit/QuestAndNarrative.test.ts` | **COMPLETE** |
+| **REQ-015** | Directed Acyclic Graph (DAG) Quest Manager | Stage 5 | `src/narrative/QuestManager.ts` | `tests/unit/QuestAndNarrative.test.ts` | **COMPLETE** |
+| **REQ-016** | Playable Story Campaign Act I & Encounter Scenes | Stage 5 | `src/scenes/StoryCampaignScene.ts`, `BossEncounterScene.ts` | `tests/unit/CinematicAndCampaignScene.test.ts` | **COMPLETE** |
+| **REQ-017** | Accessible Design System & WCAG 2.1 Contrast Tokens | Stage 6 | `src/ui/design/DesignTokens.ts`, `FocusManager.ts` | `tests/unit/DesignSystemAndUI.test.ts` | **COMPLETE** |
+| **REQ-018** | Reusable Accessible UI Components & Modals | Stage 6 | `src/ui/components/UIModal.ts`, `UIButton.ts` | `tests/ui/UIComponents.test.ts` | **COMPLETE** |
+| **REQ-019** | Full Accessibility Manager (Motion, Shake, Subtitles) | Stage 6 | `src/ui/accessibility/AccessibilityManager.ts` | `tests/unit/DesignSystemAndUI.test.ts` | **COMPLETE** |
+| **REQ-020** | Responsive Production HUD & Codex Modal | Stage 6 | `src/ui/ProductionHUD.ts`, `CodexQuestModal.ts` | `tests/unit/DesignSystemAndUI.test.ts` | **COMPLETE** |
+| **REQ-021** | Procedural Vedic Raga Synthesizer (Tanpura/Sitar/Tabla) | Stage 7 | `src/audio/RagaMusicGenerator.ts` | `tests/unit/AudioDesignAndSynthesizer.test.ts` | **COMPLETE** |
+| **REQ-022** | 2D Spatial Audio Listener with Doppler Shift | Stage 7 | `src/audio/SpatialAudioListener.ts` | `tests/unit/AudioDesignAndSynthesizer.test.ts` | **COMPLETE** |
+| **REQ-023** | Formant Sanskrit Mantra Synthesizer (OM/HRĪM/KRĪM/PHAṬ) | Stage 7 | `src/audio/MantraSynthesizer.ts` | `tests/unit/AudioDesignAndSynthesizer.test.ts` | **COMPLETE** |
+| **REQ-024** | Physics-Based Material Foley Synthesizer | Stage 7 | `src/audio/FoleySynthesizer.ts` | `tests/unit/AudioDesignAndSynthesizer.test.ts` | **COMPLETE** |
+| **REQ-025** | Dynamic Cinematic Director & Vertigo Dolly Zoom | Stage 7 | `src/cinematics/CinematicDirector.ts` | `tests/unit/CinematicsAndVFX.test.ts` | **COMPLETE** |
+| **REQ-026** | Celestial Particle VFX & Chromatic Shockwaves | Stage 7 | `src/render/CelestialVFX.ts` | `tests/unit/CinematicsAndVFX.test.ts` | **COMPLETE** |
+| **REQ-027** | Multi-Platform Performance Budgets & Specification | Stage 8 | `PERFORMANCE_SPECIFICATION.md` | `tests/performance/PlatformBenchmark.test.ts` | **COMPLETE** |
+| **REQ-028** | Graphics Quality Manager & Adaptive Resolution Scaling | Stage 8 | `src/render/GraphicsQualityManager.ts` | `tests/unit/PerformanceAndPlatform.test.ts` | **COMPLETE** |
+| **REQ-029** | Render Batcher & Viewport Frustum Culling | Stage 8 | `src/render/RenderBatcher.ts` | `tests/unit/PerformanceAndPlatform.test.ts` | **COMPLETE** |
+| **REQ-030** | Zero-Allocation Object Pool & Memory Profiler | Stage 8 | `src/core/ObjectPool.ts`, `MemoryProfiler.ts` | `tests/unit/PerformanceAndPlatform.test.ts` | **COMPLETE** |
+| **REQ-031** | Cross-Platform Bridge with Notches & Safe Areas | Stage 8 | `src/platform/PlatformBridge.ts` | `tests/unit/PerformanceAndPlatform.test.ts` | **COMPLETE** |
+| **REQ-032** | Genuine Multi-Platform Releases (6 Targets) & CI Audit | Stage 8 | `scripts/build-platforms.js`, `validate-artifacts.js` | `npm run validate:artifacts` | **COMPLETE** |

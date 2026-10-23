@@ -1,7 +1,7 @@
 # Mythos: Astra & The Seven Realms — Multi-Platform Release Guide
-**Document Version:** 1.0.0-PROD  
-**Classification:** DevOps & Distribution Guide  
-**Status:** Approved for Stage 0  
+**Document Version:** 2.0.0-PROD  
+**Classification:** DevOps & Production Distribution Guide  
+**Status:** Certified for Production Release v1.0.0  
 
 ---
 
@@ -12,7 +12,7 @@ The project adheres to **Semantic Versioning 2.0.0** (`MAJOR.MINOR.PATCH`):
 - **MINOR:** Backward-compatible features, new gameplay mechanics, or stage deliverables.
 - **PATCH:** Backward-compatible bug fixes, performance optimizations, or documentation updates.
 
-Current Stage 0 Release: **`v0.1.0`**
+Current Certified Production Release: **`v1.0.0`** (Base Package Version `0.1.0`)
 
 ---
 
