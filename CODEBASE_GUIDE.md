@@ -21,6 +21,12 @@ mythologicalgame/
 │   ├── generate-sbom.js           # CycloneDX SBOM & Dependency Manifest generator
 │   └── verify-append-only.js      # Git diff validator for TODO.md & CHANGELOG.md
 ├── src/
+│   ├── assets/
+│   │   ├── AssetManager.ts        # Preloader, BFS transparency keyer & proxies
+│   │   ├── AssetManifest.ts       # 28-item production asset catalog
+│   │   ├── AssetPipelineDiagnostics.ts # Lint, pivot & UI portrait separation validator
+│   │   ├── AssetProvenance.ts     # SHA-256 provenance registry & CC-BY-4.0 licensing
+│   │   └── SpriteAtlas.ts         # High-performance 2.5D sprite atlas with normalized pivots
 │   ├── audio/
 │   │   └── AudioEngine.ts         # WebAudio procedural sound synthesizer
 │   ├── core/
@@ -122,3 +128,23 @@ mythologicalgame/
 - **Strict Typing:** All TypeScript files must compile with `--strict`, `noUnusedLocals`, and `noUnusedParameters`.
 - **Zero Allocations in Game Loop:** Entities, particles, and vectors are pooled or reused where possible to avoid garbage collection spikes.
 - **Headless Testability:** Subsystems in `core`, `physics`, and `state` must never directly touch `window` or `document` without safe fallbacks.
+
+---
+
+## 4. Stage R0 Rendering, Viewport Safe-Area & Scene Lifecycle Contracts
+
+### 4.1 World-Pass vs. Screen-Pass Rendering Separation
+- **World Pass:** All entities, terrain tiles, particle bursts, and atmospheric effects must be drawn within `renderer.beginWorldPass()` and `renderer.endWorldPass()`.
+- **Screen Pass:** All HUD elements, modal dialogs, dialogue trees, and cinematic letterboxes must be drawn strictly after `renderer.endWorldPass()`. Never apply camera translation offsets to screen-space elements.
+
+### 4.2 Top-Bar Safe-Area Guidelines
+- The DOM `#quick-bar` container occupies the top-right screen space ($x \ge 980\text{px}$, $y: 16\text{px} - 48\text{px}$).
+- Top-right canvas UI buttons (e.g., Pause, Codex, Diagnostics, Compendium tabs) must be positioned at $y \ge 56\text{px}$ or positioned left of $x = 980\text{px}$ to avoid click and hover collisions with the DOM bar.
+
+### 4.3 Canvas Path Hygiene (`ctx.beginPath`)
+- Always execute `ctx.beginPath()` prior to calling `ctx.roundRect()` or geometric path generation. Omitting `ctx.beginPath()` causes accumulated path strokes to restroke repeatedly every frame, creating opaque dark rectangles and corrupted borders.
+
+### 4.4 Scene Lifecycle & Stack Reset
+- When returning to `SplashScene`, invoke `sceneManager.clearNavigationStack()` and `camera.reset(0, 0, 1.0)`.
+- Scenes must clean up event listeners, pooled particle references, and transient UI states in `onExit()`.
+

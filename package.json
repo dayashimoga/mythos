@@ -42,5 +42,8 @@
     "stage-0"
   ],
   "author": "Mythos Core Architecture Team",
-  "license": "Apache-2.0"
+  "license": "Apache-2.0",
+  "dependencies": {
+    "pixi.js": "^8.22.0"
+  }
 }

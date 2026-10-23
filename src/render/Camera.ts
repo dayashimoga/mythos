@@ -107,6 +107,24 @@ export class Camera {
     this.worldMinY = minY;
     this.worldMaxX = maxX;
     this.worldMaxY = maxY;
+    this.clampToBounds();
+  }
+
+  public clampToBounds(): void {
+    const halfW = (this.viewportWidth / 2) / this.zoom;
+    const halfH = (this.viewportHeight / 2) / this.zoom;
+
+    if (this.worldMaxX - this.worldMinX >= halfW * 2) {
+      this.position.x = Math.max(this.worldMinX + halfW, Math.min(this.worldMaxX - halfW, this.position.x));
+    } else {
+      this.position.x = (this.worldMinX + this.worldMaxX) / 2;
+    }
+
+    if (this.worldMaxY - this.worldMinY >= halfH * 2) {
+      this.position.y = Math.max(this.worldMinY + halfH, Math.min(this.worldMaxY - halfH, this.position.y));
+    } else {
+      this.position.y = (this.worldMinY + this.worldMaxY) / 2;
+    }
   }
 
   public triggerShake(intensity: number, durationSeconds: number): void {
@@ -129,6 +147,9 @@ export class Camera {
       this.position.x += (targetX - this.position.x) * factor;
       this.position.y += (targetY - this.position.y) * factor;
     }
+
+    // Clamp to world bounds
+    this.clampToBounds();
 
     // Handle screen shake
     if (this.shakeTimer > 0) {

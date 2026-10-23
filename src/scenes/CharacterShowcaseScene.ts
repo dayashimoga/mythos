@@ -313,17 +313,17 @@ export class CharacterShowcaseScene implements IScene {
       '#FFD166'
     );
     renderer.drawText(
-      'Vedic Character Rigs & Animation Showcase',
+      'Vedic Character Rigs & Lore',
       36,
       56,
       '11px monospace',
       '#94A3B8'
     );
 
-    // 5 Character Tabs (Optimized to fit cleanly across widescreen display)
-    const tabStartX = 280;
-    const tabW = 128;
-    const tabGap = 6;
+    // 5 Character Tabs (Optimized to fit cleanly across widescreen display without title or quick-bar collision)
+    const tabStartX = 270;
+    const tabW = 96;
+    const tabGap = 5;
     for (let i = 0; i < this.charactersMeta.length; i++) {
       const c = this.charactersMeta[i];
       const isSelected = i === this.activeRigIndex;
@@ -336,39 +336,39 @@ export class CharacterShowcaseScene implements IScene {
       ctx.lineWidth = isSelected ? 2 : 1;
       ctx.strokeRect(tx, ty, tabW, 54);
 
-      renderer.drawText(`[ ${i + 1} ] ${c.name}`, tx + 8, ty + 22, 'bold 11px sans-serif', isSelected ? '#00E5FF' : '#E2E8F0');
-      renderer.drawText(c.title, tx + 8, ty + 40, '9px monospace', isSelected ? '#FFD166' : '#94A3B8');
+      renderer.drawText(`[ ${i + 1} ] ${c.name}`, tx + 6, ty + 22, 'bold 10px sans-serif', isSelected ? '#00E5FF' : '#E2E8F0');
+      renderer.drawText(c.title, tx + 6, ty + 40, '8px monospace', isSelected ? '#FFD166' : '#94A3B8');
     }
 
     // Hide UI Button
-    const hideBtnX = 960;
+    const hideBtnX = 780;
     ctx.fillStyle = 'rgba(30, 41, 59, 0.8)';
-    ctx.fillRect(hideBtnX, 24, 85, 54);
+    ctx.fillRect(hideBtnX, 24, 60, 54);
     ctx.strokeStyle = '#64748B';
     ctx.lineWidth = 1;
-    ctx.strokeRect(hideBtnX, 24, 85, 54);
-    renderer.drawText('HIDE UI', hideBtnX + 16, 45, 'bold 10px sans-serif', '#CBD5E1');
-    renderer.drawText('[ H ]', hideBtnX + 28, 63, '10px monospace', '#94A3B8');
+    ctx.strokeRect(hideBtnX, 24, 60, 54);
+    renderer.drawText('HIDE UI', hideBtnX + 9, 45, 'bold 10px sans-serif', '#CBD5E1');
+    renderer.drawText('[ H ]', hideBtnX + 16, 63, '10px monospace', '#94A3B8');
 
     // Diagnostics Drawer Toggle Button
-    const diagBtnX = 1055;
+    const diagBtnX = 848;
     ctx.fillStyle = this.isDiagnosticsOpen ? 'rgba(239, 71, 111, 0.35)' : 'rgba(30, 41, 59, 0.8)';
-    ctx.fillRect(diagBtnX, 24, 95, 54);
+    ctx.fillRect(diagBtnX, 24, 72, 54);
     ctx.strokeStyle = this.isDiagnosticsOpen ? '#EF476F' : '#64748B';
     ctx.lineWidth = 1.2;
-    ctx.strokeRect(diagBtnX, 24, 95, 54);
-    renderer.drawText('DIAGNOSTICS', diagBtnX + 12, 45, 'bold 10px sans-serif', this.isDiagnosticsOpen ? '#EF476F' : '#CBD5E1');
-    renderer.drawText('[ D / Tab ]', diagBtnX + 20, 63, '10px monospace', '#94A3B8');
+    ctx.strokeRect(diagBtnX, 24, 72, 54);
+    renderer.drawText('DIAGNOSTICS', diagBtnX + 4, 45, 'bold 9px sans-serif', this.isDiagnosticsOpen ? '#EF476F' : '#CBD5E1');
+    renderer.drawText('[ D / Tab ]', diagBtnX + 8, 63, '10px monospace', '#94A3B8');
 
     // Return to Title Button
-    const exitBtnX = 1160;
+    const exitBtnX = 928;
     ctx.fillStyle = 'rgba(220, 38, 38, 0.25)';
-    ctx.fillRect(exitBtnX, 24, 90, 54);
+    ctx.fillRect(exitBtnX, 24, 60, 54);
     ctx.strokeStyle = 'rgba(239, 68, 68, 0.5)';
     ctx.lineWidth = 1;
-    ctx.strokeRect(exitBtnX, 24, 90, 54);
-    renderer.drawText('🚪 TITLE', exitBtnX + 18, 45, 'bold 10px sans-serif', '#FCA5A5');
-    renderer.drawText('[ ESC ]', exitBtnX + 24, 63, '10px monospace', '#94A3B8');
+    ctx.strokeRect(exitBtnX, 24, 60, 54);
+    renderer.drawText('🚪 TITLE', exitBtnX + 8, 45, 'bold 10px sans-serif', '#FCA5A5');
+    renderer.drawText('[ ESC ]', exitBtnX + 10, 63, '10px monospace', '#94A3B8');
 
     // -----------------------------------------------------------------------
     // BOTTOM TRANSPORT BAR & TIMELINE SCRUBBER
@@ -525,9 +525,9 @@ export class CharacterShowcaseScene implements IScene {
     if (input.isMouseButtonJustPressed(0)) {
       // Character Header Tabs & Controls hit-test (y between 24 and 78)
       if (screenMouse.y >= 24 && screenMouse.y <= 78) {
-        const tabStartX = 280;
-        const tabW = 128;
-        const tabGap = 6;
+        const tabStartX = 270;
+        const tabW = 96;
+        const tabGap = 5;
         for (let i = 0; i < this.charactersMeta.length; i++) {
           const tx = tabStartX + i * (tabW + tabGap);
           if (screenMouse.x >= tx && screenMouse.x <= tx + tabW) {
@@ -535,11 +535,11 @@ export class CharacterShowcaseScene implements IScene {
             break;
           }
         }
-        if (screenMouse.x >= 960 && screenMouse.x <= 1045) {
+        if (screenMouse.x >= 780 && screenMouse.x <= 840) {
           this.isControlsHidden = !this.isControlsHidden;
-        } else if (screenMouse.x >= 1055 && screenMouse.x <= 1150) {
+        } else if (screenMouse.x >= 848 && screenMouse.x <= 920) {
           this.isDiagnosticsOpen = !this.isDiagnosticsOpen;
-        } else if (screenMouse.x >= 1160 && screenMouse.x <= 1250) {
+        } else if ((screenMouse.x >= 928 && screenMouse.x <= 988) || (screenMouse.x >= 1160 && screenMouse.x <= 1250)) {
           this.engine.getSceneManager().switchTo('SplashScene');
           return;
         }

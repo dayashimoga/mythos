@@ -344,15 +344,16 @@ export class ProductionHUD {
     // 5. TOP-RIGHT FAST-ACCESS BUTTONS (CODEX & PAUSE)
     // -------------------------------------------------------------------------
     const rightMargin = isMobile ? 12 : 20;
+    const btnY = isMobile ? panelY : 56;
     this.pauseButtonBounds = {
       x: vp.width - rightMargin - 80,
-      y: panelY,
+      y: btnY,
       width: 80,
       height: 32,
     };
     this.codexButtonBounds = {
       x: vp.width - rightMargin - 170,
-      y: panelY,
+      y: btnY,
       width: 80,
       height: 32,
     };

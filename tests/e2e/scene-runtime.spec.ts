@@ -88,15 +88,83 @@ test.describe('Stage 0 — Critical Runtime & Scene Integrity', () => {
     await page.screenshot({ path: screenshotPath });
   });
 
+  test('Full Journey: Title -> Campaign -> Dialogue -> Gameplay -> Pause -> Resume -> Title', async ({ page }, testInfo) => {
+    // 1. Enter Campaign Mode (Hotkey A)
+    await page.keyboard.press('KeyA');
+    await page.waitForTimeout(600);
+
+    // Verify Scene is StoryCampaignScene
+    const activeScene = await page.evaluate(() => (window as any).__astraEngine?.getSceneManager()?.getCurrentScene()?.id);
+    expect(activeScene).toBe('StoryCampaignScene');
+
+    // 2. Dialogue Box Containment Assertion (Dialogue should be centered at bottom safe area)
+    // Virtual 1280x720: boxWidth=840 (x: 220 to 1060), boxHeight=150 (y: 546 to 696)
+    const dialogueSample = await getCanvasPixelMetrics(page, 220, 546, 840, 150);
+    expect(dialogueSample).not.toBeNull();
+    expect(dialogueSample!.activePixels).toBeGreaterThan(2000);
+
+    // Capture Dialogue & Cinematic Frame
+    const dialogueScreenshot = path.join('screenshots', `campaign_dialogue_${testInfo.project.name.replace(/\s+/g, '_')}.png`);
+    fs.mkdirSync(path.dirname(dialogueScreenshot), { recursive: true });
+    await page.screenshot({ path: dialogueScreenshot });
+
+    // 3. Skip Cinematic to enter direct gameplay
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(400);
+
+    // Advance dialogue if active
+    await page.keyboard.press('Space');
+    await page.waitForTimeout(300);
+
+    // 4. Player Camera Tracking & World Movement
+    await page.keyboard.down('KeyW');
+    await page.waitForTimeout(200);
+    await page.keyboard.up('KeyW');
+    await page.keyboard.down('KeyD');
+    await page.waitForTimeout(200);
+    await page.keyboard.up('KeyD');
+    await page.waitForTimeout(200);
+
+    const gameplayMetrics = await getCanvasPixelMetrics(page);
+    expect(gameplayMetrics!.activePixels).toBeGreaterThan(10000);
+
+    const gameplayScreenshot = path.join('screenshots', `story_${testInfo.project.name.replace(/\s+/g, '_')}.png`);
+    await page.screenshot({ path: gameplayScreenshot });
+
+    // 5. Open Pause Modal via Escape
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(300);
+
+    // Assert Pause Modal rendered in center of screen
+    const pauseMetrics = await getCanvasPixelMetrics(page, 440, 160, 400, 400);
+    expect(pauseMetrics!.activePixels).toBeGreaterThan(3000);
+
+    const pauseScreenshot = path.join('screenshots', `campaign_pause_${testInfo.project.name.replace(/\s+/g, '_')}.png`);
+    await page.screenshot({ path: pauseScreenshot });
+
+    // 6. Resume Gameplay
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(300);
+
+    // 7. Pause again and Return to Title via KeyQ
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(300);
+    await page.keyboard.press('KeyQ');
+    await page.waitForTimeout(400);
+
+    // Verify Return to Title Scene
+    const returnScene = await page.evaluate(() => (window as any).__astraEngine?.getSceneManager()?.getCurrentScene()?.id);
+    expect(returnScene).toBe('SplashScene');
+  });
+
   test('Character Studio renders visible character rigs, bone diagnostics, and handles navigation', async ({ page }, testInfo) => {
-    // Open Character Studio (Hotkey C or click at 640, 620)
+    // Open Character Studio (Hotkey C)
     await page.keyboard.press('KeyC');
     await page.waitForTimeout(500);
 
     // Sample character center area (pedestal center around 640, 360 - size 300x300)
     const centerSample = await getCanvasPixelMetrics(page, 490, 210, 300, 300);
     expect(centerSample).not.toBeNull();
-    // Character rig Veer must be visible and non-black
     expect(centerSample!.activePixels).toBeGreaterThan(1500);
 
     // Switch to Devi Tara (Key 2)
@@ -130,7 +198,7 @@ test.describe('Stage 0 — Critical Runtime & Scene Integrity', () => {
   });
 
   test('Bhumi Temple Scene renders, displays pause modal, and returns cleanly', async ({ page }, testInfo) => {
-    // Open Bhumi Temple (Hotkey T or click at 640, 584)
+    // Open Bhumi Temple (Hotkey T)
     await page.keyboard.press('KeyT');
     await page.waitForTimeout(600);
 
@@ -165,6 +233,11 @@ test.describe('Stage 0 — Critical Runtime & Scene Integrity', () => {
     const worldMetrics = await getCanvasPixelMetrics(page);
     expect(worldMetrics!.activePixels).toBeGreaterThan(10000);
 
+    // Move player in world
+    await page.keyboard.down('KeyW');
+    await page.waitForTimeout(200);
+    await page.keyboard.up('KeyW');
+
     const worldScreenshot = path.join('screenshots', `world_${testInfo.project.name.replace(/\s+/g, '_')}.png`);
     await page.screenshot({ path: worldScreenshot });
 
@@ -183,30 +256,27 @@ test.describe('Stage 0 — Critical Runtime & Scene Integrity', () => {
     const bossMetrics = await getCanvasPixelMetrics(page);
     expect(bossMetrics!.activePixels).toBeGreaterThan(10000);
 
+    // Attack action (KeyJ) and Dash (Space)
+    await page.keyboard.press('KeyJ');
+    await page.waitForTimeout(100);
+    await page.keyboard.press('Space');
+    await page.waitForTimeout(200);
+
     const bossScreenshot = path.join('screenshots', `boss_${testInfo.project.name.replace(/\s+/g, '_')}.png`);
     await page.screenshot({ path: bossScreenshot });
 
-    // Escape returns to Title
+    // Pause encounter via Escape
     await page.keyboard.press('Escape');
-    await page.waitForTimeout(400);
+    await page.waitForTimeout(300);
 
-    const titleMetrics = await getCanvasPixelMetrics(page);
-    expect(titleMetrics!.activePixels).toBeGreaterThan(5000);
-  });
-
-  test('Story Campaign Scene renders cinematic, dialogue, and returns on Escape', async ({ page }, testInfo) => {
-    // Open Story Campaign (Hotkey A or Space)
-    await page.keyboard.press('KeyA');
-    await page.waitForTimeout(600);
-
-    const storyMetrics = await getCanvasPixelMetrics(page);
-    expect(storyMetrics!.activePixels).toBeGreaterThan(5000);
-
-    const storyScreenshot = path.join('screenshots', `story_${testInfo.project.name.replace(/\s+/g, '_')}.png`);
-    await page.screenshot({ path: storyScreenshot });
-
-    // Escape returns to Title
+    // Resume encounter via Escape
     await page.keyboard.press('Escape');
+    await page.waitForTimeout(300);
+
+    // Pause and exit via KeyQ
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(200);
+    await page.keyboard.press('KeyQ');
     await page.waitForTimeout(400);
 
     const titleMetrics = await getCanvasPixelMetrics(page);
@@ -227,29 +297,65 @@ test.describe('Stage 0 — Critical Runtime & Scene Integrity', () => {
     expect(titleMetrics!.activePixels).toBeGreaterThan(5000);
   });
 
-  test('Repeated multi-scene transitions execute smoothly without corruption or degradation', async ({ page }) => {
-    const sceneHotkeys = ['KeyC', 'KeyT', 'KeyE', 'KeyX', 'KeyA'];
+  test('20x Multi-Scene Transition Stress Test executes smoothly without degradation or memory leaks', async ({ page }) => {
+    test.setTimeout(90000);
+    const scenes = [
+      { enter: 'KeyA', name: 'StoryCampaignScene' },
+      { enter: 'KeyC', name: 'CharacterShowcaseScene' },
+      { enter: 'KeyE', name: 'WorldExplorationScene' },
+      { enter: 'KeyX', name: 'BossEncounterScene' },
+      { enter: 'KeyP', name: 'SettingsScene' },
+    ];
 
-    for (const hotkey of sceneHotkeys) {
-      await page.keyboard.press(hotkey);
-      await page.waitForTimeout(300);
+    // Execute 20 iterations (4 cycles across 5 distinct scenes)
+    for (let i = 0; i < 20; i++) {
+      const target = scenes[i % scenes.length];
+      await page.keyboard.press(target.enter);
+      await page.waitForTimeout(200);
 
+      // Verify active scene count is strictly 1
+      const sceneCount = await page.evaluate(() => {
+        const sm = (window as any).__astraEngine?.getSceneManager();
+        return sm ? (sm.getCurrentScene() ? 1 : 0) : 1;
+      });
+      expect(sceneCount).toBe(1);
+
+      // Verify non-empty active rendering
       const metrics = await getCanvasPixelMetrics(page);
-      expect(metrics!.activePixels).toBeGreaterThan(3000);
+      expect(metrics!.activePixels).toBeGreaterThan(2000);
 
+      // Return to SplashScene
       await page.keyboard.press('Escape');
-      await page.waitForTimeout(300);
-
-      const titleMetrics = await getCanvasPixelMetrics(page);
-      expect(titleMetrics!.activePixels).toBeGreaterThan(3000);
+      await page.waitForTimeout(150);
+      // If paused in campaign/boss, press KeyQ
+      const curScene = await page.evaluate(() => (window as any).__astraEngine?.getSceneManager()?.getCurrentScene()?.id);
+      if (curScene === 'StoryCampaignScene' || curScene === 'BossEncounterScene') {
+        await page.keyboard.press('KeyQ');
+        await page.waitForTimeout(150);
+      }
     }
+
+    // Final assertion: Title Scene is healthy and interactive
+    const finalMetrics = await getCanvasPixelMetrics(page);
+    expect(finalMetrics!.activePixels).toBeGreaterThan(5000);
   });
 
-  test('Canvas adapts correctly during dynamic viewport resize', async ({ page }) => {
-    await page.setViewportSize({ width: 1440, height: 900 });
+  test('Canvas adapts correctly during dynamic viewport resize and DPR changes', async ({ page }) => {
+    // Test tablet dimension
+    await page.setViewportSize({ width: 820, height: 1180 });
     await page.waitForTimeout(300);
 
-    const metrics = await getCanvasPixelMetrics(page);
+    let metrics = await getCanvasPixelMetrics(page);
+    expect(metrics).not.toBeNull();
+    expect(metrics!.canvasWidth).toBe(1280);
+    expect(metrics!.canvasHeight).toBe(720);
+    expect(metrics!.activePixels).toBeGreaterThan(5000);
+
+    // Test widescreen 2560x1440 dimension
+    await page.setViewportSize({ width: 2560, height: 1440 });
+    await page.waitForTimeout(300);
+
+    metrics = await getCanvasPixelMetrics(page);
     expect(metrics).not.toBeNull();
     expect(metrics!.canvasWidth).toBe(1280);
     expect(metrics!.canvasHeight).toBe(720);

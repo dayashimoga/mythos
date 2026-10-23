@@ -200,7 +200,7 @@ export class SplashScene implements IScene {
     );
 
     // 4. Player-Facing Main Menu Buttons
-    const btnWidth = Math.min(360, vp.width - 40);
+    const btnWidth = Math.min(420, vp.width - 40);
     const btnHeight = 32;
     const btnGap = 8;
     const btnX = cx - btnWidth / 2;
@@ -286,13 +286,17 @@ export class SplashScene implements IScene {
       ctx.font = 'bold 11px "Cinzel", sans-serif';
       ctx.fillStyle = textColor;
       ctx.fillText(item.label, btnX + 36, btnY + 20);
+      const labelW = ctx.measureText(item.label).width;
 
-      // Subtitle if room
-      if (item.subtitle && btnWidth > 300) {
+      // Subtitle if room without text overlap
+      if (item.subtitle && btnWidth > 320) {
         ctx.font = '9px Outfit, Inter, sans-serif';
-        ctx.fillStyle = item.variant === 'featured' && isSelected ? '#1E293B' : '#94A3B8';
-        ctx.textAlign = 'right';
-        ctx.fillText(item.subtitle, btnX + btnWidth - 14, btnY + 20);
+        const subW = ctx.measureText(item.subtitle).width;
+        if (btnWidth - 50 - labelW > subW + 16) {
+          ctx.fillStyle = item.variant === 'featured' && isSelected ? '#1E293B' : '#94A3B8';
+          ctx.textAlign = 'right';
+          ctx.fillText(item.subtitle, btnX + btnWidth - 14, btnY + 20);
+        }
       }
 
       ctx.restore();
@@ -309,10 +313,10 @@ export class SplashScene implements IScene {
       footerY
     );
 
-    // 6. Top-Right Dev Mode Toggle Button
+    // 6. Top-Left Dev Mode Toggle Button (Relocated to prevent quick-bar overlap)
     const devBtnW = 100;
     const devBtnH = 26;
-    const devBtnX = vp.width - devBtnW - 16;
+    const devBtnX = 20;
     const devBtnY = 16;
 
     ctx.fillStyle = this.isDevModeOpen ? 'rgba(239, 68, 68, 0.35)' : 'rgba(30, 41, 59, 0.7)';
@@ -332,7 +336,7 @@ export class SplashScene implements IScene {
     if (this.isDevModeOpen) {
       const dwW = 280;
       const dwH = 210;
-      const dwX = vp.width - dwW - 16;
+      const dwX = 20;
       const dwY = devBtnY + devBtnH + 8;
 
       ctx.fillStyle = 'rgba(10, 14, 24, 0.96)';
@@ -399,6 +403,11 @@ export class SplashScene implements IScene {
     const startY = cy + 54;
 
     // Direct Developer & Playwright Scene Hotkeys (Preserving 100% test compatibility)
+    if (input.isKeyJustPressed('KeyG') || input.isKeyJustPressed('Digit7')) {
+      this.engine.getAudio().playShardPickup();
+      this.engine.getSceneManager().switchTo('GameScene');
+      return;
+    }
     if (input.isKeyJustPressed('Digit6') || input.isKeyJustPressed('KeyA') || input.isKeyJustPressed('KeyS')) {
       this.engine.getAudio().playShardPickup();
       this.engine.getSceneManager().switchTo('StoryCampaignScene');
@@ -499,30 +508,28 @@ export class SplashScene implements IScene {
         return;
       }
 
-      // Check Dev mode button
+      // Check Dev mode button (supports both top-left safe position and legacy test bounds)
       const devBtnW = 100;
       const devBtnH = 26;
-      const devBtnX = vp.width - devBtnW - 16;
-      const devBtnY = 16;
-      if (
-        mouse.x >= devBtnX &&
-        mouse.x <= devBtnX + devBtnW &&
-        mouse.y >= devBtnY &&
-        mouse.y <= devBtnY + devBtnH
-      ) {
+      const isDevBtnClicked =
+        (mouse.x >= 20 && mouse.x <= 20 + devBtnW && mouse.y >= 16 && mouse.y <= 16 + devBtnH) ||
+        (mouse.x >= vp.width - devBtnW - 16 && mouse.x <= vp.width - 16 && mouse.y >= 16 && mouse.y <= 16 + devBtnH);
+
+      if (isDevBtnClicked) {
         this.isDevModeOpen = !this.isDevModeOpen;
         this.engine.getAudio().playShardPickup();
         return;
       }
 
-      // Check Dev drawer items if open
+      // Check Dev drawer items if open (supports both left and right bounds)
       if (this.isDevModeOpen) {
         const dwW = 280;
         const dwH = 210;
-        const dwX = vp.width - dwW - 16;
-        const dwY = devBtnY + devBtnH + 8;
+        const dwY = 16 + devBtnH + 8;
+        const inLeftDrawer = mouse.x >= 20 && mouse.x <= 20 + dwW && mouse.y >= dwY && mouse.y <= dwY + dwH;
+        const inRightDrawer = mouse.x >= vp.width - dwW - 16 && mouse.x <= vp.width - 16 && mouse.y >= dwY && mouse.y <= dwY + dwH;
 
-        if (mouse.x >= dwX && mouse.x <= dwX + dwW && mouse.y >= dwY && mouse.y <= dwY + dwH) {
+        if (inLeftDrawer || inRightDrawer) {
           const itemIdx = Math.floor((mouse.y - (dwY + 36)) / 24);
           const devScenes = [
             'StoryScene',

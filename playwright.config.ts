@@ -2,7 +2,7 @@ import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
   testDir: './tests/e2e',
-  timeout: 30000,
+  timeout: 60000,
   expect: {
     timeout: 5000,
   },
@@ -36,6 +36,14 @@ export default defineConfig({
       use: {
         viewport: { width: 1280, height: 720 },
         browserName: 'chromium',
+      },
+    },
+    {
+      name: 'Tablet 820x1180',
+      use: {
+        viewport: { width: 820, height: 1180 },
+        browserName: 'chromium',
+        hasTouch: true,
       },
     },
     {

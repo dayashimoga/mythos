@@ -271,6 +271,10 @@ export class StoryCampaignScene implements IScene {
       } else if (input.isActionJustReleased('ATTACK')) {
         this.pauseModal.handlePointerUp(mousePos);
       }
+      if (input.isKeyJustPressed('KeyQ') || input.isKeyJustPressed('KeyM') || input.isKeyJustPressed('Backspace')) {
+        this.engine.getSceneManager().switchTo('SplashScene');
+        return;
+      }
       if (input.isActionJustPressed('PAUSE')) {
         this.pauseModal.close();
         this.isPaused = false;
@@ -286,7 +290,7 @@ export class StoryCampaignScene implements IScene {
     }
 
     if (this.isPaused) {
-      if (input.isKeyJustPressed('KeyM') || input.isKeyJustPressed('Backspace')) {
+      if (input.isKeyJustPressed('KeyQ') || input.isKeyJustPressed('KeyM') || input.isKeyJustPressed('Backspace')) {
         this.engine.getSceneManager().switchTo('SplashScene');
         return;
       }
@@ -951,6 +955,9 @@ export class StoryCampaignScene implements IScene {
   public render(renderer: IRenderer): void {
     const ctx = renderer.getContext();
 
+    // World Pass with Camera Transform
+    renderer.beginWorldPass();
+
     // 1. Render World Environment
     this.renderWorldEnvironment(ctx);
 
@@ -985,7 +992,9 @@ export class StoryCampaignScene implements IScene {
     CelestialVFX.getInstance().render(renderer);
     this.damageNumbers.render(renderer);
 
-    // 7. Cinematic & Dialogue Overlays
+    renderer.endWorldPass();
+
+    // 7. Cinematic & Dialogue Overlays (Screen-Space Pass)
     this.cinematicDirector.render(renderer);
     this.dialogueTree.render(renderer);
 
@@ -1212,12 +1221,11 @@ export class StoryCampaignScene implements IScene {
   }
 
   private renderQuestHUD(ctx: CanvasRenderingContext2D): void {
-    const cam = this.engine.getRenderer().getCamera();
+    const vp = this.engine.getRenderer().getViewport();
     ctx.save();
-    ctx.translate(cam.position.x - cam.viewportWidth / 2, cam.position.y - cam.viewportHeight / 2);
 
     const hudX = 20;
-    const hudY = 20;
+    const hudY = 104;
 
     const mission = this.questManager.getActiveMission();
     if (mission) {
@@ -1246,40 +1254,40 @@ export class StoryCampaignScene implements IScene {
       });
     }
 
-    // Relationship & Moral Affinity Card (top right)
-    const affX = cam.viewportWidth - 210;
+    // Relationship & Moral Affinity Card (stacked below CODEX/PAUSE buttons)
+    const affX = vp.width - 210;
+    const affY = 96;
     ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
     ctx.strokeStyle = '#334155';
     ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.roundRect(affX, 20, 190, 68, 6);
+    ctx.roundRect(affX, affY, 190, 68, 6);
     ctx.fill();
     ctx.stroke();
 
     ctx.font = 'bold 11px Inter, sans-serif';
     ctx.fillStyle = '#38BDF8';
     ctx.textAlign = 'left';
-    ctx.fillText(`TARA AFFINITY: +${this.questManager.relationships.taraAffinity}`, affX + 12, 40);
+    ctx.fillText(`TARA AFFINITY: +${this.questManager.relationships.taraAffinity}`, affX + 12, affY + 20);
     ctx.fillStyle = '#FBBF24';
-    ctx.fillText(`VANARA TRUST: +${this.questManager.relationships.vanaraTrust}`, affX + 12, 58);
+    ctx.fillText(`VANARA TRUST: +${this.questManager.relationships.vanaraTrust}`, affX + 12, affY + 38);
     ctx.fillStyle = '#A78BFA';
-    ctx.fillText(`KARMIC BALANCE: +${this.questManager.relationships.karmicBalance}`, affX + 12, 76);
+    ctx.fillText(`KARMIC BALANCE: +${this.questManager.relationships.karmicBalance}`, affX + 12, affY + 56);
 
     ctx.restore();
   }
 
   private renderQuestLogModal(ctx: CanvasRenderingContext2D): void {
-    const cam = this.engine.getRenderer().getCamera();
+    const vp = this.engine.getRenderer().getViewport();
     ctx.save();
-    ctx.translate(cam.position.x - cam.viewportWidth / 2, cam.position.y - cam.viewportHeight / 2);
 
     ctx.fillStyle = 'rgba(15, 23, 42, 0.94)';
-    ctx.fillRect(0, 0, cam.viewportWidth, cam.viewportHeight);
+    ctx.fillRect(0, 0, vp.width, vp.height);
 
     ctx.font = 'bold 28px "Cinzel", Georgia, serif';
     ctx.fillStyle = '#FFB703';
     ctx.textAlign = 'center';
-    ctx.fillText('CAMPAIGN QUEST CHRONICLE', cam.viewportWidth / 2, 70);
+    ctx.fillText('CAMPAIGN QUEST CHRONICLE', vp.width / 2, 70);
 
     const missions = this.questManager.getAllMissions();
     missions.forEach((m, idx) => {
@@ -1292,73 +1300,71 @@ export class StoryCampaignScene implements IScene {
       ctx.strokeStyle = isComplete ? '#34D399' : isActive ? '#F59E0B' : '#475569';
       ctx.lineWidth = 1.5;
       ctx.beginPath();
-      ctx.roundRect(cam.viewportWidth / 2 - 280, cardY, 560, 65, 6);
+      ctx.roundRect(vp.width / 2 - 280, cardY, 560, 65, 6);
       ctx.fill();
       ctx.stroke();
 
       ctx.textAlign = 'left';
       ctx.fillStyle = isComplete ? '#34D399' : isActive ? '#FFD166' : '#94A3B8';
       ctx.font = 'bold 14px Outfit, sans-serif';
-      ctx.fillText(`[ ${status} ] ${m.title}`, cam.viewportWidth / 2 - 260, cardY + 26);
+      ctx.fillText(`[ ${status} ] ${m.title}`, vp.width / 2 - 260, cardY + 26);
 
       ctx.fillStyle = '#E2E8F0';
       ctx.font = '11px Inter, sans-serif';
-      ctx.fillText(m.description, cam.viewportWidth / 2 - 260, cardY + 48);
+      ctx.fillText(m.description, vp.width / 2 - 260, cardY + 48);
     });
 
     ctx.font = '12px Inter, sans-serif';
     ctx.fillStyle = '#94A3B8';
     ctx.textAlign = 'center';
-    ctx.fillText('Press [ O / TAB ] to Close Quest Chronicle', cam.viewportWidth / 2, cam.viewportHeight - 35);
+    ctx.fillText('Press [ O / TAB ] to Close Quest Chronicle', vp.width / 2, vp.height - 35);
 
     ctx.restore();
   }
 
   private renderVictoryOverlay(ctx: CanvasRenderingContext2D): void {
-    const cam = this.engine.getRenderer().getCamera();
+    const vp = this.engine.getRenderer().getViewport();
     ctx.save();
-    ctx.translate(cam.position.x - cam.viewportWidth / 2, cam.position.y - cam.viewportHeight / 2);
 
     ctx.fillStyle = 'rgba(15, 23, 42, 0.92)';
-    ctx.fillRect(0, 0, cam.viewportWidth, cam.viewportHeight);
+    ctx.fillRect(0, 0, vp.width, vp.height);
 
     ctx.font = 'bold 36px "Cinzel", Georgia, serif';
     ctx.fillStyle = '#F59E0B';
     ctx.textAlign = 'center';
-    ctx.fillText('CHAPTER I COMPLETED', cam.viewportWidth / 2, cam.viewportHeight / 2 - 70);
+    ctx.fillText('CHAPTER I COMPLETED', vp.width / 2, vp.height / 2 - 70);
 
     ctx.font = '16px Inter, sans-serif';
     ctx.fillStyle = '#E2E8F0';
-    ctx.fillText('The Dawning Flare of Dandaka has been restored.', cam.viewportWidth / 2, cam.viewportHeight / 2 - 25);
-    ctx.fillText(`Final Moral Karmic Balance: +${this.questManager.relationships.karmicBalance}`, cam.viewportWidth / 2, cam.viewportHeight / 2 + 5);
+    ctx.fillText('The Dawning Flare of Dandaka has been restored.', vp.width / 2, vp.height / 2 - 25);
+    ctx.fillText(`Final Moral Karmic Balance: +${this.questManager.relationships.karmicBalance}`, vp.width / 2, vp.height / 2 + 5);
 
     ctx.font = 'bold 18px Outfit, sans-serif';
     ctx.fillStyle = '#34D399';
-    ctx.fillText('Pathway to Floating Sky Citadels of Vayu Unlocked!', cam.viewportWidth / 2, cam.viewportHeight / 2 + 50);
+    ctx.fillText('Pathway to Floating Sky Citadels of Vayu Unlocked!', vp.width / 2, vp.height / 2 + 50);
 
     ctx.font = '13px Inter, sans-serif';
     ctx.fillStyle = '#94A3B8';
-    ctx.fillText('Press [ R ] to Replay Chapter  |  [ ESC / M ] Return to Title', cam.viewportWidth / 2, cam.viewportHeight / 2 + 95);
+    ctx.fillText('Press [ R ] to Replay Chapter  |  [ ESC / M ] Return to Title', vp.width / 2, vp.height / 2 + 95);
 
     ctx.restore();
   }
 
   private renderDefeatOverlay(ctx: CanvasRenderingContext2D): void {
-    const cam = this.engine.getRenderer().getCamera();
+    const vp = this.engine.getRenderer().getViewport();
     ctx.save();
-    ctx.translate(cam.position.x - cam.viewportWidth / 2, cam.position.y - cam.viewportHeight / 2);
 
     ctx.fillStyle = 'rgba(69, 10, 10, 0.9)';
-    ctx.fillRect(0, 0, cam.viewportWidth, cam.viewportHeight);
+    ctx.fillRect(0, 0, vp.width, vp.height);
 
     ctx.font = 'bold 34px "Cinzel", serif';
     ctx.fillStyle = '#EF4444';
     ctx.textAlign = 'center';
-    ctx.fillText('FALLEN IN SCRIPTED MISSION', cam.viewportWidth / 2, cam.viewportHeight / 2 - 30);
+    ctx.fillText('FALLEN IN SCRIPTED MISSION', vp.width / 2, vp.height / 2 - 30);
 
     ctx.font = '14px Inter, sans-serif';
     ctx.fillStyle = '#FCA5A5';
-    ctx.fillText('Press [ R ] to Respawn at Chapter Checkpoint  |  [ ESC / M ] Return to Menu', cam.viewportWidth / 2, cam.viewportHeight / 2 + 25);
+    ctx.fillText('Press [ R ] to Respawn at Chapter Checkpoint  |  [ ESC / M ] Return to Menu', vp.width / 2, vp.height / 2 + 25);
 
     ctx.restore();
   }

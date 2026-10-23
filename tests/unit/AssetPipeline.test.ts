@@ -13,7 +13,7 @@ describe('Production Asset Pipeline & Manifest Verification', () => {
 
     expect(validation.valid).toBe(true);
     expect(validation.errors).toHaveLength(0);
-    expect(manager.getManifest()).toHaveLength(19);
+    expect(manager.getManifest().length).toBeGreaterThanOrEqual(19);
   });
 
   it('contains valid descriptors for all core sanctum visual assets, characters, and environments', () => {

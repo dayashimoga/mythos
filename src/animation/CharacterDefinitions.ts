@@ -11,6 +11,8 @@ import { IRenderer } from '../render/CanvasRenderer';
 import { AssetManager } from '../assets/AssetManager';
 import { ASSET_IDS } from '../assets/AssetManifest';
 
+import { SpriteAtlas } from '../assets/SpriteAtlas';
+
 function isDrawableTexture(tex: unknown): tex is CanvasImageSource {
   if (!tex) return false;
   if (typeof HTMLImageElement !== 'undefined' && tex instanceof HTMLImageElement) {
@@ -249,38 +251,27 @@ export class CharacterDefinitions {
       ctx.ellipse(0, 2, 30, 10, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Check for production character artwork
-      const texture = AssetManager.getInstance().getTexture(ASSET_IDS.CHAR_VEER);
       const spineBone = rig.skeleton.getBone('spine_01');
       const swayY = spineBone ? spineBone.localTransform.rotation * 10 : 0;
 
-      if (isDrawableTexture(texture)) {
-        const w = 84;
-        const h = 106;
-        const x = -w / 2;
-        const y = -h + 10 + swayY;
+      // 1. Production Hero Veer Sprite from SpriteAtlas (Separated from UI portrait cards)
+      const atlasDrawn = SpriteAtlas.getInstance().drawSprite(ctx, 'SANCTUM_HERO_VEER', 0, swayY, {
+        scale: 0.105,
+      });
 
-        // Surya halo background behind hero
-        SacredGeometry.drawMandala(ctx, 0, y + 26, 24, 8, rig.stateMachine.stateTime * 0.3, 'rgba(255, 183, 3, 0.25)', 1.2);
-
-        // Character Artwork with rounded corners
-        ctx.save();
-        safeClipRoundRect(ctx, x, y, w, h, 10);
-        if (typeof ctx.drawImage === 'function') {
-          ctx.drawImage(texture, x, y, w, h);
-        }
+      if (atlasDrawn) {
+        // Dynamic Surya prana solar flare aura behind hero
+        SacredGeometry.drawMandala(ctx, 0, -56 + swayY, 28, 8, rig.stateMachine.stateTime * 0.4, 'rgba(255, 183, 3, 0.22)', 1.2);
 
         // Hit reaction flinch tint
         if (rig.expression === 'hurt') {
-          ctx.fillStyle = 'rgba(239, 68, 68, 0.45)';
-          ctx.fillRect(x, y, w, h);
+          ctx.save();
+          ctx.fillStyle = 'rgba(239, 68, 68, 0.4)';
+          ctx.beginPath();
+          ctx.ellipse(0, -50 + swayY, 26, 48, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
         }
-        ctx.restore();
-
-        // Golden Trim / Silhouette Rim Frame
-        ctx.strokeStyle = rig.expression === 'hurt' ? '#EF476F' : 'rgba(255, 209, 102, 0.65)';
-        ctx.lineWidth = 2;
-        safeStrokeRoundRect(ctx, x, y, w, h, 10);
       } else {
         const skinTone = rig.expression === 'hurt' ? '#FF9E9E' : '#DDA15E';
         const dhotiColor = '#9B2226';

@@ -219,9 +219,7 @@ export class DialogueTree {
     const vp = renderer.getViewport();
 
     ctx.save();
-    // Fixed screen coordinates
-    const cam = renderer.getCamera();
-    ctx.translate(cam.position.x - cam.viewportWidth / 2, cam.position.y - cam.viewportHeight / 2);
+    // Authoritative screen space coordinate rendering
 
     const boxWidth = Math.min(840, vp.width - 60);
     const boxHeight = 150;

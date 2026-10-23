@@ -2,6 +2,7 @@ import { Entity } from './Entity';
 import { IRenderer } from '../render/CanvasRenderer';
 import { SacredGeometry } from '../render/SacredGeometry';
 import { AssetManager } from '../assets/AssetManager';
+import { SpriteAtlas } from '../assets/SpriteAtlas';
 
 export type AltarState = 'dormant' | 'attuning' | 'consecrated';
 
@@ -56,22 +57,27 @@ export class Altar extends Entity {
     }
 
     // 2. Render Illustrated Sun Altar Sprite
-    const altarTex = AssetManager.getInstance().getTexture('TEX_SANCTUM_ALTAR');
-    if (altarTex) {
-      ctx.save();
-      const pulseScale = 1.0 + Math.sin(this.pulseTime * 2) * 0.02;
-      ctx.scale(pulseScale, pulseScale);
-      try {
-        ctx.beginPath();
-        ctx.arc(0, 0, 64, 0, Math.PI * 2);
-        ctx.clip();
-        ctx.drawImage(altarTex as CanvasImageSource, -70, -70, 140, 140);
-      } catch (e) {
+    const atlas = SpriteAtlas.getInstance();
+    const pulseScale = 1.0 + Math.sin(this.pulseTime * 2) * 0.02;
+    if (atlas.getFrame('SANCTUM_ALTAR')) {
+      atlas.drawSprite(ctx, 'SANCTUM_ALTAR', 0, 0, { scale: 0.18 * pulseScale });
+    } else {
+      const altarTex = AssetManager.getInstance().getTexture('TEX_SANCTUM_ALTAR');
+      if (altarTex) {
+        ctx.save();
+        ctx.scale(pulseScale, pulseScale);
+        try {
+          ctx.beginPath();
+          ctx.arc(0, 0, 64, 0, Math.PI * 2);
+          ctx.clip();
+          ctx.drawImage(altarTex as CanvasImageSource, -70, -70, 140, 140);
+        } catch {
+          this.renderProceduralBase(ctx);
+        }
+        ctx.restore();
+      } else {
         this.renderProceduralBase(ctx);
       }
-      ctx.restore();
-    } else {
-      this.renderProceduralBase(ctx);
     }
 
     // 3. Dynamic Rotating Sacred Mandala Rings

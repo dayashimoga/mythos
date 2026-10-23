@@ -218,6 +218,7 @@ export class WorldExplorationScene implements IScene {
     ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
     ctx.strokeStyle = '#334155';
     ctx.lineWidth = 1.5;
+    ctx.beginPath();
     ctx.roundRect(vp.width / 2 - 280, 16, 560, 48, 8);
     ctx.fill();
     ctx.stroke();
@@ -238,6 +239,7 @@ export class WorldExplorationScene implements IScene {
     const totalCount = this.environment.landmarks.length;
 
     ctx.fillStyle = 'rgba(15, 23, 42, 0.75)';
+    ctx.beginPath();
     ctx.roundRect(16, 16, 220, 52, 6);
     ctx.fill();
     ctx.stroke();
@@ -253,6 +255,7 @@ export class WorldExplorationScene implements IScene {
 
     // Bottom Controls Bar
     ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+    ctx.beginPath();
     ctx.roundRect(vp.width / 2 - 340, vp.height - 42, 680, 32, 6);
     ctx.fill();
     ctx.stroke();
@@ -265,6 +268,7 @@ export class WorldExplorationScene implements IScene {
     // In-game temporary toast notice
     if (this.noticeTimer > 0) {
       ctx.fillStyle = 'rgba(217, 119, 6, 0.9)';
+      ctx.beginPath();
       ctx.roundRect(vp.width / 2 - 180, 75, 360, 28, 6);
       ctx.fill();
 
@@ -274,9 +278,9 @@ export class WorldExplorationScene implements IScene {
       ctx.fillText(this.interactionNotice, vp.width / 2, 93);
     }
 
-    // Mini-Map Radar (Top Right)
+    // Mini-Map Radar (Top Right below quick-bar)
     if (this.showMiniMap) {
-      this.renderMiniMap(ctx, vp.width - 160, 16, 144, 115);
+      this.renderMiniMap(ctx, vp.width - 160, 56, 144, 115);
     }
 
     ctx.restore();
@@ -295,6 +299,7 @@ export class WorldExplorationScene implements IScene {
     ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
     ctx.strokeStyle = '#64748B';
     ctx.lineWidth = 1.5;
+    ctx.beginPath();
     ctx.roundRect(x, y, w, h, 6);
     ctx.fill();
     ctx.stroke();

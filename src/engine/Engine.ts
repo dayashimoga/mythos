@@ -138,10 +138,13 @@ export class Engine implements IGameEngine {
   private render(_interpolation: number): void {
     const t0 = performance.now();
 
-    // Render Scene
+    // 1. Authoritative frame clear & render state isolation
+    this.renderer.clear('#080C14');
+
+    // 2. Render Scene
     this.sceneManager.render(this.renderer);
 
-    // Render Diagnostics if enabled
+    // 3. Render Diagnostics if enabled
     this.diagnosticOverlay.render(this.renderer, this.diagnostics);
 
     const t1 = performance.now();

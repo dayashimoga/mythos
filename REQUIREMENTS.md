@@ -189,3 +189,33 @@ At the twilight of the Dvapara Yuga, the cosmic anchor binding the realm of shad
 | **REQ-038** | Genuine Platform Release Verification (6 Targets) | Stage 9 | `scripts/build-platforms.js`, `scripts/validate-artifacts.js` | `npm run validate:artifacts` (100% binary integrity) | **VERIFIED** |
 | **REQ-039** | Immutable Release Manifest, Governance & Final GO Decision | Stage 9 | `TODO.md`, `CHANGELOG.md`, `scripts/verify-append-only.js` | `npm run verify:append-only`, `stage_9_performance_and_release_certification_report.md` | **VERIFIED (GO)** |
 
+---
+
+## 12. Stage R0 — Runtime, Camera, Viewport & Scene Composition Defects Repair Matrix
+
+| Req ID | Requirement Description | Stage | Source Implementation | Test Verification | Status |
+| :--- | :--- | :---: | :--- | :--- | :---: |
+| **REQ-R0-001** | Authoritative World, Viewport & Screen Coordinate Spaces | Stage R0 | `src/render/Camera.ts`, `src/render/CanvasRenderer.ts` | `tests/e2e/scene-runtime.spec.ts` | **VERIFIED** |
+| **REQ-R0-002** | Camera Bounds Clamping & Player-Centered Tracking | Stage R0 | `src/render/Camera.ts` | `tests/unit/Camera.test.ts`, `tests/e2e/scene-runtime.spec.ts` | **VERIFIED** |
+| **REQ-R0-003** | Render Transform Isolation & State Balancing | Stage R0 | `src/render/CanvasRenderer.ts`, `src/scenes/SceneManager.ts`, `src/engine/Engine.ts` | `tests/e2e/scene-runtime.spec.ts` | **VERIFIED** |
+| **REQ-R0-004** | Alpha Feathering & Chroma-Keying Asset Shaders | Stage R0 | `src/assets/AssetManager.ts` | `tests/e2e/scene-runtime.spec.ts` | **VERIFIED** |
+| **REQ-R0-005** | Viewport-Safe HUD, Dialogue & Modal Positioning | Stage R0 | `src/narrative/DialogueTree.ts`, `src/cinematics/CinematicDirector.ts`, `src/scenes/StoryCampaignScene.ts`, `src/scenes/BossEncounterScene.ts`, `src/ui/ProductionHUD.ts`, `src/ui/DiagnosticOverlay.ts` | `tests/e2e/scene-runtime.spec.ts` | **VERIFIED** |
+| **REQ-R0-006** | Compounded Path Stroke Eradication & Canvas Clearing | Stage R0 | `src/scenes/WorldExplorationScene.ts`, `src/engine/Engine.ts` | `tests/e2e/scene-runtime.spec.ts` | **VERIFIED** |
+| **REQ-R0-007** | Safe Scene Transition Navigation & Lifecycle Isolation | Stage R0 | `src/scenes/SceneManager.ts`, `src/scenes/StoryCampaignScene.ts`, `src/scenes/BossEncounterScene.ts` | `tests/e2e/scene-runtime.spec.ts` (20x sequential transitions) | **VERIFIED** |
+| **REQ-R0-008** | Automated Visual Regression Testing (5 Viewport Profiles) | Stage R0 | `playwright.config.ts`, `tests/e2e/scene-runtime.spec.ts` | Playwright test suite (45/45 passing across 5 viewports) | **VERIFIED** |
+
+---
+
+## 13. Stage R1 — Modern Graphics & Production Art Pipeline Matrix
+
+| Req ID | Requirement Description | Stage | Source Implementation | Test Verification | Status |
+| :--- | :--- | :---: | :--- | :--- | :---: |
+| **REQ-R1-001** | Forensic Rendering & Production Art Audit | Stage R1 | `STAGE_R1_ART_AND_RENDERING_SPECIFICATION.md` | `tests/unit/StageR1AssetPipelineAndSanctum.test.ts` | **VERIFIED** |
+| **REQ-R1-002** | Comparative Architecture Benchmark POC (Canvas2D vs PixiJS/WebGL2) | Stage R1 | `tests/performance/RenderingArchitectureComparison.test.ts` | `npm run test` (RenderingArchitectureComparison) | **VERIFIED** |
+| **REQ-R1-003** | 2.5D Hoysala/Vedic Temple Fantasy Art Direction & Standards | Stage R1 | `ART_DIRECTION.md`, `STAGE_R1_ART_AND_RENDERING_SPECIFICATION.md` | Human visual review, screenshot captures | **VERIFIED** |
+| **REQ-R1-004** | Real Asset Pipeline, SpriteAtlas, Normalized Pivots & Provenance | Stage R1 | `src/assets/SpriteAtlas.ts`, `AssetProvenance.ts`, `AssetPipelineDiagnostics.ts` | `tests/unit/StageR1AssetPipelineAndSanctum.test.ts` | **VERIFIED** |
+| **REQ-R1-005** | Complete Sanctum Level Visual Reconstruction | Stage R1 | `src/scenes/GameScene.ts`, `public/assets/art/` | Playwright E2E, Browser subagent walkthrough | **VERIFIED** |
+| **REQ-R1-006** | Multi-Pass Dynamic Lighting, Contact Shadows & Shading Optimization | Stage R1 | `src/scenes/GameScene.ts`, `src/assets/AssetManager.ts` | `tests/unit/StageR1AssetPipelineAndSanctum.test.ts` | **VERIFIED** |
+| **REQ-R1-007** | Automated Visual & Functional Validation with Video Recordings | Stage R1 | Playwright E2E (`scene-runtime.spec.ts`), Vitest test suite (56 suites, 486 tests) | Playwright E2E (45/45 passing), WebP gameplay recording | **VERIFIED** |
+
+

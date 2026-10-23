@@ -264,9 +264,7 @@ export class CinematicDirector {
     const vp = renderer.getViewport();
 
     ctx.save();
-    // Neutralize camera translation for screen space overlays
-    const cam = renderer.getCamera();
-    ctx.translate(cam.position.x - cam.viewportWidth / 2, cam.position.y - cam.viewportHeight / 2);
+    // Authoritative screen space coordinate rendering
 
     // 1. Cinematic Black Letterbox Bars
     if (this.currentLetterbox > 0) {

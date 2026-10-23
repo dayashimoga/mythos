@@ -16,6 +16,7 @@ import { SaveGameManager } from '../state/SaveGameManager';
 import { AssetManager } from '../assets/AssetManager';
 import { LayeredRenderer } from '../render/LayeredRenderer';
 import { RenderLayer } from '../render/RenderLayers';
+import { SpriteAtlas } from '../assets/SpriteAtlas';
 
 interface PillarInstance {
   id: string;
@@ -353,20 +354,48 @@ export class GameScene implements IScene {
     this.renderToranaGate(ctx);
 
     // 4. Enqueue Y-Sorted Entities & Architecture into LayeredRenderer
-    // Enqueue Pillars
+    // Enqueue 4 Monumental Hoysala Pillars
     for (const p of this.pillars) {
       this.layeredRenderer.enqueue(RenderLayer.ARCHITECTURE, p.y + p.height / 2, (c) => {
         this.renderPillar(c, p);
       });
 
-      // Register brazier point light at pillar capital
+      // Register brazier point light at pillar Diya lamp
       this.layeredRenderer.addLight({
         id: `light_${p.id}`,
-        x: p.x,
-        y: p.y - 70,
-        radius: 180,
+        x: p.x + 30,
+        y: p.y - 75,
+        radius: 200,
         color: '#FFB703',
-        intensity: 0.6,
+        intensity: 0.7,
+        flicker: true,
+      });
+    }
+
+    // Enqueue 4 Standing Ceremonial Bronze Agni Braziers
+    const braziers = [
+      { id: 'brazier_entry_w', x: -140, y: 420 },
+      { id: 'brazier_entry_e', x: 140, y: 420 },
+      { id: 'brazier_altar_w', x: -130, y: -180 },
+      { id: 'brazier_altar_e', x: 130, y: -180 },
+    ];
+
+    for (const b of braziers) {
+      this.layeredRenderer.enqueue(RenderLayer.ARCHITECTURE, b.y + 10, (c) => {
+        this.layeredRenderer.drawContactShadow(c, b.x, b.y + 20, 24, 10, 0.6);
+        const atlas = SpriteAtlas.getInstance();
+        if (atlas.getFrame('SANCTUM_BRAZIER')) {
+          atlas.drawSprite(c, 'SANCTUM_BRAZIER', b.x, b.y + 18, { scale: 0.08 });
+        }
+      });
+
+      this.layeredRenderer.addLight({
+        id: `light_${b.id}`,
+        x: b.x,
+        y: b.y - 12,
+        radius: 140,
+        color: '#FB8500',
+        intensity: 0.55,
         flicker: true,
       });
     }
@@ -381,9 +410,9 @@ export class GameScene implements IScene {
       id: 'light_altar',
       x: this.altar.position.x,
       y: this.altar.position.y,
-      radius: this.altar.state === 'consecrated' ? 320 : 200,
+      radius: this.altar.state === 'consecrated' ? 340 : 220,
       color: this.altar.state === 'consecrated' ? '#FFD166' : '#FFB703',
-      intensity: this.altar.state === 'consecrated' ? 0.9 : 0.65,
+      intensity: this.altar.state === 'consecrated' ? 0.95 : 0.7,
       flicker: true,
     });
 
@@ -505,13 +534,15 @@ export class GameScene implements IScene {
     const w = this.chamberBounds.width;
     const h = this.chamberBounds.height;
 
-    // Base background tone
+    // 1. Deep cosmic stone base tone
     ctx.fillStyle = '#080C14';
     ctx.fillRect(minX, minY, w, h);
 
-    // 1. Tiled Carved Vedic Granite Tiles with Gold Surya Mandalas
-    const floorTex = AssetManager.getInstance().getTexture('TEX_SANCTUM_FLOOR');
-    if (floorTex) {
+    // 2. Sculpted Basalt Temple Floor Pavers with Golden Mandalas
+    const paversTex =
+      AssetManager.getInstance().getTexture('TEX_SANCTUM_PAVERS_PROD') ||
+      AssetManager.getInstance().getTexture('TEX_SANCTUM_FLOOR');
+    if (paversTex) {
       const tileSize = 256;
       ctx.save();
       for (let x = minX; x < maxX; x += tileSize) {
@@ -519,87 +550,102 @@ export class GameScene implements IScene {
           const drawW = Math.min(tileSize, maxX - x);
           const drawH = Math.min(tileSize, maxY - y);
           try {
-            ctx.drawImage(floorTex as CanvasImageSource, 0, 0, 512, 512, x, y, drawW, drawH);
-          } catch (e) {
+            ctx.drawImage(paversTex as CanvasImageSource, 0, 0, 512, 512, x, y, drawW, drawH);
+          } catch {
             // fallback
           }
         }
       }
       ctx.restore();
-    } else {
-      // Procedural stone floor fallback
-      ctx.fillStyle = '#0D1424';
-      ctx.fillRect(minX, minY, w, h);
     }
 
-    // 2. Central Sanctuary Sacred Grand Mandala Inlay
+    // 3. Central Ceremonial Nave with Inlaid Sanskrit Solar Mandalas
+    const inlayTex = AssetManager.getInstance().getTexture('TEX_SANCTUM_INLAY_PROD');
+    if (inlayTex) {
+      ctx.save();
+      const naveW = 160;
+      const naveX = -naveW / 2;
+      const tileH = 160;
+      for (let y = -120; y < maxY - 20; y += tileH) {
+        const drawH = Math.min(tileH, maxY - 20 - y);
+        try {
+          ctx.drawImage(inlayTex as CanvasImageSource, 0, 0, 512, 512, naveX, y, naveW, drawH);
+        } catch {
+          // fallback
+        }
+      }
+      ctx.restore();
+    }
+
+    // 4. Central Sanctuary Sacred Grand Mandala Radiance around Sun Altar
     ctx.save();
     ctx.globalCompositeOperation = 'lighter';
-    const floorGrad = ctx.createRadialGradient(0, 0, 40, 0, 0, 360);
-    floorGrad.addColorStop(0, 'rgba(255, 183, 3, 0.22)');
-    floorGrad.addColorStop(0.5, 'rgba(251, 133, 0, 0.08)');
+    const floorGrad = ctx.createRadialGradient(0, -180, 40, 0, -180, 360);
+    floorGrad.addColorStop(0, 'rgba(255, 183, 3, 0.28)');
+    floorGrad.addColorStop(0.4, 'rgba(251, 133, 0, 0.12)');
     floorGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
     ctx.fillStyle = floorGrad;
     ctx.beginPath();
-    ctx.arc(0, 0, 360, 0, Math.PI * 2);
+    ctx.arc(0, -180, 360, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
 
-    // 3. Subtle grid lines for movement alignment
-    ctx.strokeStyle = 'rgba(255, 215, 0, 0.04)';
-    ctx.lineWidth = 1;
-    const step = 64;
-    for (let x = minX; x <= maxX; x += step) {
-      ctx.beginPath();
-      ctx.moveTo(x, minY);
-      ctx.lineTo(x, maxY);
-      ctx.stroke();
-    }
-    for (let y = minY; y <= maxY; y += step) {
-      ctx.beginPath();
-      ctx.moveTo(minX, y);
-      ctx.lineTo(maxX, y);
-      ctx.stroke();
-    }
+    // 5. Perimeter Wall Ambient Occlusion Gradient (soft dark border vignette)
+    ctx.save();
+    const aoGradLeft = ctx.createLinearGradient(minX, 0, minX + 80, 0);
+    aoGradLeft.addColorStop(0, 'rgba(4, 6, 12, 0.7)');
+    aoGradLeft.addColorStop(1, 'rgba(4, 6, 12, 0)');
+    ctx.fillStyle = aoGradLeft;
+    ctx.fillRect(minX, minY, 80, h);
+
+    const aoGradRight = ctx.createLinearGradient(maxX, 0, maxX - 80, 0);
+    aoGradRight.addColorStop(0, 'rgba(4, 6, 12, 0.7)');
+    aoGradRight.addColorStop(1, 'rgba(4, 6, 12, 0)');
+    ctx.fillStyle = aoGradRight;
+    ctx.fillRect(maxX - 80, minY, 80, h);
+
+    const aoGradTop = ctx.createLinearGradient(0, minY, 0, minY + 80);
+    aoGradTop.addColorStop(0, 'rgba(4, 6, 12, 0.7)');
+    aoGradTop.addColorStop(1, 'rgba(4, 6, 12, 0)');
+    ctx.fillStyle = aoGradTop;
+    ctx.fillRect(minX, minY, w, 80);
+
+    const aoGradBottom = ctx.createLinearGradient(0, maxY, 0, maxY - 80);
+    aoGradBottom.addColorStop(0, 'rgba(4, 6, 12, 0.7)');
+    aoGradBottom.addColorStop(1, 'rgba(4, 6, 12, 0)');
+    ctx.fillStyle = aoGradBottom;
+    ctx.fillRect(minX, maxY - 80, w, 80);
+    ctx.restore();
   }
 
   private renderPillar(ctx: CanvasRenderingContext2D, pillar: PillarInstance): void {
     ctx.save();
-    ctx.translate(pillar.x, pillar.y);
+    // 1. Soft directional contact shadow at pillar base
+    this.layeredRenderer.drawContactShadow(ctx, pillar.x, pillar.y + 40, 52, 22, 0.75);
 
-    // 1. Pillar Contact Shadow at base
-    this.layeredRenderer.drawContactShadow(ctx, 0, 60, 40, 18, 0.7);
-
-    // 2. Render Illustrated Pillar Sprite
-    const pillarTex = AssetManager.getInstance().getTexture('TEX_SANCTUM_PILLAR');
-    if (pillarTex) {
-      try {
-        ctx.save();
-        ctx.beginPath();
-        ctx.roundRect(-pillar.width / 2 + 4, -pillar.height / 2, pillar.width - 8, pillar.height, [16, 16, 6, 6]);
-        ctx.clip();
-        ctx.drawImage(pillarTex as CanvasImageSource, -pillar.width / 2, -pillar.height / 2, pillar.width, pillar.height);
-        ctx.restore();
-      } catch (e) {
-        this.renderProceduralPillar(ctx, pillar);
-      }
+    // 2. Render Illustrated Hoysala Pillar Sprite with Atlas
+    const atlas = SpriteAtlas.getInstance();
+    if (atlas.getFrame('SANCTUM_PILLAR')) {
+      atlas.drawSprite(ctx, 'SANCTUM_PILLAR', pillar.x, pillar.y + 42, { scale: 0.22 });
     } else {
       this.renderProceduralPillar(ctx, pillar);
     }
 
-    // 3. Animated Brazier Flame Light
-    const flameY = -pillar.height / 2 + 10;
+    // 3. Hanging Brass Diya Lamp Fire & Ember Particles
+    const flameX = pillar.x + 30;
+    const flameY = pillar.y - 75;
     const flameFlicker = Math.sin(this.sceneTime * 8 + pillar.x) * 3;
 
     ctx.save();
     ctx.globalCompositeOperation = 'lighter';
-    const flameGrad = ctx.createRadialGradient(0, flameY, 0, 0, flameY, 28 + flameFlicker);
-    flameGrad.addColorStop(0, 'rgba(255, 255, 200, 0.9)');
-    flameGrad.addColorStop(0.4, 'rgba(255, 183, 3, 0.6)');
+    const flameGrad = ctx.createRadialGradient(flameX, flameY, 0, flameX, flameY, 26 + flameFlicker);
+    flameGrad.addColorStop(0, 'rgba(255, 255, 220, 0.95)');
+    flameGrad.addColorStop(0.35, 'rgba(255, 183, 3, 0.7)');
+    flameGrad.addColorStop(0.7, 'rgba(251, 133, 0, 0.35)');
     flameGrad.addColorStop(1, 'rgba(251, 133, 0, 0)');
     ctx.fillStyle = flameGrad;
     ctx.beginPath();
-    ctx.arc(0, flameY, 28 + flameFlicker, 0, Math.PI * 2);
+    ctx.arc(flameX, flameY, 26 + flameFlicker, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
 
@@ -615,35 +661,40 @@ export class GameScene implements IScene {
   }
 
   private renderToranaGate(ctx: CanvasRenderingContext2D): void {
-    const toranaTex = AssetManager.getInstance().getTexture('TEX_SANCTUM_TORANA');
     const gx = 0;
-    const gy = -470;
-    const gw = 180;
-    const gh = 140;
+    const gy = -460;
 
     ctx.save();
-    // Shadow under gate
-    this.layeredRenderer.drawContactShadow(ctx, gx, gy + 50, 90, 24, 0.65);
+    // Deep gateway shadow under gate threshold
+    this.layeredRenderer.drawContactShadow(ctx, gx, gy + 45, 120, 32, 0.8);
 
-    if (toranaTex) {
-      try {
-        ctx.drawImage(toranaTex as CanvasImageSource, gx - gw / 2, gy - gh / 2, gw, gh);
-      } catch (e) {
-        // fallback
+    // Render Illustrated Torana Gateway with Atlas
+    const atlas = SpriteAtlas.getInstance();
+    if (atlas.getFrame('SANCTUM_TORANA')) {
+      atlas.drawSprite(ctx, 'SANCTUM_TORANA', gx, gy + 40, { scale: 0.26 });
+    } else {
+      const toranaTex = AssetManager.getInstance().getTexture('TEX_SANCTUM_TORANA');
+      if (toranaTex) {
+        try {
+          ctx.drawImage(toranaTex as CanvasImageSource, gx - 100, gy - 80, 200, 160);
+        } catch {
+          // fallback
+        }
       }
     }
 
-    // Consecration Portal Gateway Beam
+    // Consecration Portal Gateway Swirl
     if (this.isVictory) {
       ctx.save();
       ctx.globalCompositeOperation = 'lighter';
-      const portalGrad = ctx.createRadialGradient(gx, gy + 10, 0, gx, gy + 10, 80);
-      portalGrad.addColorStop(0, 'rgba(255, 255, 255, 0.95)');
-      portalGrad.addColorStop(0.4, 'rgba(0, 229, 255, 0.7)');
+      const portalGrad = ctx.createRadialGradient(gx, gy + 5, 0, gx, gy + 5, 100);
+      portalGrad.addColorStop(0, 'rgba(255, 255, 255, 0.98)');
+      portalGrad.addColorStop(0.35, 'rgba(0, 229, 255, 0.8)');
+      portalGrad.addColorStop(0.7, 'rgba(255, 183, 3, 0.4)');
       portalGrad.addColorStop(1, 'rgba(0, 229, 255, 0)');
       ctx.fillStyle = portalGrad;
       ctx.beginPath();
-      ctx.arc(gx, gy + 10, 80, 0, Math.PI * 2);
+      ctx.arc(gx, gy + 5, 100, 0, Math.PI * 2);
       ctx.fill();
       ctx.restore();
     }
@@ -655,17 +706,29 @@ export class GameScene implements IScene {
     const b = this.chamberBounds;
 
     ctx.save();
-    // Heavy carved stone boundary curb
-    ctx.strokeStyle = '#FFB703';
-    ctx.lineWidth = 6;
+    // 1. Heavy Outer Drop Shadow
+    ctx.save();
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.8)';
+    ctx.lineWidth = 14;
+    ctx.strokeRect(b.x - 4, b.y - 4, b.width + 8, b.height + 8);
+    ctx.restore();
+
+    // 2. Sculpted Stepped Dark Basalt Perimeter Walls
+    ctx.strokeStyle = '#1E2638';
+    ctx.lineWidth = 12;
     ctx.strokeRect(b.x, b.y, b.width, b.height);
 
-    // Inner golden accent trim
-    ctx.strokeStyle = 'rgba(255, 183, 3, 0.3)';
+    // 3. Carved Stone Cornice & Molding
+    ctx.strokeStyle = '#2D3748';
+    ctx.lineWidth = 6;
+    ctx.strokeRect(b.x + 3, b.y + 3, b.width - 6, b.height - 6);
+
+    // 4. Inner Golden Lotus Trim Inlay
+    ctx.strokeStyle = 'rgba(255, 183, 3, 0.6)';
     ctx.lineWidth = 2;
     ctx.strokeRect(b.x + 8, b.y + 8, b.width - 16, b.height - 16);
 
-    // 4 Corner Brahmic Knot Medallions
+    // 5. Four Corner Lotus Pavilion Stupas
     const corners = [
       { x: b.minX, y: b.minY },
       { x: b.maxX, y: b.minY },
@@ -674,10 +737,24 @@ export class GameScene implements IScene {
     ];
 
     for (const c of corners) {
-      ctx.fillStyle = '#FB8500';
+      // Dark stone corner base
+      ctx.fillStyle = '#1A202C';
+      ctx.beginPath();
+      ctx.arc(c.x, c.y, 20, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Carved bronze medallion
+      ctx.fillStyle = '#D97706';
       ctx.beginPath();
       ctx.arc(c.x, c.y, 14, 0, Math.PI * 2);
       ctx.fill();
+
+      // Golden solar core
+      ctx.fillStyle = '#FFD166';
+      ctx.beginPath();
+      ctx.arc(c.x, c.y, 7, 0, Math.PI * 2);
+      ctx.fill();
+
       ctx.strokeStyle = '#FFFFFF';
       ctx.lineWidth = 2;
       ctx.stroke();

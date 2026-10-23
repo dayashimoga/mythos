@@ -116,6 +116,17 @@ export class CanvasRenderer implements IRenderer {
 
   public endWorldPass(): void {
     this.ctx.restore();
+    if (typeof this.ctx.setTransform === 'function') {
+      this.ctx.setTransform(1, 0, 0, 1, 0, 0);
+    }
+    this.ctx.globalAlpha = 1.0;
+    this.ctx.globalCompositeOperation = 'source-over';
+    if ('filter' in this.ctx) {
+      this.ctx.filter = 'none';
+    }
+    if (typeof this.ctx.setLineDash === 'function') {
+      this.ctx.setLineDash([]);
+    }
   }
 
   public drawRect(x: number, y: number, w: number, h: number, fill?: string, stroke?: string): void {

@@ -15,7 +15,7 @@ export class DiagnosticOverlay {
     const panelWidth = 270;
     const panelHeight = 255;
     const panelX = vp.width - panelWidth - 20;
-    const panelY = 20;
+    const panelY = 56;
 
     // Background panel
     ctx.fillStyle = 'rgba(8, 12, 20, 0.9)';

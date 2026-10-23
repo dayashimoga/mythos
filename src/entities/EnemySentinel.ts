@@ -2,6 +2,7 @@ import { Entity } from './Entity';
 import { Vector2D } from '../physics/Vector2D';
 import { IRenderer } from '../render/CanvasRenderer';
 import { AssetManager } from '../assets/AssetManager';
+import { SpriteAtlas } from '../assets/SpriteAtlas';
 
 export class EnemySentinel extends Entity {
   public health = 50;
@@ -62,28 +63,38 @@ export class EnemySentinel extends Entity {
     }
 
     // 2. Render Illustrated Sentinel Sprite
-    const sentinelTex = AssetManager.getInstance().getTexture('TEX_SANCTUM_SENTINEL');
-    if (sentinelTex) {
+    const atlas = SpriteAtlas.getInstance();
+    if (atlas.getFrame('SANCTUM_SENTINEL')) {
       ctx.save();
-      ctx.translate(0, hoverY);
       if (isFlashing) {
         ctx.filter = 'brightness(2.0)';
       }
-      try {
-        const spriteSize = 64;
-        ctx.beginPath();
-        ctx.arc(0, 0, spriteSize / 2 - 4, 0, Math.PI * 2);
-        ctx.clip();
-        ctx.drawImage(sentinelTex as CanvasImageSource, -spriteSize / 2, -spriteSize / 2, spriteSize, spriteSize);
-      } catch (e) {
-        this.renderProceduralSentinel(ctx, isFlashing);
-      }
+      atlas.drawSprite(ctx, 'SANCTUM_SENTINEL', 0, hoverY, { scale: 0.12 });
       ctx.restore();
     } else {
-      ctx.save();
-      ctx.translate(0, hoverY);
-      this.renderProceduralSentinel(ctx, isFlashing);
-      ctx.restore();
+      const sentinelTex = AssetManager.getInstance().getTexture('TEX_SANCTUM_SENTINEL');
+      if (sentinelTex) {
+        ctx.save();
+        ctx.translate(0, hoverY);
+        if (isFlashing) {
+          ctx.filter = 'brightness(2.0)';
+        }
+        try {
+          const spriteSize = 64;
+          ctx.beginPath();
+          ctx.arc(0, 0, spriteSize / 2 - 4, 0, Math.PI * 2);
+          ctx.clip();
+          ctx.drawImage(sentinelTex as CanvasImageSource, -spriteSize / 2, -spriteSize / 2, spriteSize, spriteSize);
+        } catch {
+          this.renderProceduralSentinel(ctx, isFlashing);
+        }
+        ctx.restore();
+      } else {
+        ctx.save();
+        ctx.translate(0, hoverY);
+        this.renderProceduralSentinel(ctx, isFlashing);
+        ctx.restore();
+      }
     }
 
     // 3. Menacing Crimson Core Optic Flare

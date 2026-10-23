@@ -2,6 +2,7 @@ import { Entity } from './Entity';
 import { Vector2D } from '../physics/Vector2D';
 import { IRenderer } from '../render/CanvasRenderer';
 import { AssetManager } from '../assets/AssetManager';
+import { SpriteAtlas } from '../assets/SpriteAtlas';
 
 export class AstraShard extends Entity {
   public basePositionY: number;
@@ -62,21 +63,26 @@ export class AstraShard extends Entity {
     }
 
     // 2. Render Illustrated Astra Shard Sprite
-    const shardTex = AssetManager.getInstance().getTexture('TEX_SANCTUM_SHARD');
-    if (shardTex) {
-      try {
-        const shardSize = 38;
-        ctx.save();
-        ctx.beginPath();
-        ctx.arc(0, 0, shardSize / 2 - 2, 0, Math.PI * 2);
-        ctx.clip();
-        ctx.drawImage(shardTex as CanvasImageSource, -shardSize / 2, -shardSize / 2, shardSize, shardSize);
-        ctx.restore();
-      } catch (e) {
+    const atlas = SpriteAtlas.getInstance();
+    if (atlas.getFrame('SANCTUM_SHARD')) {
+      atlas.drawSprite(ctx, 'SANCTUM_SHARD', 0, 0, { scale: 0.08 });
+    } else {
+      const shardTex = AssetManager.getInstance().getTexture('TEX_SANCTUM_SHARD');
+      if (shardTex) {
+        try {
+          const shardSize = 38;
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(0, 0, shardSize / 2 - 2, 0, Math.PI * 2);
+          ctx.clip();
+          ctx.drawImage(shardTex as CanvasImageSource, -shardSize / 2, -shardSize / 2, shardSize, shardSize);
+          ctx.restore();
+        } catch {
+          this.renderProceduralShard(ctx);
+        }
+      } else {
         this.renderProceduralShard(ctx);
       }
-    } else {
-      this.renderProceduralShard(ctx);
     }
 
     // 3. Floating Crystalline Aura & Orbiting Rings

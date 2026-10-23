@@ -283,10 +283,12 @@ export class LayeredRenderer {
     const bgH = vpH * 1.5;
 
     try {
+      const centerX = vpW / 2 + offsetX;
+      const centerY = vpH / 2 + offsetY;
       ctx.drawImage(
         tex as CanvasImageSource,
-        camX - bgW / 2 + offsetX,
-        camY - bgH / 2 + offsetY,
+        centerX - bgW / 2,
+        centerY - bgH / 2,
         bgW,
         bgH
       );

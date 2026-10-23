@@ -25,6 +25,7 @@ function bootstrap(): void {
   // 3. Instantiate Engine
   const engine = new Engine();
   engine.init(canvas);
+  (window as any).__astraEngine = engine;
 
   // Handle responsive canvas scaling
   const handleResize = () => {

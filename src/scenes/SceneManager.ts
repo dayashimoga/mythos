@@ -1,6 +1,7 @@
 import { IRenderer } from '../render/CanvasRenderer';
 import { InputManager } from '../input/InputManager';
 import { IGameEngine } from '../engine/Engine';
+import { LayeredRenderer } from '../render/LayeredRenderer';
 
 export interface IScene {
   readonly id: string;
@@ -43,10 +44,15 @@ export class SceneManager {
       return;
     }
 
-    if (this.currentScene) {
-      if (trackHistory && this.currentScene.id !== sceneId) {
+    if (sceneId === 'SplashScene') {
+      this.navigationStack = [];
+    } else if (this.currentScene && trackHistory && this.currentScene.id !== sceneId) {
+      if (this.navigationStack[this.navigationStack.length - 1] !== this.currentScene.id) {
         this.navigationStack.push(this.currentScene.id);
       }
+    }
+
+    if (this.currentScene) {
       try {
         this.currentScene.onExit();
       } catch (err) {
@@ -54,8 +60,13 @@ export class SceneManager {
       }
     }
 
-    // Reset camera transforms and isolate render state between scene transitions
+    // Reset camera transforms, flush queues and clear canvas between scene transitions
     try {
+      LayeredRenderer.getInstance().clear();
+    } catch {}
+
+    try {
+      this.engine.getRenderer().clear('#080C14');
       const camera = this.engine.getRenderer().getCamera();
       camera.reset(0, 0, 1.0);
     } catch {
@@ -123,6 +134,11 @@ export class SceneManager {
 
     this.currentScene = prev;
     try {
+      LayeredRenderer.getInstance().clear();
+    } catch {}
+
+    try {
+      this.engine.getRenderer().clear('#080C14');
       const camera = this.engine.getRenderer().getCamera();
       camera.reset(0, 0, 1.0);
     } catch {
@@ -190,7 +206,18 @@ export class SceneManager {
 
   public render(renderer: IRenderer): void {
     if (this.currentScene) {
-      this.currentScene.render(renderer);
+      try {
+        this.currentScene.render(renderer);
+      } catch (err) {
+        console.error(`[SceneManager] Render error in ${this.currentScene.id}:`, err);
+      } finally {
+        const ctx = renderer.getContext();
+        if (ctx && typeof ctx.setTransform === 'function') {
+          ctx.setTransform(1, 0, 0, 1, 0, 0);
+          ctx.globalAlpha = 1.0;
+          ctx.globalCompositeOperation = 'source-over';
+        }
+      }
     }
   }
 

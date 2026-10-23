@@ -190,6 +190,10 @@ export class BossEncounterScene implements IScene {
       } else if (input.isActionJustReleased('ATTACK')) {
         this.pauseModal.handlePointerUp(mousePos);
       }
+      if (input.isKeyJustPressed('KeyQ') || input.isKeyJustPressed('KeyM') || input.isKeyJustPressed('Backspace')) {
+        this.engine.getSceneManager().switchTo('SplashScene');
+        return;
+      }
       if (input.isActionJustPressed('PAUSE')) {
         this.pauseModal.close();
         this.isPaused = false;
@@ -641,6 +645,9 @@ export class BossEncounterScene implements IScene {
   public render(renderer: IRenderer): void {
     const ctx = renderer.getContext();
 
+    // World Pass with Camera Transform
+    renderer.beginWorldPass();
+
     // 1. Draw Obsidian Arena Floor & Molten Fissures
     this.renderArena(ctx);
 
@@ -668,7 +675,9 @@ export class BossEncounterScene implements IScene {
     CelestialVFX.getInstance().render(renderer);
     this.damageNumbers.render(renderer);
 
-    // 6. Boss HUD & Overlays
+    renderer.endWorldPass();
+
+    // 6. Boss HUD & Overlays (Screen-Space Pass)
     this.renderBossHUD(ctx);
 
     if (this.isVictory) {
@@ -753,16 +762,14 @@ export class BossEncounterScene implements IScene {
   }
 
   private renderBossHUD(ctx: CanvasRenderingContext2D): void {
+    const vp = this.engine.getRenderer().getViewport();
     ctx.save();
-    // Fixed screen coordinates (cancel camera transform for UI)
-    const cam = this.engine.getRenderer().getCamera();
-    ctx.translate(cam.position.x - cam.viewportWidth / 2, cam.position.y - cam.viewportHeight / 2);
 
     // --- Top Boss Bar ---
-    const barWidth = 620;
+    const barWidth = Math.min(620, vp.width - 40);
     const barHeight = 20;
-    const barX = (cam.viewportWidth - barWidth) / 2;
-    const barY = 28;
+    const barX = (vp.width - barWidth) / 2;
+    const barY = 38;
 
     // Boss Title & Phase Name
     ctx.font = 'bold 14px Outfit, sans-serif';
@@ -775,7 +782,7 @@ export class BossEncounterScene implements IScene {
         ? 'PHASE 2: TAMAS SORCERY & REINFORCEMENTS'
         : 'PHASE 1: BUFFALO TITAN WRATH';
 
-    ctx.fillText(`MAHISHASURA — TITAN OF THE VOID ECLIPSE [ ${phaseName} ]`, cam.viewportWidth / 2, barY - 8);
+    ctx.fillText(`MAHISHASURA — TITAN OF THE VOID ECLIPSE [ ${phaseName} ]`, vp.width / 2, barY - 10);
 
     // Background Container
     ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
@@ -804,8 +811,8 @@ export class BossEncounterScene implements IScene {
     ctx.fillRect(barX, poiseBarY, barWidth * poiseRatio, 6);
 
     // --- Bottom Player Combat HUD ---
-    const hudW = 560;
-    const hudY = cam.viewportHeight - 65;
+    const hudW = Math.min(580, vp.width - 40);
+    const hudY = vp.height - 65;
     ctx.fillStyle = 'rgba(15, 23, 42, 0.92)';
     ctx.fillRect(20, hudY, hudW, 52);
     ctx.strokeStyle = '#334155';
@@ -843,67 +850,65 @@ export class BossEncounterScene implements IScene {
     // Special Attack Status
     const canSpecial = this.player.energy >= 30 && !this.player.poise.isStaggered;
     ctx.fillStyle = canSpecial ? '#38BDF8' : '#64748B';
-    ctx.fillText(`SPECIAL: [E] ${canSpecial ? 'READY' : '30 EP'}`, 365, hudY + 18);
+    ctx.fillText(`SPECIAL: [E] ${canSpecial ? 'READY' : '30 EP'}`, 400, hudY + 18);
 
     // Guard & Parry Status
     const parryActive = this.player.parryWindowTimer > 0;
     ctx.fillStyle = parryActive ? '#00E5FF' : this.player.isGuarding ? '#F59E0B' : '#64748B';
-    ctx.fillText(parryActive ? 'PERFECT PARRY [ACTIVE]' : 'GUARD [C / X]', 365, hudY + 38);
+    ctx.fillText(parryActive ? 'PERFECT PARRY [ACTIVE]' : 'GUARD [C / X]', 400, hudY + 38);
 
     ctx.restore();
   }
 
   private renderVictoryOverlay(ctx: CanvasRenderingContext2D): void {
-    const cam = this.engine.getRenderer().getCamera();
+    const vp = this.engine.getRenderer().getViewport();
     ctx.save();
-    ctx.translate(cam.position.x - cam.viewportWidth / 2, cam.position.y - cam.viewportHeight / 2);
 
     ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
-    ctx.fillRect(0, 0, cam.viewportWidth, cam.viewportHeight);
+    ctx.fillRect(0, 0, vp.width, vp.height);
 
     ctx.font = 'bold 36px Outfit, sans-serif';
     ctx.fillStyle = '#F59E0B';
     ctx.textAlign = 'center';
-    ctx.fillText('VICTORY — MAHISHASURA VANQUISHED', cam.viewportWidth / 2, cam.viewportHeight / 2 - 80);
+    ctx.fillText('VICTORY — MAHISHASURA VANQUISHED', vp.width / 2, vp.height / 2 - 80);
 
     ctx.font = '16px Inter, sans-serif';
     ctx.fillStyle = '#E2E8F0';
-    ctx.fillText(`Encounter Duration: ${this.battleTime.toFixed(1)}s`, cam.viewportWidth / 2, cam.viewportHeight / 2 - 30);
-    ctx.fillText(`Damage Taken: ${this.damageTakenTotal}`, cam.viewportWidth / 2, cam.viewportHeight / 2 - 5);
-    ctx.fillText(`Parries Executed: ${this.parriesPerformed}`, cam.viewportWidth / 2, cam.viewportHeight / 2 + 20);
+    ctx.fillText(`Encounter Duration: ${this.battleTime.toFixed(1)}s`, vp.width / 2, vp.height / 2 - 30);
+    ctx.fillText(`Damage Taken: ${this.damageTakenTotal}`, vp.width / 2, vp.height / 2 - 5);
+    ctx.fillText(`Parries Executed: ${this.parriesPerformed}`, vp.width / 2, vp.height / 2 + 20);
 
     const rank = this.damageTakenTotal < 80 ? 'S - DIVINE GUARDIAN' : this.damageTakenTotal < 180 ? 'A - WARRIOR OF SURYA' : 'B - SURVIVOR';
     ctx.font = 'bold 22px Outfit, sans-serif';
     ctx.fillStyle = '#34D399';
-    ctx.fillText(`Battle Rank: ${rank}`, cam.viewportWidth / 2, cam.viewportHeight / 2 + 65);
+    ctx.fillText(`Battle Rank: ${rank}`, vp.width / 2, vp.height / 2 + 65);
 
     ctx.font = '14px Inter, sans-serif';
     ctx.fillStyle = '#94A3B8';
-    ctx.fillText('Press [R] to Refight Boss  |  Press [ESC] to Return to Menu', cam.viewportWidth / 2, cam.viewportHeight / 2 + 115);
+    ctx.fillText('Press [R] to Refight Boss  |  Press [ESC] to Return to Menu', vp.width / 2, vp.height / 2 + 115);
 
     ctx.restore();
   }
 
   private renderDefeatOverlay(ctx: CanvasRenderingContext2D): void {
-    const cam = this.engine.getRenderer().getCamera();
+    const vp = this.engine.getRenderer().getViewport();
     ctx.save();
-    ctx.translate(cam.position.x - cam.viewportWidth / 2, cam.position.y - cam.viewportHeight / 2);
 
     ctx.fillStyle = 'rgba(69, 10, 10, 0.88)';
-    ctx.fillRect(0, 0, cam.viewportWidth, cam.viewportHeight);
+    ctx.fillRect(0, 0, vp.width, vp.height);
 
     ctx.font = 'bold 36px Outfit, sans-serif';
     ctx.fillStyle = '#EF4444';
     ctx.textAlign = 'center';
-    ctx.fillText('FALLEN IN BATTLE', cam.viewportWidth / 2, cam.viewportHeight / 2 - 40);
+    ctx.fillText('FALLEN IN BATTLE', vp.width / 2, vp.height / 2 - 40);
 
     ctx.font = '16px Inter, sans-serif';
     ctx.fillStyle = '#FCA5A5';
-    ctx.fillText('The Tamas corruption overwhelmed your life force.', cam.viewportWidth / 2, cam.viewportHeight / 2);
+    ctx.fillText('The Tamas corruption overwhelmed your life force.', vp.width / 2, vp.height / 2);
 
     ctx.font = 'bold 15px Inter, sans-serif';
     ctx.fillStyle = '#FFFFFF';
-    ctx.fillText('Press [R] to Respawn at Sanctum Checkpoint  |  [ESC] Return to Menu', cam.viewportWidth / 2, cam.viewportHeight / 2 + 50);
+    ctx.fillText('Press [R] to Respawn at Sanctum Checkpoint  |  [ESC] Return to Menu', vp.width / 2, vp.height / 2 + 50);
 
     ctx.restore();
   }

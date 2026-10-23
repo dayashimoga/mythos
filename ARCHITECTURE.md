@@ -224,3 +224,105 @@ The codebase enforces strict, unidirectional dependency layers:
 ```
 
 No circular dependencies are permitted. `core` and `physics` have zero dependencies on rendering or DOM elements, ensuring 100% headless testability.
+
+---
+
+## 6. Stage R0 Graphics, Coordinate Spaces, Rendering Isolation & Camera Architecture
+
+### 6.1 Coordinate Space Hierarchy
+
+To eliminate offscreen gameplay, clipped dialogue, and displaced HUD elements, the engine enforces strict separation between five distinct coordinate systems:
+
+```
+[World Space (Entities, Colliders, Particles)]
+       │
+       ▼  CanvasRenderer.beginWorldPass():
+          Translate(+V_w/2, +V_h/2) -> Scale(zoom) -> Translate(-cam.x, -cam.y)
+[Viewport Camera Space]
+       │
+       ▼  CanvasRenderer.endWorldPass():
+          ctx.setTransform(1, 0, 0, 1, 0, 0)
+[Screen-Space UI / HUD / Overlays]
+       │
+       ▼  DevicePixelRatio & Canvas Scaling
+[Canvas Pixel Space (Backing Store)]
+       │
+       ▼  CSS Display Scaling (letterboxing / aspect fit)
+[CSS Pixel Space & DOM Overlay Coordinates]
+```
+
+1. **World Space:** Unbounded Cartesian coordinates where entities (Player, Enemies, Shards, Altars) and physics colliders exist. Center is $(0, 0)$.
+2. **Viewport Camera Space:** Represents the visible subset of the world. Camera tracks the player with smooth interpolation and clamps strictly within world bounding boxes (`clampToBounds`).
+3. **Screen-Space UI Space:** Viewport-relative screen coordinates $(0, 0)$ to $(V_w, V_h)$. Authoritative HUD, Dialogue boxes, modals, and cinematics render in this space with zero camera translation.
+4. **Canvas Pixel Space:** Backing canvas resolution (`canvas.width`, `canvas.height`) scaled by DPR for Retina / high-DPI displays.
+5. **CSS Pixel Space:** Layout dimensions of the `<canvas>` DOM element (`rect.width`, `rect.height`). The `InputManager` transforms mouse and touch coordinates via `scaleX = canvas.width / rect.width` to ensure 1:1 hit-testing precision.
+
+### 6.2 Dual-Pass Rendering Pipeline & State Isolation
+
+Rendering within every gameplay scene follows a strict dual-pass contract:
+
+```typescript
+// PASS 1: World Entities (with camera transform)
+renderer.beginWorldPass();
+this.renderTerrain(renderer);
+this.renderEntities(renderer);
+this.renderVFX(renderer);
+renderer.endWorldPass(); // Authoritative reset: setTransform(1,0,0,1,0,0) + alpha/composite reset
+
+// PASS 2: Viewport-Safe Screen UI (identity transform)
+this.renderHUD(renderer);
+this.renderDialogue(renderer);
+this.renderModals(renderer);
+```
+
+- **`beginWorldPass()`:** Configures camera translation and zoom.
+- **`endWorldPass()`:** Restores identity matrix (`setTransform(1, 0, 0, 1, 0, 0)`), resets `globalAlpha = 1.0`, `globalCompositeOperation = 'source-over'`, `filter = 'none'`, and clears dashed strokes.
+- **`SceneManager` Isolation:** Scene renders are wrapped in `try...finally` blocks to guarantee transform resets even if a scene throws an exception.
+- **Root Background Clearing:** `Engine.render()` issues an authoritative `#080C14` clear pass before scene execution, preventing stale buffer retention.
+
+### 6.3 Asset Chroma-Keying & Alpha Feathering Pipeline
+
+Textures with solid black backgrounds (JPEG artifacts) are dynamically keyed into transparent PNG surfaces at load time in `AssetManager`:
+- Luminance $< 28$: Alpha set to $0.0$ (fully transparent).
+- Luminance $28 \le L \le 52$: Alpha feathered linearly $(L - 28) / 24.0$ to eliminate harsh halo artifacts.
+- Luminance $> 52$: Preserved intact.
+
+### 6.4 Camera Bounds Clamping & Viewport Safety
+
+`Camera.clampToBounds(minX, minY, maxX, maxY)` prevents the camera center from moving into invalid voids:
+$$cam_x = \text{clamp}(cam_x, minX + V_w / (2 \cdot zoom), maxX - V_w / (2 \cdot zoom))$$
+$$cam_y = \text{clamp}(cam_y, minY + V_h / (2 \cdot zoom), maxY - V_h / (2 \cdot zoom))$$
+This guarantees that the world bounds always fill the viewport without exposing black borders.
+
+---
+
+## 7. Stage R1 Modern Graphics, SpriteAtlas & Production Sanctum Architecture
+
+### 7.1 Hybrid 2.5D Production Renderer vs. WebGL2/PixiJS Trade-off
+Empirical proof of concept evaluation (`tests/performance/RenderingArchitectureComparison.test.ts`):
+1. **Bundle Overhead:** Canvas2D requires 0 KB external library overhead, whereas PixiJS adds +1.4 MB minified dependency overhead.
+2. **Headless & CI Execution:** Canvas2D executes deterministically in Node.js JSDOM under 3ms, whereas WebGL2 requires native GPU contexts or heavy software rasterizers (`node-gles`).
+3. **Mobile Lifecycle Resilience:** Canvas2D backing stores are immune to `webglcontextlost` events on memory-constrained mobile devices.
+4. **Architectural Choice:** The Hybrid 2.5D Production Renderer (Hardware-Accelerated Canvas2D + SpriteAtlas + Multi-Pass Lighting + Object Pools) delivers 60 FPS performance, rich visual aesthetics, and zero breakage of existing gameplay systems.
+
+### 7.2 SpriteAtlas & Normalized Pivot Alignment
+All in-world visual elements are registered in `SpriteAtlas` with normalized anchor points ($0.0 \le \text{pivot} \le 1.0$):
+- Pillars (`SANCTUM_PILLAR`): Pivot at base foot $(0.5, 0.92)$ to anchor cleanly to contact shadows.
+- Altar (`SANCTUM_ALTAR`): Pivot at dais center $(0.5, 0.56)$ aligned to concentric lotus mandalas.
+- Torana Gate (`SANCTUM_TORANA`): Pivot at bottom threshold $(0.5, 0.90)$.
+- Braziers (`SANCTUM_BRAZIER`): Pivot at stone pedestal base $(0.5, 0.88)$.
+- Hero Veer (`SANCTUM_HERO_VEER`): Pivot at feet $(0.5, 0.96)$ with boundary BFS flood-fill transparency keying.
+`SpriteAtlas.drawSprite(ctx, frameId, worldX, worldY, options)` automatically computes:
+$$\text{destX} = -\text{frame.width} \times \text{pivotX}$$
+$$\text{destY} = -\text{frame.height} \times \text{pivotY}$$
+guaranteeing spatial coherence across all entity movements and rotations.
+
+### 7.3 Multi-Pass Layered Environmental Lighting
+The reconstructed Sanctum scene utilizes multi-pass lighting:
+1. **Base Geometry & Decal Pass:** Dark sculpted basalt pavers and central ceremonial nave with Sanskrit glyph inlays.
+2. **Contact Shadow & Ambient Occlusion Pass:** Soft elliptical contact drop shadows beneath entities, pillars, and perimeter walls.
+3. **Actor & Prop Pass:** Entities rendered with SpriteAtlas pivots, weapon trails, and particle scintillation.
+4. **Point-Light Radial Pass:** Harmonic flickering firelight from 4 bronze braziers and 4 pillar Diya lamps casting warm illumination ($r=140\text{px}-240\text{px}$) onto the surrounding environment.
+5. **Screen-Space HUD Pass:** Production HUD and modals drawn with clean vector contrast.
+
+

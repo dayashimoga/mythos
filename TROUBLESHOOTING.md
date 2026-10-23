@@ -73,3 +73,38 @@ When troubleshooting gameplay or performance anomalies, press **`F3`** (or click
 ### 3.3 Genuine Native Binary Deliverables
 - **Desktop**: Tauri 2 Rust engine compiles genuine PE32+ `.exe` on Windows and ELF 64-bit binary on Linux.
 - **Mobile**: Android Gradle compiles genuine `classes.dex` and binary manifest into debug APK; iOS Xcode compiles Mach-O ARM64 binary into Xcode archive.
+
+---
+
+## 4. Stage R0 Root Cause Analyses & Defect Resolutions
+
+### 4.1 Offscreen Gameplay & Floating Letterboxes
+- **Symptom:** Player character, scenery, or cinematic letterbox bars rendered partially or completely offscreen.
+- **Root Cause:** World entities were rendered without camera matrix transformations in `StoryCampaignScene` and `BossEncounterScene`, while overlay and cinematic routines manually applied erroneous camera translation offsets.
+- **Resolution:** Encapsulated all world drawing within `renderer.beginWorldPass()` / `renderer.endWorldPass()`, and removed camera translation offsets from `DialogueTree` and `CinematicDirector`. World space and screen-space UI are now strictly separated.
+
+### 4.2 Left-Clipped Dialogue Box
+- **Symptom:** Dialogue box and Devi Tara speaker portrait pushed into the far left screen margin with truncated text.
+- **Root Cause:** `DialogueTree.render()` applied an erroneous camera translation `ctx.translate(cam.position.x - cam.viewportWidth / 2, cam.position.y - cam.viewportHeight / 2)`, displacing the dialogue box whenever the camera tracked the player.
+- **Resolution:** Removed the translation call and positioned the dialogue box authoritatively in viewport coordinates (`boxX = (vpW - boxW) / 2`, `boxY = vpH - boxH - 24`).
+
+### 4.3 Black Rendering Rectangles & Texture Halos
+- **Symptom:** Sanctum Torana, pillars, altars, and sentinels displayed solid black rectangular halos.
+- **Root Cause:** Sanctum textures were stored as JPEGs with solid black backgrounds instead of RGBA transparent PNGs.
+- **Resolution:** Implemented runtime offscreen canvas chroma-keying with linear alpha feathering in `AssetManager.processBlackKeying()`. Black backgrounds ($L < 28$) are converted to full alpha transparency while intermediate edge pixels ($28 \le L \le 52$) are feathered smoothly.
+
+### 4.4 Compounded Darkening Shapes & Corrupted Borders
+- **Symptom:** UI cards, buttons, and mini-map in `WorldExplorationScene` appeared abnormally dark with muddy, thick borders.
+- **Root Cause:** `ctx.roundRect()` was invoked without a preceding `ctx.beginPath()`, causing Canvas 2D to retain previously drawn paths and restroke/refill all prior paths compounded with alpha.
+- **Resolution:** Added `ctx.beginPath()` before every `ctx.roundRect()` call across all UI rendering functions.
+
+### 4.5 Overlapping Canvas Menus and DOM Quick Bar
+- **Symptom:** Top-right canvas HUD buttons (Pause, Codex, Diagnostics, Showcase tabs) overlapped and conflicted with the HTML `#quick-bar`.
+- **Root Cause:** The DOM `#quick-bar` occupies `top: 16px, right: 16px` ($y: 16\text{px} - 48\text{px}$). Top-right canvas UI elements placed at $y < 50\text{px}$ collided with the DOM buttons.
+- **Resolution:** Repositioned top-right canvas buttons to $y \ge 56\text{px}$ and constrained top tab headers to $x < 980\text{px}$.
+
+### 4.6 Infinite Title Screen Navigation Loops & Leaking Stacks
+- **Symptom:** Navigating back to the Title Screen caused stack history leaks or re-entering prior scenes when pressing Back.
+- **Root Cause:** `SceneManager.navigationStack` retained stale scene references, and camera transform/shake parameters were not reset.
+- **Resolution:** Added `clearNavigationStack()` and `camera.reset(0, 0, 1.0)` whenever transitioning to `SplashScene`. Wrapped scene rendering in `try...finally` with transform stack and composite operation resets.
+

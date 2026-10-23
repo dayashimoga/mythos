@@ -74,7 +74,7 @@ export class AssetManager {
       for (const desc of ASSET_MANIFEST) {
         const img = new Image();
         img.onload = () => {
-          this.textures.set(desc.id, img);
+          this.textures.set(desc.id, this.processBlackKeying(desc.id, img));
           this.loadedCount++;
           pending--;
           if (pending === 0) {
@@ -97,6 +97,100 @@ export class AssetManager {
     });
 
     return this.loadPromise;
+  }
+
+  private processBlackKeying(descId: string, img: HTMLImageElement): HTMLCanvasElement | HTMLImageElement {
+    const TRANSPARENT_SPRITE_IDS = new Set([
+      'TEX_SANCTUM_TORANA',
+      'TEX_SANCTUM_PILLAR',
+      'TEX_SANCTUM_ALTAR',
+      'TEX_SANCTUM_SHARD',
+      'TEX_SANCTUM_SENTINEL',
+      'TEX_SANCTUM_HERO_VEER',
+      'TEX_SANCTUM_TORANA_PROD',
+      'TEX_SANCTUM_PILLAR_PROD',
+      'TEX_SANCTUM_ALTAR_PROD',
+      'TEX_SANCTUM_SHARD_PROD',
+      'TEX_SANCTUM_SENTINEL_PROD',
+      'TEX_SANCTUM_BRAZIER_PROD',
+    ]);
+
+    if (!TRANSPARENT_SPRITE_IDS.has(descId) || typeof document === 'undefined') {
+      return img;
+    }
+
+    try {
+      const canvas = document.createElement('canvas');
+      const w = img.naturalWidth || img.width;
+      const h = img.naturalHeight || img.height;
+      if (w <= 0 || h <= 0) return img;
+
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return img;
+
+      ctx.drawImage(img, 0, 0);
+      const imgData = ctx.getImageData(0, 0, w, h);
+      const data = imgData.data;
+
+      const isCheckerboardBackground = (r: number, g: number, b: number): boolean => {
+        const diffRG = Math.abs(r - g);
+        const diffGB = Math.abs(g - b);
+        const diffRB = Math.abs(r - b);
+        return diffRG <= 16 && diffGB <= 16 && diffRB <= 16;
+      };
+
+      // BFS Flood-fill from borders to clear external background without affecting interior
+      const queue: number[] = [];
+      const visited = new Uint8Array(w * h);
+
+      // Seed all 4 borders
+      for (let x = 0; x < w; x++) {
+        queue.push(x);
+        queue.push((h - 1) * w + x);
+      }
+      for (let y = 1; y < h - 1; y++) {
+        queue.push(y * w);
+        queue.push(y * w + (w - 1));
+      }
+
+      let qIdx = 0;
+      while (qIdx < queue.length) {
+        const p = queue[qIdx++];
+        if (visited[p]) continue;
+        visited[p] = 1;
+
+        const idx = p * 4;
+        const r = data[idx];
+        const g = data[idx + 1];
+        const b = data[idx + 2];
+        const maxVal = Math.max(r, g, b);
+
+        const isDark = maxVal <= 36;
+        const isNeutral = isCheckerboardBackground(r, g, b) && maxVal >= 70;
+
+        if (isDark || isNeutral) {
+          data[idx + 3] = 0; // Transparent
+
+          const px = p % w;
+          const py = Math.floor(p / w);
+
+          if (px > 0 && !visited[p - 1]) queue.push(p - 1);
+          if (px < w - 1 && !visited[p + 1]) queue.push(p + 1);
+          if (py > 0 && !visited[p - w]) queue.push(p - w);
+          if (py < h - 1 && !visited[p + w]) queue.push(p + w);
+        } else if (maxVal <= 64 || (isCheckerboardBackground(r, g, b) && maxVal <= 96)) {
+          // Soft feathered alpha edge
+          data[idx + 3] = Math.round(data[idx + 3] * 0.4);
+        }
+      }
+
+      ctx.putImageData(imgData, 0, 0);
+      return canvas;
+    } catch {
+      return img;
+    }
   }
 
   private createFallbackTexture(id: string): HTMLCanvasElement {
