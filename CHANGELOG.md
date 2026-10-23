@@ -391,3 +391,56 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Comprehensive automated test suite across 39 test files and 312 tests with 100% pass rate.
   - Overall code coverage: Statements 93.65% ($\ge 90\%$), Functions 93.45% ($\ge 90\%$), Lines 93.65% ($\ge 90\%$), Branches 85.51% ($\ge 85\%$).
   - Full multi-platform production packages generated for Web, Windows x64, Linux x64, macOS, Android, and iOS with SHA-256 manifest.
+
+---
+
+## [0.9.0] - 2026-10-23
+
+### Added
+- **Authoritative Performance & Multi-Platform Specification (`PERFORMANCE_SPECIFICATION.md`):**
+  - Platform performance budget matrix for Windows Desktop, Linux Desktop, macOS Desktop, Android Phone, iOS Phone, and Web PWA.
+  - Subsystem frame-time budget breakdown for 60 FPS ($16.66\text{ ms}$) baseline with $43.7\%$ headroom margin.
+  - Thermal and battery saver throttling thresholds ($30\text{ FPS}$ cap under low battery $< 20\%$).
+- **Graphics Quality Manager & Adaptive Scaler (`src/render/GraphicsQualityManager.ts`):**
+  - 4 discrete quality tiers (`LOW`, `MEDIUM`, `HIGH`, `ULTRA`) and dynamic `ADAPTIVE` resolution scaling.
+  - Configurable particle budgets ($300 \to 2000$), resolution scaling ($0.65\text{x} \to 1.25\text{x}$), aura glow bloom, chromatic aberration, and shadow filters.
+  - Continuous rolling average frame-time evaluation adapting resolution scale dynamically between $0.65\text{x}$ and $1.0\text{x}$ without visual hitching.
+  - Hardware profile detection utilizing `navigator.deviceMemory` and `navigator.hardwareConcurrency`.
+- **Render Batcher & Spatial Frustum Culling (`src/render/RenderBatcher.ts`):**
+  - Fast AABB camera frustum intersection test with configurable cull margins.
+  - Fast point visibility testing.
+  - Batched particle quad drawer grouping particles by color to minimize Canvas 2D context state mutations.
+  - Real-time drawn vs. culled object statistics tracking.
+- **Zero-Allocation Generic Object Pool (`src/core/ObjectPool.ts`):**
+  - Pre-allocated zero-allocation object pool with `borrow()`, `release()`, `releaseAll()`, and `reset()` lifecycle contracts.
+  - Watermark tracking and leak detection metrics.
+- **Memory Profiler & Continuous Leak Detector (`src/core/MemoryProfiler.ts`):**
+  - Periodic memory sampling capturing used JS heap, total heap, active entities, particles, and audio voices.
+  - Automated leak detection heuristic evaluating monotonic heap expansion across 10 sample intervals.
+- **Interleaved Time-Slice Task Scheduler (`src/core/TimeSliceScheduler.ts`):**
+  - Staggered task execution distributing non-critical operations across `EVERY_FRAME`, `EVERY_2ND_FRAME`, `EVERY_4TH_FRAME`, and `EVERY_8TH_FRAME` cadences.
+  - Uniform task offset distribution eliminating CPU clustering spikes.
+- **Enhanced Cross-Platform Bridge (`src/platform/PlatformBridge.ts`):**
+  - Device type categorization (`desktop`, `tablet`, `mobile`, `console`).
+  - Safe area inset calculation (`top`, `bottom`, `left`, `right`) accommodating phone notches, camera punch-holes, and home bars.
+  - Battery API integration monitoring charging status, charge level, and low-power modes.
+  - Lifecycle state observers (`active`, `suspended`, `hidden`) handling `pagehide`, `freeze`, and `resume` window events.
+  - Device vibration haptic trigger and fullscreen toggling.
+- **Multi-Platform Production Deliverables (`scripts/build-platforms.js`):**
+  - Web PWA bundle with `manifest.json`, Service Worker `sw.js` for full offline caching, and responsive viewport meta tags.
+  - Windows x64 standalone bundle with native `launcher.bat`, silent `run.vbs`, and DPI-aware application manifest.
+  - Linux x64 standalone bundle with POSIX `run-linux.sh` and freedesktop `.desktop` launcher.
+  - macOS Universal bundle with `MythosAstra.app` directory structure, `Info.plist`, and Gatekeeper bypass guide.
+  - Android APK container with `AndroidManifest.xml` (API 29+), landscape orientation, and sideload developer instructions.
+  - iOS Xcode Archive (`xcarchive.zip`) with `Info.plist` and webview container.
+  - Cryptographic SHA-256 manifest (`SHA256SUMS.txt`) and metadata catalogue (`RELEASE_MANIFEST.json`).
+- **Clean-Environment Artifact Validation Script (`scripts/validate-artifacts.js`):**
+  - Automated extraction into isolated clean environment verifying archive integrity, file presence, checksums, and launcher scripts.
+- **Production Benchmark & High-Throughput Stress Suite (`tests/performance/PlatformBenchmark.test.ts`):**
+  - Sustained 1000-frame render loop benchmark verifying $< 1.5\text{ms}$ average frame time in headless environment.
+  - Spatial hash broadphase collision query under $0.1\text{ms}$ per query with 500 colliders.
+  - 10,000 borrow/release cycles in under $20\text{ms}$ with zero memory leakage.
+  - Viewport culling of 2,000 off-screen primitives in under $3\text{ms}$.
+- **Quality Assurance & Verification:**
+  - Automated test suite expanded to 41 test files and 331 tests with 100% pass rate.
+  - Code coverage: Statements 93.65% ($\ge 90\%$), Functions 93.89% ($\ge 90\%$), Lines 93.65% ($\ge 90\%$), Branches 85.40% ($\ge 85\%$).

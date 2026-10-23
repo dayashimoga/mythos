@@ -54,6 +54,9 @@ jobs:
       - name: Package all target platforms (Web, Windows, Linux, macOS, Android, iOS)
         run: npm run build:platforms
 
+      - name: Validate artifacts in clean isolated environment
+        run: npm run validate:artifacts
+
       - name: Verify SHA256 checksums file
         run: |
           cat dist/release-artifacts/SHA256SUMS.txt

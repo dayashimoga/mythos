@@ -39,6 +39,14 @@ export class Camera {
     this.target = target;
   }
 
+  public setPosition(x: number, y: number): void {
+    this.position.set(x, y);
+  }
+
+  public getPosition(): Vector2D {
+    return this.position;
+  }
+
   public setZoom(zoom: number): void {
     this.zoom = zoom;
   }

@@ -64,7 +64,23 @@ export class SpatialHashGrid<T extends SpatialItem> {
     return Array.from(nearby);
   }
 
+  public query(box: AABB): T[] {
+    const nearby = new Set<T>();
+    const cells = this.getCellsForAABB(box);
+    for (const key of cells) {
+      const itemsInCell = this.grid.get(key);
+      if (itemsInCell) {
+        for (const item of itemsInCell) {
+          nearby.add(item);
+        }
+      }
+    }
+    return Array.from(nearby);
+  }
+
   public getCellCount(): number {
     return this.grid.size;
   }
 }
+
+export { SpatialHashGrid as SpatialHash };

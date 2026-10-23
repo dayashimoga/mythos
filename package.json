@@ -14,6 +14,7 @@
     "lint": "tsc --noEmit",
     "verify:append-only": "node scripts/verify-append-only.js",
     "build:platforms": "node scripts/build-platforms.js",
+    "validate:artifacts": "node scripts/validate-artifacts.js",
     "generate:sbom": "node scripts/generate-sbom.js"
   },
   "devDependencies": {
