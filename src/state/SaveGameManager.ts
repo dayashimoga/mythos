@@ -1,4 +1,5 @@
 import { StorageAdapter } from './StorageAdapter';
+import { NarrativeSaveState } from '../narrative/NarrativeTypes';
 
 export interface GameSaveState {
   version: string;
@@ -9,6 +10,7 @@ export interface GameSaveState {
   altarConsecrated: boolean;
   highScore: number;
   playtimeSeconds: number;
+  narrative?: NarrativeSaveState;
   checksum: string;
 }
 
@@ -34,7 +36,8 @@ export class SaveGameManager {
   }
 
   private static calculateChecksum(data: Omit<GameSaveState, 'checksum'>): string {
-    const str = `${data.version}:${data.currentRealm}:${data.shardsCollected}:${data.altarConsecrated}:${data.highScore}`;
+    const narrativePart = data.narrative ? `:${data.narrative.checksum}` : '';
+    const str = `${data.version}:${data.currentRealm}:${data.shardsCollected}:${data.altarConsecrated}:${data.highScore}${narrativePart}`;
     let hash = 0;
     for (let i = 0; i < str.length; i++) {
       hash = (hash << 5) - hash + str.charCodeAt(i);

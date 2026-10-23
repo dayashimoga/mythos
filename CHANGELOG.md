@@ -211,5 +211,57 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Expanded test coverage across 32 test files and 207 automated tests with 93.56% statement coverage and 85.84% branch coverage (100% passing).
   - Multi-platform production packaging validated across Web, Windows x64, Linux x64, macOS Universal, Android, and iOS.
 
+---
+
+## [0.6.0] - 2026-10-23
+
+### Added
+- **Narrative Architecture & Screenplay Bible (`NARRATIVE_SPECIFICATION.md`):**
+  - Canonical lore bible and screenplay for Chapter 1: *The Dawning Flare of Dandaka*.
+  - Three-Act dramatic progression: Act I (The Shattered Sanctum), Act II (The Blighted Groves of Dandaka), Act III (The Obsidian Throne).
+  - Character relationship affinity system tracking `taraAffinity`, `vanaraTrust`, and `karmicBalance` across moral decision nodes.
+  - Comprehensive objective taxonomy (`EXPLORE_LOCATION`, `COLLECT_SHARD`, `DEFEAT_TARGET`, `INTERACT_NPC`, `CONSECRATE_ALTAR`, `CHOOSE_DIALOGUE`).
+  - Strict `v2.0.0` narrative save-state contract with cryptographic checksum validation.
+- **Narrative Data Models & Schemas (`src/narrative/NarrativeTypes.ts`):**
+  - Strongly-typed TypeScript interfaces for `MissionDefinition`, `MissionObjective`, `MissionReward`, `DialogueChoice`, `DialogueNodeData`, and `NarrativeSaveState`.
+- **Branching Dialogue Tree Engine (`src/narrative/DialogueTree.ts`):**
+  - Typewriter text pacing with configurable speed ($22\text{ ms/char}$) and instant fast-forward on input.
+  - Branching choice selection with story-flag prerequisites and moral alignment deltas.
+  - Distinct speaker badges, custom portrait color motifs, and celestial expressions (`neutral`, `focused`, `determined`, `surprised`, `sorrowful`, `wrathful`).
+  - Keyboard number hotkeys (`[ 1 ]`, `[ 2 ]`, `[ 3 ]`) preventing accidental choice skips.
+- **Authoritative Quest & Progression Manager (`src/narrative/QuestManager.ts`):**
+  - Directed Acyclic Graph (DAG) mission prerequisite validation.
+  - Objective event trigger dispatch system decoupled from scene rendering.
+  - Story flag persistence, relationship affinity clamping ($[-100, +100]$), and cutscene unlock tracking.
+  - Cryptographic checksum generation and tampering detection.
+- **Canonical Chapter 1 Campaign Missions & Dialogues (`src/narrative/CampaignChapter1.ts`):**
+  - Five complete sequential missions:
+    - *M1: Awakening of the Solar Flame* (Sanctum calibration, combo strike attunement).
+    - *M2: The Consecration of Surya-Kund* (Gathering Astra Shards, purifying Sun Altar).
+    - *M3: The Blighted Groves of Dandaka* (Torana Gate transition, Vanara Scout Kapi standoff).
+    - *M4: The Harmonies of Brahman* (Harmonizing Om and Krim Brahmic Pillars).
+    - *M5: The Eclipse Titan's Fall* (Obsidian Throne confrontation, Mahishasura defeat).
+  - Full dialogue trees for Devi Tara, Vanara Scout Kapi, and Mahishasura.
+- **Cinematic Director & Camera Choreographer (`src/cinematics/CinematicDirector.ts`):**
+  - Smooth 2.39:1 widescreen black letterbox bar transitions with golden accent trim lines.
+  - Camera position and zoom interpolation towards cinematic points of interest.
+  - Elegant serif title card overlays with subtitle pacing and alpha fade curves.
+  - Seamless skip handling (`[ ESC ]`) restoring gameplay camera and state without desync.
+- **Backwards-Compatible Save State Upgrade (`src/state/SaveGameManager.ts`):**
+  - Extended `GameSaveState` with optional `narrative?: NarrativeSaveState`.
+  - Checksum validation maintains 100% backward compatibility with `v1.0.0` save states.
+- **Playable Story Campaign Scene (`src/scenes/StoryCampaignScene.ts`):**
+  - Full multi-act story arc across Sanctum of Astra, Dandaka Gateway, and Obsidian Throne.
+  - Active Quest Tracker HUD displaying current mission, active objectives, and progress counts.
+  - Quest Log modal (`[ O ]` / `[ TAB ]`) with full mission summaries, rewards, and lore entries.
+  - Seamless transitions between scripted cutscenes, narrative dialogues, and intense real-time combat.
+  - Tactical checkpoint respawn (`[ R ]`), game-over recovery, and title screen navigation.
+  - Fast-travel button (`STAGE 5: STORY CAMPAIGN [ S / 📜 ]`) integrated into `SplashScene.ts`.
+- **Quality Assurance & Certification:**
+  - Expanded test suite to 34 test files and 239 automated tests with 100% pass rate.
+  - Global test coverage: 93.46% statements/lines ($\ge 90\%$ requirement), 85.74% branch coverage ($\ge 85\%$ requirement).
+  - Multi-platform packaging builds verified for Web, Windows x64, Linux x64, macOS, Android, and iOS.
+
+
 
 

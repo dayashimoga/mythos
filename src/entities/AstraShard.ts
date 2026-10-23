@@ -69,4 +69,9 @@ export class AstraShard extends Entity {
 
     ctx.restore();
   }
+
+  public collect(): void {
+    this.isCollected = true;
+    this.isActive = false;
+  }
 }
