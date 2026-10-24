@@ -227,9 +227,7 @@ static func _test_naga_constrictor_ai_and_combat() -> Dictionary:
 
 	# Test stalk to leap transition
 	constrictor.position = Vector3(0, 0, 8.0)
-	constrictor.global_position = Vector3(0, 0, 8.0)
 	player.position = Vector3.ZERO
-	player.global_position = Vector3.ZERO
 	constrictor.current_state = NagaConstrictorScript.State.SERPENTINE_STALK
 	constrictor.state_timer = 2.0
 	constrictor._process_stalk(0.1)

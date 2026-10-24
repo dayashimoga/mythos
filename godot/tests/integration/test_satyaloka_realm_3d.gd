@@ -145,12 +145,10 @@ static func _test_moksha_seraph_ai_and_barrier() -> Dictionary:
 	var test_name = "test_moksha_seraph_ai_and_barrier"
 	var seraph = MokshaSeraphScript.new()
 	seraph.position = Vector3(0, 0, 0)
-	seraph.global_position = Vector3(0, 0, 0)
 
 	var dummy_player = CharacterBody3D.new()
 	dummy_player.add_to_group("player")
 	dummy_player.position = Vector3(0, 0, 8.0)
-	dummy_player.global_position = Vector3(0, 0, 8.0)
 	seraph.target_player = dummy_player
 
 	# Hover to telegraph
@@ -199,12 +197,10 @@ static func _test_dharma_sentinel_ai_and_guard() -> Dictionary:
 	var test_name = "test_dharma_sentinel_ai_and_guard"
 	var sentinel = DharmaSentinelScript.new()
 	sentinel.position = Vector3(0, 0, 0)
-	sentinel.global_position = Vector3(0, 0, 0)
 
 	var dummy_player = CharacterBody3D.new()
 	dummy_player.add_to_group("player")
 	dummy_player.position = Vector3(0, 0, 3.0)
-	dummy_player.global_position = Vector3(0, 0, 3.0)
 	sentinel.target_player = dummy_player
 
 	# Chase into melee
@@ -245,12 +241,10 @@ static func _test_boss_brahma_avatara_phases_and_enrage() -> Dictionary:
 	var test_name = "test_boss_brahma_avatara_phases_and_enrage"
 	var boss = BossBrahmaAvataraScript.new()
 	boss.position = Vector3(0, 0, 0)
-	boss.global_position = Vector3(0, 0, 0)
 
 	var dummy_player = CharacterBody3D.new()
 	dummy_player.add_to_group("player")
 	dummy_player.position = Vector3(0, 0, 18.0)
-	dummy_player.global_position = Vector3(0, 0, 18.0)
 	boss.target_player = dummy_player
 
 	if boss.max_health != 650 or boss.current_health != 650:

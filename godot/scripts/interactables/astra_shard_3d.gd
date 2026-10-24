@@ -1,6 +1,8 @@
 class_name AstraShard3D
 extends Area3D
 
+const AudioManager3D = preload("res://scripts/audio/audio_manager_3d.gd")
+
 ## 3D Floating Astra Shard pickup with continuous rotation, bobbing, and collection detection.
 
 signal collected(shard_name: String)
@@ -34,6 +36,7 @@ func _on_body_entered(body: Node3D) -> void:
 		return
 	if body is PlayerController3D:
 		is_collected = true
+		AudioManager3D.play_3d("crystal_pickup", global_position)
 		body.add_shard(1)
 		collected.emit(shard_id)
 

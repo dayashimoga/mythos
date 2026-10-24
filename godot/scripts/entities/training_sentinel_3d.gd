@@ -97,11 +97,14 @@ func _execute_practice_strike() -> void:
 
 func _on_strike_body_entered(body: Node3D) -> void:
 	if body is PlayerController3D and body.has_method("take_damage_spec"):
-		var atk = CombatMath.AttackSpec.new("sentinel", 20, 25.0, global_position)
+		var p = global_position if is_inside_tree() else position
+		var atk = CombatMath.AttackSpec.new("sentinel", 20, 25.0, p)
 		body.take_damage_spec(atk)
 
 func take_damage_spec(attack_spec: CombatMath.AttackSpec) -> CombatMath.CombatHitResult:
-	var def_spec = CombatMath.DefenseSpec.new("sentinel", global_position, -global_transform.basis.z)
+	var my_pos = global_position if is_inside_tree() else position
+	var my_facing = -global_transform.basis.z if is_inside_tree() else Vector3.FORWARD
+	var def_spec = CombatMath.DefenseSpec.new("sentinel", my_pos, my_facing)
 	def_spec.poise = poise
 
 	var result = CombatMath.resolve_attack(attack_spec, def_spec)

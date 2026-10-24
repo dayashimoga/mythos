@@ -1611,3 +1611,76 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     - Vitest Suite: 504/504 tests passing (100% green across 58 test files) with 91.96% line and 85.16% branch coverage.
     - Re-exported updated production Web pack `public/3d/index.pck` (1.46 MB).
     - Validated append-only integrity with 0 violations via `scripts/verify-append-only.js`.
+
+## [1.29.0] - 2026-10-24
+
+### Audited & Repaired (Stage Q0 — Independent Mythos 3D Audit & Verified Baseline)
+- **Phase Q0.1 Repository & Engine Version Pinning:**
+  - Pinned production engine Godot 4.3 Stable Official (`tools/godot/Godot_v4.3-stable_win64_console.exe`, `4.3.stable.official.77dcf97d8`) and confirmed matching export templates.
+  - Re-exported and synchronized production Web package `index.pck` at exact size 1,493,712 bytes across `public/3d/`, `dist/3d/`, and `builds/web/`.
+  - Updated preload configuration in `public/3d/index.html`, `dist/3d/index.html`, and `builds/web/index.html` to match exact package size.
+- **Phase Q0.2 Seven-Realm Functional & Runtime Audit:**
+  - Audited all 7 realm scenes: Bhumi Valley, Antariksha Sky Realm, Patala Underworld, Svar Solar Citadel, Maharloka Sanctuary, Tapoloka Forge, and Satyaloka Apex.
+  - Resolved runtime typing mismatches: fixed `hud: Control` to `hud: HUD3D = $HUD3D if has_node("HUD3D") else null` (`CanvasLayer` on Layer 10) across all realm scripts.
+  - Resolved `tara_npc: Area3D` to `tara_npc: Node3D = ...` to match genuine scene node hierarchies.
+  - Added alias signals `shrine_consecrated` and `shrine_activated` on `SunShrine3D`.
+  - Added missing inter-realm exit portals connecting the complete campaign progression loop:
+    - Antariksha Sky Realm $\rightarrow$ Patala Underworld (`_spawn_patala_descent_portal`)
+    - Patala Underworld $\rightarrow$ Svar Solar Citadel (`_spawn_svar_portal`)
+    - Svar Solar Citadel $\rightarrow$ Maharloka Sanctuary (`_spawn_maharloka_portal`)
+    - Maharloka Sanctuary $\rightarrow$ Tapoloka Forge (`_spawn_tapoloka_portal`)
+    - Tapoloka Forge $\rightarrow$ Satyaloka Apex (`_spawn_satyaloka_portal`)
+    - Satyaloka Apex $\rightarrow$ Cosmic Cycle Return to Bhumi Valley (`_spawn_cosmic_cycle_portal`)
+- **Phase Q0.3 Character & Asset Integrity Forensic Audit:**
+  - Audited all enemy, NPC, and boss asset generation scripts (`scripts/generate_*_assets.py`); confirmed that all 14 enemies and 7 bosses are procedural unskinned primitive box/cylinder assemblies and formally classified them as *Incomplete Procedural Prototypes*.
+  - Completely re-engineered hero character Veer in `scripts/generate_production_veer.py` and `scripts/generate_veer_glb.py`:
+    - Added continuous anatomical limbs: upper arms, elbows, forearms (`forearm_l/r`), wrists, thighs, knees, and calf shins (`shin_l/r`).
+    - Added bronze bracers and greaves with 8 PBR material assignments.
+    - Corrected default rest posture from rigid horizontal T-pose ($+14^\circ$) to natural warrior stance ($68^\circ$ downward shoulder drop and $12^\circ$ elbow flexion).
+    - Regenerated `godot/assets/characters/veer/veer.glb` (3,806 vertices, 6,068 triangles, 24-bone skeleton, 339 KB).
+- **Phase Q0.4 Runtime Visual Quality Audit:**
+  - Rendered and captured 9 high-resolution GPU screenshots across all seven realms, diagnostic test chamber, and character studio on Intel Arc GPU with OpenGL 3.3 Compatibility renderer.
+  - Published visual evidence artifacts to `screenshots/audit_q0/` and project artifact repository.
+- **Phase Q0.5 Critical Runtime Defect Remediation:**
+  - Resolved missing `sprint` action in `godot/project.godot`.
+  - Added missing `interaction_requested` signal and emission in `player_controller_3d.gd`.
+  - Added static save validation method `is_save_valid(data: Dictionary) -> bool` to `save_system.gd`.
+  - Connected victory modal advance buttons to `HUD3D.next_realm_scene_path`.
+- **Phase Q0.6 Dual Test Framework Integrity & Suite 16 E2E Verification:**
+  - Formally differentiated 504 Vitest unit tests (legacy 2D Canvas engine in `src/`) from 106 Godot engine tests (3D engine in `godot/`).
+  - Authored Suite 16 (`godot/tests/integration/test_seven_realms_e2e_3d.gd`) validating complete scene lifecycles, player/camera instantiation, continuous humanoid skeleton rigging, and 7-realm save progression chain.
+  - Achieved 106/106 passing tests across all 16 Godot test suites (0 failures).
+  - Maintained 504/504 passing tests across all 58 Vitest files.
+- **Phase Q0.7 Production Baseline Certification & Remediation Backlog:**
+  - Established reproducible Godot 4.3 baseline.
+  - Delivered comprehensive Seven-Realm Traceability Matrix, Defect Register, and prioritized Stage Q1 remediation backlog.
+  - Verified strict append-only integrity with 0 violations via `scripts/verify-append-only.js`.
+
+---
+
+## [1.30.0] - 2026-10-24
+
+### Remediated & Upgraded (Stage Q1 — Seven-Realm Production Remediation & Polish)
+- **Phase Q1.1 High-Fidelity Character & Boss Modeling Pipeline:**
+  - Authored procedural mesh builder library `scripts/production_asset_builder.py` providing smooth parametric geometry generation: `add_cylinder_segment`, `add_ellipsoid`, `add_torus`, `add_beveled_plate`, `add_curved_blade`, `add_feathered_wing`, and `add_serpentine_spine`.
+  - Authored and executed `scripts/generate_all_production_realm_assets.py`, completely replacing procedural box/cylinder primitive placeholders with 20 high-fidelity binary GLB models featuring continuous anatomy, Vedic ornamentation, and procedural PBR textures (Albedo, Normal, Metallic/Roughness, Emissive):
+    - Act I (Bhumi): `asura_warrior.glb` (75.5 KB, 4-armed demon with curved scythe), `boss_kalanemi.glb` (115.0 KB, 4-armed corrupted general titan with void cleaver).
+    - Act II (Antariksha): `gale_falcon.glb` (45.5 KB, feathered avian predator with talons and beak), `wind_archer.glb` (53.8 KB, hovering winged celestial archer with recurve bow), `boss_matarishvan.glb` (69.8 KB, four-winged storm sovereign with tempest prana crest).
+    - Act III (Patala): `naga_spitter.glb` (33.4 KB, serpentine hooded cobra with venom sac), `naga_constrictor.glb` (62.7 KB, armored multi-segmented serpent with bladed tail), `boss_shesha_echo.glb` (65.2 KB, monumental 5-hooded celestial serpent avatar).
+    - Act IV (Svar): `surya_guardian.glb` (70.1 KB, solar armored knight with sun blade and sunburst shield), `solar_gryphon.glb` (45.0 KB, quad avian-feline beast with feathered wings), `boss_surya_avatara.glb` (74.1 KB, radiant 12-spoked solar deity with golden crown and solar aura).
+    - Act V (Maharloka): `astral_rishi.glb` (77.5 KB, levitating bearded cosmic seer with crystal staff and glowing aura), `scripture_golem.glb` (28.1 KB, monolithic granite construct with inscribed Vedic runes), `boss_brihaspati.glb` (80.8 KB, supreme celestial guru with multi-tier halo and cosmic scripture tome).
+    - Act VI (Tapoloka): `agni_berserker.glb` (60.0 KB, volcanic warrior with obsidian armor and twin flame blades), `tapas_magma_hound.glb` (46.5 KB, molten quad beast with glowing core and magma jaws), `boss_agni_rudra.glb` (81.5 KB, monumental fire titan with flame crest and flaming trisula).
+    - Act VII (Satyaloka): `moksha_seraph.glb` (75.3 KB, six-winged seraph with golden halo and radiant crystal prism), `dharma_sentinel.glb` (89.0 KB, crystalline guardian with dharma spear and lotus shield), `boss_brahma_avatara.glb` (126.8 KB, four-faced cosmic creator-dissolution titan with dharmachakra halo).
+- **Phase Q1.2 3D Spatial Audio & Sound Effects Pipeline:**
+  - Authored `scripts/generate_production_audio.py` synthesizing 8 authentic 16-bit 44.1kHz PCM sound effects into `godot/assets/audio/sfx/`: `sword_slash.wav` (resonant metallic whoosh), `parry_clink.wav` (high-frequency resonant brass ring), `dash_whoosh.wav` (aerodynamic prana burst), `crystal_pickup.wav` (celestial bell chime with harmonic overtone), `boss_roar.wav` (deep resonant rumble with roar harmonics), `altar_attune.wav` (sacred bell sequence with resonant sustain), `footstep_stone.wav` (stone impact transient), and `hit_impact.wav` (solid martial impact thud).
+  - Implemented `godot/scripts/audio/audio_manager_3d.gd`: pooled audio player manager with 16-channel 2D and 3D spatialized audio playback (`play_sfx`, `play_sfx_3d`) and global static helpers.
+  - Wired spatial sound triggers into `player_controller_3d.gd` (dash, sword combo slashes, parry deflection), `asura_warrior_3d.gd` (telegraph roar, impact), `boss_kalanemi_3d.gd` (ground slam impact, enrage roar, hit impact), `astra_shard_3d.gd` (shard pickup chime), and `shrine_3d.gd` (altar kindling attunement).
+- **Phase Q1.3 Environment & Scene UID Warning Sanitization:**
+  - Sanitized invalid placeholder synthetic UIDs (`uid://e_...` and `uid://e...`) from `.tscn` resource declarations across `GaleFalcon3D.tscn`, `WindArcher3D.tscn`, `BossMatarishvan3D.tscn`, `VayuTurbine3D.tscn`, `GrappleAnchor3D.tscn`, `AntarikshaSkyRealm3D.tscn`, and `BhumiValley3D.tscn`.
+  - Achieved 100% clean engine boot with 0 ext_resource UID warning logs in Godot 4.3 console.
+- **Phase Q1.4 Production Web Packaging & Test Verification:**
+  - Re-exported updated production Web pack `public/3d/index.pck` (2,780,656 bytes), synchronized to `dist/3d/index.pck` and `builds/web/index.pck`.
+  - Synchronized `fileSizes` in `public/3d/index.html`, `dist/3d/index.html`, and `builds/web/index.html`.
+  - Headless Godot CI: 16/16 test suites passing, 106/106 tests passing (100% green, 0 failures, 0 warnings).
+  - Vitest Unit & Integration CI: 58/58 test files passing, 504/504 tests passing (100% green, 0 failures).
+  - Validated strict append-only governance with 0 violations via `scripts/verify-append-only.js`.

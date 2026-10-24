@@ -232,5 +232,16 @@ At the twilight of the Dvapara Yuga, the cosmic anchor binding the realm of shad
 | **REQ-3D0-006** | Complete 3D Technical Demonstration Level with Elevated Stairs & Shrine | Stage 3D-0 | `godot/scenes/levels/TestChamber3D.tscn`, `SunShrine3D.tscn`, `AstraShard3D.tscn`, `HUD3D.tscn` | `test_stair_elevation_geometry`, browser gameplay verification | **VERIFIED** |
 | **REQ-3D0-007** | Automated Headless CI, Multiplatform Exports & Dual Runtime Verification | Stage 3D-0 | `.github/workflows/godot-ci.yml`, `Containerfile`, `podman-compose.yml`, `builds/` | Windows exe (81MB), Linux binary (64MB), Web wasm (34MB), 20/20 Godot tests | **VERIFIED** |
 
+---
 
+## 15. Stage Q0 — Independent Mythos 3D Audit & Verified Baseline Traceability Matrix
 
+| Req ID | Requirement Description | Stage | Source Implementation | Test Verification | Status |
+| :--- | :--- | :---: | :--- | :--- | :---: |
+| **REQ-Q0-001** | Pinned Engine & Reproducible Export Toolchain | Stage Q0 | `tools/godot/Godot_v4.3-stable_win64_console.exe`, `godot/export_presets.cfg`, `public/3d/index.pck`, `public/3d/index.html` | Headless engine `--version` (v4.3.stable.official.77dcf97d8), package size sync (1,493,712 bytes) | **VERIFIED** |
+| **REQ-Q0-002** | Seven-Realm Rendered Scene Lifecycle & Act Progression Verification | Stage Q0 | `godot/scenes/levels/` (`BhumiValley3D`, `AntarikshaSkyRealm3D`, `PatalaUnderworld3D`, `SvarSolarCitadel3D`, `MaharlokaSanctuary3D`, `TapolokaForge3D`, `SatyalokaApex3D`) | `godot/tests/integration/test_seven_realms_e2e_3d.gd` (Suite 16), GPU renderer capture | **VERIFIED** |
+| **REQ-Q0-003** | Continuous Humanoid Hero Anatomy & Natural Stance Rigging | Stage Q0 | `scripts/generate_production_veer.py`, `scripts/generate_veer_glb.py`, `godot/assets/characters/veer/veer.glb` | `test_veer_continuous_anatomy_and_animation_tracks`, 24 bones, 3,806 verts, 6,068 tris | **VERIFIED** |
+| **REQ-Q0-004** | Character & Asset Integrity Forensic Classification | Stage Q0 | `scripts/generate_satya_assets.py`, `generate_tapo_assets.py`, `generate_mahar_assets.py`, `generate_svar_assets.py`, `generate_patala_assets.py`, `generate_antariksha_assets.py` | Asset audit: all enemies and bosses classified as procedural primitive assemblies (unskinned box/cylinder) requiring Stage Q1 high-fidelity modeling | **AUDITED / INCOMPLETE** |
+| **REQ-Q0-005** | Critical Runtime Repairs & Inter-Realm Portal Graph | Stage Q0 | `godot/project.godot`, `player_controller_3d.gd`, `save_system.gd`, `shrine_3d.gd`, `hud_3d.gd`, realm level scripts | `test_seven_realms_e2e_3d.gd` (Portals: Antariksha→Patala→Svar→Maharloka→Tapoloka→Satyaloka→Bhumi), 0 script runtime errors | **VERIFIED** |
+| **REQ-Q0-006** | Dual Test Suite Separation & Suite 16 E2E Integration | Stage Q0 | `godot/tests/runner.gd`, `godot/tests/integration/test_seven_realms_e2e_3d.gd` | Vitest 504/504 pass (Legacy 2D Canvas), Godot 106/106 pass (3D Engine Suites 1-16) | **VERIFIED** |
+| **REQ-Q0-007** | Visual Quality Ground Truth & Seven-Realm Defect Register | Stage Q0 | `screenshots/audit_q0/` (9 rendered captures), `stage_q0_independent_audit_and_verified_baseline_report.md` | Artifact review, gap matrix, remediation backlog | **VERIFIED** |

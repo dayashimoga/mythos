@@ -1,6 +1,8 @@
 class_name BossKalanemi3D
 extends CharacterBody3D
 
+const AudioManager3D = preload("res://scripts/audio/audio_manager_3d.gd")
+
 ## Monumental 3D Boss Controller: Kalanemi, Corrupted Asura General
 ## Multi-phase encounter featuring:
 ## Phase 1 (100% - 50% HP): Heavy Void Cleaves, Leap Ground Slam with expanding shockwaves
@@ -256,6 +258,8 @@ func _process_leap_ground_slam(delta: float) -> void:
 func _execute_ground_slam_impact() -> void:
 	velocity = Vector3.ZERO
 	ground_slam_impact.emit(global_position)
+	AudioManager3D.play_3d("boss_roar", global_position, 0.8)
+	AudioManager3D.play_3d("hit_impact", global_position, 0.7)
 
 	if ground_slam_indicator:
 		ground_slam_indicator.visible = false
@@ -312,6 +316,7 @@ func _trigger_enrage() -> void:
 	state_timer = 2.0
 	velocity = Vector3.ZERO
 	boss_phase_changed.emit(2)
+	AudioManager3D.play_3d("boss_roar", global_position, 0.75)
 
 	# Blazing crimson Tamas aura
 	if core_light:
@@ -377,6 +382,7 @@ func take_damage_spec(attack_spec: CombatMath.AttackSpec) -> CombatMath.CombatHi
 	var result = CombatMath.resolve_attack(attack_spec, def_spec)
 	current_health = max(0, current_health - result.damage_dealt)
 	boss_health_changed.emit(current_health, max_health)
+	AudioManager3D.play_3d("hit_impact", global_position, 0.8)
 
 	# Flinch bounce
 	if visual and is_inside_tree() and current_state != State.LEAP_GROUND_SLAM and current_state != State.CHARGE_RUSH:

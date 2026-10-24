@@ -1,9 +1,9 @@
 [gd_scene load_steps=19 format=3 uid="uid://tapoloka_forge_scene"]
 
 [ext_resource type="Script" path="res://scripts/levels/tapoloka_forge_3d.gd" id="1_realm_script"]
-[ext_resource type="PackedScene" uid="uid://dp61vx580veer" path="res://scenes/player/Player3D.tscn" id="2_player"]
-[ext_resource type="PackedScene" uid="uid://bvygku61k5n04" path="res://scenes/ui/HUD3D.tscn" id="3_hud"]
-[ext_resource type="PackedScene" uid="uid://c_devi_tara_3d" path="res://scenes/entities/DeviTara3D.tscn" id="4_tara"]
+[ext_resource type="PackedScene" uid="uid://b7vyu9s2km13a" path="res://scenes/player/Player3D.tscn" id="2_player"]
+[ext_resource type="PackedScene" uid="uid://c6hu83mdu3e1a" path="res://scenes/ui/HUD3D.tscn" id="3_hud"]
+[ext_resource type="PackedScene" uid="uid://c6p87w4d3devi" path="res://scenes/entities/DeviTara3D.tscn" id="4_tara"]
 [ext_resource type="PackedScene" uid="uid://agni_berserker_scene" path="res://scenes/entities/AgniBerserker3D.tscn" id="5_berserker"]
 [ext_resource type="PackedScene" uid="uid://tapas_magma_hound_scene" path="res://scenes/entities/TapasMagmaHound3D.tscn" id="6_hound"]
 [ext_resource type="PackedScene" uid="uid://boss_agni_rudra_scene" path="res://scenes/entities/BossAgniRudra3D.tscn" id="7_boss_rudra"]

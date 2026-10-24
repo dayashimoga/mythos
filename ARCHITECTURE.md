@@ -374,5 +374,40 @@ Pure gameplay logic is decoupled from rendering and implemented in modular GDScr
 - `dialogue_runner.gd`: Branching dialogue graph with speaker attributions and history.
 - `save_system.gd`: JSON persistence with 32-bit polynomial checksum integrity verification.
 
+---
 
+## 9. Stage Q0 Seven-Realm Architecture & Baseline Verification
 
+### 9.1 Seven-Realm Scene Hierarchy and Act Progression
+The production 3D campaign is structured across seven discrete realm scenes in `godot/scenes/levels/`:
+1. **Act I — Bhumi Valley (`BhumiValley3D.tscn`):** Terrestrial valley with procedural elevation terrain, Tara NPC, Sun Altar, Asura Warrior encounters, and Boss Kalanemi.
+2. **Act II — Antariksha Sky Realm (`AntarikshaSkyRealm3D.tscn`):** Floating cloud archipelagos, Prana Glider mechanics, grapple anchor rings, Gale Falcons, Wind Archers, and Boss Matarishvan.
+3. **Act III — Patala Underworld (`PatalaUnderworld3D.tscn`):** Subterranean bioluminescent cavern, toxic venom rivers, bouncy mushroom springboards, Naga Spitters, Naga Constrictors, and Boss Shesha Echo.
+4. **Act IV — Svar Solar Citadel (`SvarSolarCitadel3D.tscn`):** High celestial crystalline citadel, solar light bridges, rotating Surya prisms, Surya Guardians, Solar Gryphons, and Boss Surya Avatara.
+5. **Act V — Maharloka Sanctuary (`MaharlokaSanctuary3D.tscn`):** Astral library and floating scriptural archives, levitation glyphs, deciphering pedestals, Astral Rishis, Scripture Golems, and Boss Sage Brihaspati.
+6. **Act VI — Tapoloka / Janaloka Forge (`TapolokaForge3D.tscn`):** Primordial volcanic crucible, magma geysers, forge attunement, Agni Berserkers, Tapas Magma Hounds, and Boss Agni Rudra.
+7. **Act VII — Satyaloka / Brahmaloka Apex (`SatyalokaApex3D.tscn`):** Transcendent cosmic wheel apex, Dharmachakra resonators, crystalline Brahman bridges, Moksha Seraphs, Dharma Sentinels, and Boss Brahma Avatara.
+
+### 9.2 Inter-Realm Navigation Graph & Portal Architecture
+The inter-realm progression graph forms a continuous linear journey through the mythological cosmos, terminating in a cosmic cycle return:
+```mermaid
+graph LR
+    Bhumi[Act I: Bhumi Valley] -->|Skyward Ascent| Antariksha[Act II: Antariksha Sky]
+    Antariksha -->|Chasm Descent Portal| Patala[Act III: Patala Underworld]
+    Patala -->|Kundalini Ascension Portal| Svar[Act IV: Svar Solar Citadel]
+    Svar -->|Solar Beam Transit Portal| Maharloka[Act V: Maharloka Sanctuary]
+    Maharloka -->|Astral Consecration Portal| Tapoloka[Act VI: Tapoloka Forge]
+    Tapoloka -->|Primordial Fire Portal| Satyaloka[Act VII: Satyaloka Apex]
+    Satyaloka -->|Moksha Cosmic Cycle Portal| Bhumi
+```
+Each level scene dynamically instantiates its departure portal upon boss defeat and Peetham consecration, communicating target scene paths via `HUD3D.next_realm_scene_path`.
+
+### 9.3 Unified UI/HUD Architecture & CanvasLayer Isolation
+All 7 realm scenes and `TestChamber3D` integrate `HUD3D.tscn` as a dedicated `CanvasLayer` (Layer 10), preventing 3D transform skewing and ensuring camera-independent HUD positioning. Realm scripts reference HUD via `@onready var hud: HUD3D = $HUD3D if has_node("HUD3D") else null`, guaranteeing safe execution across both headless tests and live game runs.
+
+### 9.4 Hero Rigging & Continuous Mesh Architecture
+Hero Veer (`godot/assets/characters/veer/veer.glb`) features a 24-bone humanoid skeleton with continuous anatomical limbs:
+- **Bone Hierarchy:** `root` $\rightarrow$ `pelvis` $\rightarrow$ `spine_01` $\rightarrow$ `chest` $\rightarrow$ `neck` $\rightarrow$ `head` + `topknot`, with bilateral limbs: `shoulder` $\rightarrow$ `arm` $\rightarrow$ `forearm` $\rightarrow$ `hand`, `thigh` $\rightarrow$ `shin` $\rightarrow$ `foot`, and dynamic `sash_01/02` bones.
+- **Weapon Socketing:** Dedicated `socket_right_hand` bone for stable sword/glaive attachment during attack animations.
+- **Natural Stance:** Rest posture calibrated with $68^\circ$ downward shoulder drop and $12^\circ$ elbow flexion, replacing rigid horizontal T-pose configurations.
+- **Mesh Density:** 3,806 vertices, 6,068 triangles, 8 PBR material slots (skin, dhoti, bronze armor, sash, bracers, boots, blade, hair).

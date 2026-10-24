@@ -83,3 +83,6 @@ static func load_game() -> Dictionary:
 		return get_default_state()
 
 	return data
+
+static func is_save_valid(data: Dictionary) -> bool:
+	return str(data.get("checksum", "")) == calculate_checksum(data)

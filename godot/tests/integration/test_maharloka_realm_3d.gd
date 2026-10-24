@@ -177,12 +177,10 @@ static func _test_astral_rishi_hover_and_cast() -> Dictionary:
 	var test_name = "test_astral_rishi_hover_and_cast"
 	var rishi = AstralRishiScript.new()
 	rishi.position = Vector3(0, 2.0, 0)
-	rishi.global_position = Vector3(0, 2.0, 0)
 
 	var dummy_player = CharacterBody3D.new()
 	dummy_player.add_to_group("player")
 	dummy_player.position = Vector3(0, 2.0, 8.0)
-	dummy_player.global_position = Vector3(0, 2.0, 8.0)
 	rishi.target_player = dummy_player
 
 	# Initial hover state
@@ -228,12 +226,10 @@ static func _test_scripture_golem_combat_and_guard() -> Dictionary:
 	var test_name = "test_scripture_golem_combat_and_guard"
 	var golem = ScriptureGolemScript.new()
 	golem.position = Vector3(0, 0, 0)
-	golem.global_position = Vector3(0, 0, 0)
 
 	var dummy_player = CharacterBody3D.new()
 	dummy_player.add_to_group("player")
 	dummy_player.position = Vector3(0, 0, 3.0)
-	dummy_player.global_position = Vector3(0, 0, 3.0)
 	golem.target_player = dummy_player
 
 	# Patrol to chase
@@ -266,12 +262,10 @@ static func _test_boss_brihaspati_phases_and_enrage() -> Dictionary:
 	var test_name = "test_boss_brihaspati_phases_and_enrage"
 	var boss = BossBrihaspatiScript.new()
 	boss.position = Vector3(0, 0, 0)
-	boss.global_position = Vector3(0, 0, 0)
 
 	var dummy_player = CharacterBody3D.new()
 	dummy_player.add_to_group("player")
 	dummy_player.position = Vector3(0, 0, 15.0)
-	dummy_player.global_position = Vector3(0, 0, 15.0)
 	boss.target_player = dummy_player
 
 	if boss.max_health != 550 or boss.current_health != 550:

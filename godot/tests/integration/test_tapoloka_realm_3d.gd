@@ -172,12 +172,10 @@ static func _test_agni_berserker_combat_and_whirlwind() -> Dictionary:
 	var test_name = "test_agni_berserker_combat_and_whirlwind"
 	var berserker = AgniBerserkerScript.new()
 	berserker.position = Vector3(0, 0, 0)
-	berserker.global_position = Vector3(0, 0, 0)
 
 	var dummy_player = CharacterBody3D.new()
 	dummy_player.add_to_group("player")
 	dummy_player.position = Vector3(0, 0, 5.0)
-	dummy_player.global_position = Vector3(0, 0, 5.0)
 	berserker.target_player = dummy_player
 
 	# Patrol to chase rush
@@ -207,12 +205,10 @@ static func _test_tapas_magma_hound_ai_and_spit() -> Dictionary:
 	var test_name = "test_tapas_magma_hound_ai_and_spit"
 	var hound = TapasMagmaHoundScript.new()
 	hound.position = Vector3(0, 0, 0)
-	hound.global_position = Vector3(0, 0, 0)
 
 	var dummy_player = CharacterBody3D.new()
 	dummy_player.add_to_group("player")
 	dummy_player.position = Vector3(0, 0, 8.0)
-	dummy_player.global_position = Vector3(0, 0, 8.0)
 	hound.target_player = dummy_player
 
 	# Initial stalk to spit telegraph
@@ -239,12 +235,10 @@ static func _test_boss_agni_rudra_phases_and_enrage() -> Dictionary:
 	var test_name = "test_boss_agni_rudra_phases_and_enrage"
 	var boss = BossAgniRudraScript.new()
 	boss.position = Vector3(0, 0, 0)
-	boss.global_position = Vector3(0, 0, 0)
 
 	var dummy_player = CharacterBody3D.new()
 	dummy_player.add_to_group("player")
 	dummy_player.position = Vector3(0, 0, 16.0)
-	dummy_player.global_position = Vector3(0, 0, 16.0)
 	boss.target_player = dummy_player
 
 	if boss.max_health != 600 or boss.current_health != 600:

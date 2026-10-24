@@ -1,9 +1,13 @@
 class_name SunShrine3D
 extends Area3D
 
+const AudioManager3D = preload("res://scripts/audio/audio_manager_3d.gd")
+
 ## 3D Sacred Sun Altar Shrine with spatial proximity prompt, golden flame ignition, and resonance audio.
 
 signal consecrated()
+signal shrine_consecrated()
+signal shrine_activated()
 
 @export var required_shards: int = 3
 var is_ignited: bool = false
@@ -11,7 +15,7 @@ var is_ignited: bool = false
 @onready var prompt_label: Label3D = $PromptLabel
 @onready var sun_light: OmniLight3D = $SunLight
 @onready var mandala_mesh: Node3D = $MandalaRoot
-@onready var flame_particles: GPUParticles3D = $FlameParticles
+@onready var flame_particles: GPUParticles3D = get_node_or_null("FlameParticles")
 
 func _ready() -> void:
 	if prompt_label:
@@ -48,6 +52,7 @@ func interact(player: PlayerController3D) -> void:
 
 func ignite_shrine() -> void:
 	is_ignited = true
+	AudioManager3D.play_3d("altar_attune", global_position)
 	if prompt_label:
 		prompt_label.text = "✦ Sun Altar Kindled! ✦"
 		prompt_label.modulate = Color(1.0, 0.85, 0.2)
@@ -55,3 +60,5 @@ func ignite_shrine() -> void:
 		var tween = create_tween()
 		tween.tween_property(sun_light, "light_energy", 4.5, 1.2)
 	consecrated.emit()
+	shrine_consecrated.emit()
+	shrine_activated.emit()

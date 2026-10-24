@@ -124,19 +124,23 @@ func find_and_lock_target() -> void:
 		cam_forward = -transform.basis.z.normalized()
 
 	var candidates: Array[Node3D] = []
-	var tree = get_tree()
+	var tree = get_tree() if is_inside_tree() else null
 	if tree:
 		# Search in group "targetable" or interactable entities
 		for node in tree.get_nodes_in_group("targetable"):
 			if node is Node3D and is_instance_valid(node) and node != target_node:
-				var to_node = node.global_position - player_pos
+				var node_pos = node.global_position if node.is_inside_tree() else node.position
+				var to_node = node_pos - player_pos
 				var dist = to_node.length()
 				if dist <= max_lock_distance:
 					candidates.append(node)
 	elif target_node and target_node.get_parent():
 		for child in target_node.get_parent().get_children():
 			if child is Node3D and child.is_in_group("targetable") and child != target_node:
-				candidates.append(child)
+				var child_pos = child.global_position if child.is_inside_tree() else child.position
+				var to_child = child_pos - player_pos
+				if to_child.length() <= max_lock_distance:
+					candidates.append(child)
 
 	if candidates.is_empty():
 		return

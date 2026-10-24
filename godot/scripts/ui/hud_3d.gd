@@ -41,6 +41,7 @@ signal ascend_requested()
 
 var player_ref: PlayerController3D = null
 var _on_dialogue_callback: Callable = Callable()
+var next_realm_scene_path: String = "res://scenes/levels/AntarikshaSkyRealm3D.tscn"
 
 func _ready() -> void:
 	if banner_panel:
@@ -77,7 +78,8 @@ func _ready() -> void:
 	if btn_ascend:
 		btn_ascend.pressed.connect(func():
 			ascend_requested.emit()
-			get_tree().change_scene_to_file("res://scenes/levels/AntarikshaSkyRealm3D.tscn")
+			if not next_realm_scene_path.is_empty():
+				get_tree().change_scene_to_file(next_realm_scene_path)
 		)
 
 	# Wire Touch buttons
@@ -234,9 +236,12 @@ func hide_defeat_overlay() -> void:
 	if defeat_overlay:
 		defeat_overlay.visible = false
 
-func show_victory_overlay(shards: int = 5, clear_time_sec: float = 120.0) -> void:
+func show_victory_overlay(shards: int = 5, clear_time_sec: float = 120.0, realm_title: String = "") -> void:
 	if victory_overlay:
 		var summary = victory_overlay.find_child("SummaryLabel", true, false) as Label
 		if summary:
-			summary.text = "✦ All %d Astra Shards Purified\n✦ General Kalanemi Cleansed\n✦ Time: %.1fs  |  Rank: S (Solar Champion)" % [shards, clear_time_sec]
+			if realm_title.is_empty():
+				summary.text = "✦ All %d Astra Shards Purified\n✦ Realm Guardian Cleansed\n✦ Time: %.1fs  |  Rank: S (Solar Champion)" % [shards, clear_time_sec]
+			else:
+				summary.text = "✦ %s Consecrated & Restored\n✦ All %d Astra Shards Purified\n✦ Time: %.1fs  |  Rank: S (Solar Champion)" % [realm_title, shards, clear_time_sec]
 		victory_overlay.visible = true

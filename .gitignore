@@ -43,3 +43,8 @@ temp/
 godot/.godot/
 builds/
 tools/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo

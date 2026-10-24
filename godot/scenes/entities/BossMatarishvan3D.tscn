@@ -1,7 +1,7 @@
 [gd_scene load_steps=6 format=3 uid="uid://boss_matarishvan_scene"]
 
 [ext_resource type="Script" path="res://scripts/entities/boss_matarishvan_3d.gd" id="1_script"]
-[ext_resource type="PackedScene" uid="uid://e_boss_matarishvan" path="res://assets/characters/enemies/boss_matarishvan.glb" id="2_glb"]
+[ext_resource type="PackedScene" path="res://assets/characters/enemies/boss_matarishvan.glb" id="2_glb"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_body"]
 radius = 0.95

@@ -193,6 +193,42 @@ godot/
 - `npm run test:godot`: Executes Godot headless test runner natively on Windows (`tools/godot/Godot_v4.3-stable_win64_console.exe`).
 - `npm run test:godot:podman`: Executes Godot headless test runner in containerized Podman environment (`barichello/godot-ci:4.3`).
 - `npm run test`: Executes full Vitest suite (including `Stage3D0MigrationAndParity.test.ts`).
-- `npm run build`: Builds TypeScript production bundles for dual-runtime web support.
 
+---
 
+## 6. Stage Q0 Seven-Realm Architecture, Testing & Build Workflows
+
+### 6.1 Seven-Realm Scene Layout
+```
+godot/scenes/levels/
+├── BhumiValley3D.tscn          # Act I: Terrestrial Valley & Boss Kalanemi
+├── AntarikshaSkyRealm3D.tscn   # Act II: Cloud Islands, Glider & Boss Matarishvan
+├── PatalaUnderworld3D.tscn     # Act III: Bioluminescent Cavern & Boss Shesha Echo
+├── SvarSolarCitadel3D.tscn     # Act IV: Solar Light Bridges & Boss Surya Avatara
+├── MaharlokaSanctuary3D.tscn   # Act V: Astral Library Archives & Boss Brihaspati
+├── TapolokaForge3D.tscn        # Act VI: Magma Geysers & Boss Agni Rudra
+├── SatyalokaApex3D.tscn        # Act VII: Cosmic Dharma Wheel & Boss Brahma Avatara
+└── TestChamber3D.tscn          # Diagnostic baseline & physics test chamber
+```
+
+### 6.2 Developer Realm Navigation Hotkeys (In-Game F1–F8)
+For rapid in-engine inspection and QA traversal, the global realm controller responds to developer navigation keys:
+- `F1`: Act I — Bhumi Valley
+- `F2`: Act II — Antariksha Sky Realm
+- `F3`: Act III — Patala Underworld
+- `F4`: Act IV — Svar Solar Citadel
+- `F5`: Act V — Maharloka Sanctuary
+- `F6`: Act VI — Tapoloka Forge
+- `F7`: Act VII — Satyaloka Apex
+- `F8`: 3D Character Studio
+
+### 6.3 Test & Build Verification Commands
+- `npm run test:godot`: Executes all 16 Godot test suites (106 unit & integration tests) in headless mode via `Godot_v4.3-stable_win64_console.exe`.
+- `npm test`: Executes legacy 2D Canvas Vitest suites (58 test files, 504 unit tests).
+- `node scripts/verify-append-only.js`: Verifies append-only integrity of `TODO.md` and `CHANGELOG.md`.
+- Export Web Package:
+  ```powershell
+  tools\godot\Godot_v4.3-stable_win64_console.exe --headless --path ./godot --export-pack "Web" "../public/3d/index.pck"
+  Copy-Item -Force public/3d/index.pck dist/3d/index.pck
+  Copy-Item -Force public/3d/index.pck builds/web/index.pck
+  ```

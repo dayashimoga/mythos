@@ -1,6 +1,8 @@
 class_name AsuraWarrior3D
 extends CharacterBody3D
 
+const AudioManager3D = preload("res://scripts/audio/audio_manager_3d.gd")
+
 ## 3D Asura Demonic Warrior with Perception, Navigation, Telegraphs, and Combat Interactions.
 ## Part of the "targetable" group for OrbitCamera3D and "enemies" group for level tracking.
 
@@ -143,6 +145,7 @@ func _start_telegraph() -> void:
 	if eye_light:
 		eye_light.light_color = Color(1.0, 0.1, 0.1)
 		eye_light.light_energy = 3.0
+	AudioManager3D.play_3d("boss_roar", global_position, 1.3)
 
 	if status_label:
 		status_label.text = "✦ ASURA SCYTHE STRIKE ✦\n[ Guard or Parry Now! ]"
@@ -228,6 +231,7 @@ func take_damage_spec(attack_spec: CombatMath.AttackSpec) -> CombatMath.CombatHi
 	var result = CombatMath.resolve_attack(attack_spec, def_spec)
 	current_health = max(0, current_health - result.damage_dealt)
 	health_changed.emit(current_health, max_health)
+	AudioManager3D.play_3d("hit_impact", global_position)
 
 	# Flinch bounce (only if inside scene tree)
 	if visual and is_inside_tree():

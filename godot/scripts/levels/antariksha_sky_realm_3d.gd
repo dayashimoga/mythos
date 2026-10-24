@@ -9,8 +9,8 @@ const WindArcherScript = preload("res://scripts/entities/wind_archer_3d.gd")
 const BossMatarishvanScript = preload("res://scripts/entities/boss_matarishvan_3d.gd")
 
 @onready var player: CharacterBody3D = $Player3D
-@onready var hud: Control = $HUD3D
-@onready var tara_npc: Area3D = $DeviTaraSky3D
+@onready var hud: HUD3D = $HUD3D if has_node("HUD3D") else null
+@onready var tara_npc: Node3D = $DeviTaraSky3D if has_node("DeviTaraSky3D") else null
 @onready var boss_matarishvan: CharacterBody3D = $BossMatarishvan3D
 @onready var gale_peetham_altar: Area3D = $HighGalePeetham3D
 
@@ -37,6 +37,7 @@ func _ready() -> void:
 		player.interaction_requested.connect(_on_dialogue_requested)
 
 	if hud:
+		hud.next_realm_scene_path = "res://scenes/levels/PatalaUnderworld3D.tscn"
 		hud.retry_requested.connect(_on_retry_requested)
 		_refresh_objective_display()
 		hud.show_banner("✦ REALM OF ANTARIKSHA: THE AERIAL VAULT ✦\nRestore the sacred wind currents of Vayu.", 5.0)
@@ -63,12 +64,15 @@ func _physics_process(_delta: float) -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo:
-		if event.keycode == KEY_F2:
-			get_tree().change_scene_to_file("res://scenes/levels/BhumiValley3D.tscn")
-		elif event.keycode == KEY_F4:
-			get_tree().change_scene_to_file("res://scenes/levels/PatalaUnderworld3D.tscn")
-		elif event.keycode == KEY_F5:
-			get_tree().change_scene_to_file("res://scenes/levels/SvarSolarCitadel3D.tscn")
+		match event.keycode:
+			KEY_F1: get_tree().change_scene_to_file("res://scenes/studio/CharacterStudio3D.tscn")
+			KEY_F2: get_tree().change_scene_to_file("res://scenes/levels/BhumiValley3D.tscn")
+			KEY_F3: get_tree().change_scene_to_file("res://scenes/levels/AntarikshaSkyRealm3D.tscn")
+			KEY_F4: get_tree().change_scene_to_file("res://scenes/levels/PatalaUnderworld3D.tscn")
+			KEY_F5: get_tree().change_scene_to_file("res://scenes/levels/SvarSolarCitadel3D.tscn")
+			KEY_F6: get_tree().change_scene_to_file("res://scenes/levels/MaharlokaSanctuary3D.tscn")
+			KEY_F7: get_tree().change_scene_to_file("res://scenes/levels/TapolokaForge3D.tscn")
+			KEY_F8: get_tree().change_scene_to_file("res://scenes/levels/SatyalokaApex3D.tscn")
 
 func _refresh_objective_display() -> void:
 	if not quest_mgr or not hud:

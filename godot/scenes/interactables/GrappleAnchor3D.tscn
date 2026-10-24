@@ -1,7 +1,7 @@
 [gd_scene load_steps=5 format=3 uid="uid://grapple_anchor_scene"]
 
 [ext_resource type="Script" path="res://scripts/interactables/grapple_anchor_3d.gd" id="1_script"]
-[ext_resource type="PackedScene" uid="uid://e_grapple_ring" path="res://assets/environment/grapple_anchor_ring.glb" id="2_glb"]
+[ext_resource type="PackedScene" path="res://assets/environment/grapple_anchor_ring.glb" id="2_glb"]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_detect"]
 radius = 4.0

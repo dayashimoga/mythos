@@ -511,6 +511,79 @@ class DetailedMeshBuilder:
             self.indices.extend([b0+2, b0+3, b1+3, b0+2, b1+3, b1+2])
             self.indices.extend([b0+3, b0+0, b1+0, b0+3, b1+0, b1+3])
 
+    def add_cylinder_segment(self, start_pos, end_pos, r_start, r_end, radial_segments=16, rings=4, primary_joint=0, secondary_joint=None, blend_start=1.0, blend_end=0.0):
+        sx, sy, sz = start_pos
+        ex, ey, ez = end_pos
+        dx = ex - sx
+        dy = ey - sy
+        dz = ez - sz
+        length = math.sqrt(dx*dx + dy*dy + dz*dz)
+        if length < 1e-5:
+            return
+        ax = dx / length
+        ay = dy / length
+        az = dz / length
+
+        if abs(ay) < 0.9:
+            px, py, pz = 0.0, 1.0, 0.0
+        else:
+            px, py, pz = 1.0, 0.0, 0.0
+        ux = ay * pz - az * py
+        uy = az * px - ax * pz
+        uz = ax * py - ay * px
+        u_len = math.sqrt(ux*ux + uy*uy + uz*uz)
+        ux /= u_len
+        uy /= u_len
+        uz /= u_len
+        vx = ay * uz - az * uy
+        vy = az * ux - ax * uz
+        vz = ax * uy - ay * ux
+
+        base_idx = len(self.positions)
+        j0 = primary_joint
+        j1 = secondary_joint if secondary_joint is not None else primary_joint
+
+        for r in range(rings + 1):
+            t = r / rings
+            cx = sx + dx * t
+            cy = sy + dy * t
+            cz = sz + dz * t
+            radius = r_start + (r_end - r_start) * t
+            w0 = blend_start + (blend_end - blend_start) * t
+            w1 = 1.0 - w0
+
+            for s in range(radial_segments):
+                theta = (s / radial_segments) * 2.0 * math.pi
+                cos_t = math.cos(theta)
+                sin_t = math.sin(theta)
+
+                nx = cos_t * ux + sin_t * vx
+                ny = cos_t * uy + sin_t * vy
+                nz = cos_t * uz + sin_t * vz
+
+                x = cx + nx * radius
+                y = cy + ny * radius
+                z = cz + nz * radius
+
+                u = s / radial_segments
+                v = t
+
+                self.positions.append((x, y, z))
+                self.normals.append((nx, ny, nz))
+                self.uvs.append((u, v))
+                self.joints.append([j0, j1, 0, 0])
+                self.weights.append([w0, w1, 0.0, 0.0])
+
+        for r in range(rings):
+            for s in range(radial_segments):
+                s_next = (s + 1) % radial_segments
+                i00 = base_idx + r * radial_segments + s
+                i01 = base_idx + r * radial_segments + s_next
+                i10 = base_idx + (r + 1) * radial_segments + s
+                i11 = base_idx + (r + 1) * radial_segments + s_next
+
+                self.indices.extend([i00, i01, i11, i00, i11, i10])
+
 # ---------------------------------------------------------
 # Main Generator Routine
 # ---------------------------------------------------------
@@ -705,39 +778,31 @@ def generate_production_veer_glb(output_path):
     ]
     mesh_skin.add_lathed_surface(center=(0.0, 1.54, 0.0), profile_points=neck_profile, radial_segments=16, primary_joint=4, secondary_joint=3, blend_ratio=0.7)
 
-    arm_l_profile = [
-        ( 0.12, 0.095, 0.095),
-        ( 0.00, 0.085, 0.085),
-        (-0.14, 0.072, 0.072),
-    ]
-    mesh_skin.add_lathed_surface(center=(-0.34, 1.42, 0.0), profile_points=arm_l_profile, radial_segments=16, primary_joint=8, secondary_joint=7, blend_ratio=0.85)
-
-    arm_r_profile = [
-        ( 0.12, 0.095, 0.095),
-        ( 0.00, 0.085, 0.085),
-        (-0.14, 0.072, 0.072),
-    ]
-    mesh_skin.add_lathed_surface(center=( 0.34, 1.42, 0.0), profile_points=arm_r_profile, radial_segments=16, primary_joint=12, secondary_joint=11, blend_ratio=0.85)
-
+    # Arms (Upper Arm + Forearm + Elbow + Hands)
+    # Left Arm
+    mesh_skin.add_cylinder_segment(start_pos=(-0.20, 1.45, 0.0), end_pos=(-0.56, 1.40, 0.0), r_start=0.088, r_end=0.072, radial_segments=16, rings=4, primary_joint=8, secondary_joint=7, blend_start=0.3, blend_end=1.0)
+    mesh_skin.add_smooth_sphere(center=(-0.56, 1.40, 0.0), radius=(0.065, 0.062, 0.062), rings=6, sectors=8, primary_joint=9, secondary_joint=8, blend_ratio=0.5)
+    mesh_skin.add_cylinder_segment(start_pos=(-0.56, 1.40, 0.0), end_pos=(-0.74, 1.38, 0.0), r_start=0.068, r_end=0.052, radial_segments=16, rings=4, primary_joint=9, secondary_joint=10, blend_start=1.0, blend_end=0.2)
     mesh_skin.add_smooth_sphere(center=(-0.76, 1.38, 0.0), radius=(0.055, 0.038, 0.055), rings=8, sectors=10, primary_joint=10)
-    mesh_skin.add_smooth_sphere(center=( 0.76, 1.38, 0.0), radius=(0.055, 0.038, 0.055), rings=8, sectors=10, primary_joint=14)
 
-    thigh_l_profile = [
-        ( 0.10, 0.115, 0.120),
-        (-0.10, 0.098, 0.105),
-        (-0.22, 0.082, 0.088),
-    ]
-    mesh_skin.add_lathed_surface(center=(-0.16, 0.72, 0.0), profile_points=thigh_l_profile, radial_segments=16, primary_joint=15, secondary_joint=16, blend_ratio=0.7)
+    # Right Arm
+    mesh_skin.add_cylinder_segment(start_pos=(0.20, 1.45, 0.0), end_pos=(0.56, 1.40, 0.0), r_start=0.088, r_end=0.072, radial_segments=16, rings=4, primary_joint=12, secondary_joint=11, blend_start=0.3, blend_end=1.0)
+    mesh_skin.add_smooth_sphere(center=(0.56, 1.40, 0.0), radius=(0.065, 0.062, 0.062), rings=6, sectors=8, primary_joint=13, secondary_joint=12, blend_ratio=0.5)
+    mesh_skin.add_cylinder_segment(start_pos=(0.56, 1.40, 0.0), end_pos=(0.74, 1.38, 0.0), r_start=0.068, r_end=0.052, radial_segments=16, rings=4, primary_joint=13, secondary_joint=14, blend_start=1.0, blend_end=0.2)
+    mesh_skin.add_smooth_sphere(center=(0.76, 1.38, 0.0), radius=(0.055, 0.038, 0.055), rings=8, sectors=10, primary_joint=14)
 
-    thigh_r_profile = [
-        ( 0.10, 0.115, 0.120),
-        (-0.10, 0.098, 0.105),
-        (-0.22, 0.082, 0.088),
-    ]
-    mesh_skin.add_lathed_surface(center=( 0.16, 0.72, 0.0), profile_points=thigh_r_profile, radial_segments=16, primary_joint=18, secondary_joint=19, blend_ratio=0.7)
-
+    # Legs (Thigh + Knee + Shin/Calf + Feet)
+    # Left Leg
+    mesh_skin.add_cylinder_segment(start_pos=(-0.16, 0.90, 0.0), end_pos=(-0.16, 0.48, 0.0), r_start=0.115, r_end=0.082, radial_segments=16, rings=4, primary_joint=15, secondary_joint=16, blend_start=0.9, blend_end=0.2)
+    mesh_skin.add_smooth_sphere(center=(-0.16, 0.48, 0.0), radius=(0.080, 0.078, 0.082), rings=6, sectors=10, primary_joint=16, secondary_joint=15, blend_ratio=0.5)
+    mesh_skin.add_cylinder_segment(start_pos=(-0.16, 0.48, 0.0), end_pos=(-0.16, 0.10, 0.04), r_start=0.078, r_end=0.055, radial_segments=16, rings=5, primary_joint=16, secondary_joint=17, blend_start=1.0, blend_end=0.2)
     mesh_skin.add_smooth_sphere(center=(-0.16, 0.05, 0.06), radius=(0.065, 0.045, 0.120), rings=8, sectors=12, primary_joint=17)
-    mesh_skin.add_smooth_sphere(center=( 0.16, 0.05, 0.06), radius=(0.065, 0.045, 0.120), rings=8, sectors=12, primary_joint=20)
+
+    # Right Leg
+    mesh_skin.add_cylinder_segment(start_pos=(0.16, 0.90, 0.0), end_pos=(0.16, 0.48, 0.0), r_start=0.115, r_end=0.082, radial_segments=16, rings=4, primary_joint=18, secondary_joint=19, blend_start=0.9, blend_end=0.2)
+    mesh_skin.add_smooth_sphere(center=(0.16, 0.48, 0.0), radius=(0.080, 0.078, 0.082), rings=6, sectors=10, primary_joint=19, secondary_joint=18, blend_ratio=0.5)
+    mesh_skin.add_cylinder_segment(start_pos=(0.16, 0.48, 0.0), end_pos=(0.16, 0.10, 0.04), r_start=0.078, r_end=0.055, radial_segments=16, rings=5, primary_joint=19, secondary_joint=20, blend_start=1.0, blend_end=0.2)
+    mesh_skin.add_smooth_sphere(center=(0.16, 0.05, 0.06), radius=(0.065, 0.045, 0.120), rings=8, sectors=12, primary_joint=20)
     primitives_list.append(mesh_skin)
 
     # Cuirass (Mat 1)
@@ -753,13 +818,13 @@ def generate_production_veer_glb(output_path):
     mesh_cuirass.add_smooth_sphere(center=(-0.24, 1.48, 0.0), radius=(0.095, 0.075, 0.125), rings=8, sectors=12, primary_joint=7)
     mesh_cuirass.add_smooth_sphere(center=( 0.24, 1.48, 0.0), radius=(0.095, 0.075, 0.125), rings=8, sectors=12, primary_joint=11)
 
-    greave_l_profile = [
-        (-0.18, 0.075, 0.080),
-        ( 0.00, 0.095, 0.095),
-        ( 0.18, 0.090, 0.090),
-    ]
-    mesh_cuirass.add_lathed_surface(center=(-0.16, 0.44, 0.02), profile_points=greave_l_profile, radial_segments=16, primary_joint=16)
-    mesh_cuirass.add_lathed_surface(center=( 0.16, 0.44, 0.02), profile_points=greave_l_profile, radial_segments=16, primary_joint=19)
+    # Bronze Solar Bracers
+    mesh_cuirass.add_cylinder_segment(start_pos=(-0.58, 1.40, 0.0), end_pos=(-0.72, 1.38, 0.0), r_start=0.076, r_end=0.058, radial_segments=16, rings=3, primary_joint=9, secondary_joint=10, blend_start=0.9, blend_end=0.1)
+    mesh_cuirass.add_cylinder_segment(start_pos=(0.58, 1.40, 0.0), end_pos=(0.72, 1.38, 0.0), r_start=0.076, r_end=0.058, radial_segments=16, rings=3, primary_joint=13, secondary_joint=14, blend_start=0.9, blend_end=0.1)
+
+    # Bronze Greaves
+    mesh_cuirass.add_cylinder_segment(start_pos=(-0.16, 0.46, 0.01), end_pos=(-0.16, 0.14, 0.03), r_start=0.086, r_end=0.065, radial_segments=16, rings=4, primary_joint=16, secondary_joint=17, blend_start=0.9, blend_end=0.1)
+    mesh_cuirass.add_cylinder_segment(start_pos=(0.16, 0.46, 0.01), end_pos=(0.16, 0.14, 0.03), r_start=0.086, r_end=0.065, radial_segments=16, rings=4, primary_joint=19, secondary_joint=20, blend_start=0.9, blend_end=0.1)
     primitives_list.append(mesh_cuirass)
 
     # Gold Medallion & Belt (Mat 2)
@@ -1023,14 +1088,24 @@ def generate_production_veer_glb(output_path):
             (2.4, euler_to_quat(0.0, 0.0, 0.0)),
         ],
         "arm_l": [
-            (0.0, euler_to_quat(math.radians(10.0), 0.0, math.radians(-10.0))),
-            (1.2, euler_to_quat(math.radians(14.0), 0.0, math.radians(-12.0))),
-            (2.4, euler_to_quat(math.radians(10.0), 0.0, math.radians(-10.0))),
+            (0.0, euler_to_quat(math.radians(8.0), 0.0, math.radians(68.0))),
+            (1.2, euler_to_quat(math.radians(10.0), 0.0, math.radians(70.0))),
+            (2.4, euler_to_quat(math.radians(8.0), 0.0, math.radians(68.0))),
+        ],
+        "forearm_l": [
+            (0.0, euler_to_quat(math.radians(18.0), math.radians(8.0), 0.0)),
+            (1.2, euler_to_quat(math.radians(22.0), math.radians(10.0), 0.0)),
+            (2.4, euler_to_quat(math.radians(18.0), math.radians(8.0), 0.0)),
         ],
         "arm_r": [
-            (0.0, euler_to_quat(math.radians(-24.0), math.radians(-12.0), math.radians(14.0))),
-            (1.2, euler_to_quat(math.radians(-20.0), math.radians(-12.0), math.radians(12.0))),
-            (2.4, euler_to_quat(math.radians(-24.0), math.radians(-12.0), math.radians(14.0))),
+            (0.0, euler_to_quat(math.radians(8.0), 0.0, math.radians(-68.0))),
+            (1.2, euler_to_quat(math.radians(10.0), 0.0, math.radians(-70.0))),
+            (2.4, euler_to_quat(math.radians(8.0), 0.0, math.radians(-68.0))),
+        ],
+        "forearm_r": [
+            (0.0, euler_to_quat(math.radians(18.0), math.radians(-8.0), 0.0)),
+            (1.2, euler_to_quat(math.radians(22.0), math.radians(-10.0), 0.0)),
+            (2.4, euler_to_quat(math.radians(18.0), math.radians(-8.0), 0.0)),
         ],
         "sash_01": [
             (0.0, euler_to_quat(0.0, 0.0, 0.0)),
@@ -1071,14 +1146,24 @@ def generate_production_veer_glb(output_path):
             (1.0, euler_to_quat(math.radians(6.0), 0.0, 0.0)),
         ],
         "arm_l": [
-            (0.0, euler_to_quat(math.radians(24.0), 0.0, math.radians(-10.0))),
-            (0.5, euler_to_quat(math.radians(-26.0), 0.0, math.radians(-10.0))),
-            (1.0, euler_to_quat(math.radians(24.0), 0.0, math.radians(-10.0))),
+            (0.0, euler_to_quat(math.radians(22.0), 0.0, math.radians(68.0))),
+            (0.5, euler_to_quat(math.radians(-22.0), 0.0, math.radians(68.0))),
+            (1.0, euler_to_quat(math.radians(22.0), 0.0, math.radians(68.0))),
+        ],
+        "forearm_l": [
+            (0.0, euler_to_quat(math.radians(22.0), 0.0, 0.0)),
+            (0.5, euler_to_quat(math.radians(34.0), 0.0, 0.0)),
+            (1.0, euler_to_quat(math.radians(22.0), 0.0, 0.0)),
         ],
         "arm_r": [
-            (0.0, euler_to_quat(math.radians(-26.0), 0.0, math.radians(10.0))),
-            (0.5, euler_to_quat(math.radians(24.0), 0.0, math.radians(10.0))),
-            (1.0, euler_to_quat(math.radians(-26.0), 0.0, math.radians(10.0))),
+            (0.0, euler_to_quat(math.radians(-22.0), 0.0, math.radians(-68.0))),
+            (0.5, euler_to_quat(math.radians(22.0), 0.0, math.radians(-68.0))),
+            (1.0, euler_to_quat(math.radians(-22.0), 0.0, math.radians(-68.0))),
+        ],
+        "forearm_r": [
+            (0.0, euler_to_quat(math.radians(34.0), 0.0, 0.0)),
+            (0.5, euler_to_quat(math.radians(22.0), 0.0, 0.0)),
+            (1.0, euler_to_quat(math.radians(34.0), 0.0, 0.0)),
         ],
         "spine_01": [
             (0.0, euler_to_quat(math.radians(3.0), math.radians(5.0), 0.0)),
@@ -1119,14 +1204,24 @@ def generate_production_veer_glb(output_path):
             (0.75, euler_to_quat(math.radians(18.0), 0.0, 0.0)),
         ],
         "arm_l": [
-            (0.0, euler_to_quat(math.radians(42.0), 0.0, math.radians(-12.0))),
-            (0.375, euler_to_quat(math.radians(-45.0), 0.0, math.radians(-12.0))),
-            (0.75, euler_to_quat(math.radians(42.0), 0.0, math.radians(-12.0))),
+            (0.0, euler_to_quat(math.radians(36.0), 0.0, math.radians(64.0))),
+            (0.375, euler_to_quat(math.radians(-36.0), 0.0, math.radians(64.0))),
+            (0.75, euler_to_quat(math.radians(36.0), 0.0, math.radians(64.0))),
+        ],
+        "forearm_l": [
+            (0.0, euler_to_quat(math.radians(45.0), 0.0, 0.0)),
+            (0.375, euler_to_quat(math.radians(60.0), 0.0, 0.0)),
+            (0.75, euler_to_quat(math.radians(45.0), 0.0, 0.0)),
         ],
         "arm_r": [
-            (0.0, euler_to_quat(math.radians(-45.0), 0.0, math.radians(12.0))),
-            (0.375, euler_to_quat(math.radians(42.0), 0.0, math.radians(12.0))),
-            (0.75, euler_to_quat(math.radians(-45.0), 0.0, math.radians(12.0))),
+            (0.0, euler_to_quat(math.radians(-36.0), 0.0, math.radians(-64.0))),
+            (0.375, euler_to_quat(math.radians(36.0), 0.0, math.radians(-64.0))),
+            (0.75, euler_to_quat(math.radians(-36.0), 0.0, math.radians(-64.0))),
+        ],
+        "forearm_r": [
+            (0.0, euler_to_quat(math.radians(60.0), 0.0, 0.0)),
+            (0.375, euler_to_quat(math.radians(45.0), 0.0, 0.0)),
+            (0.75, euler_to_quat(math.radians(60.0), 0.0, 0.0)),
         ],
         "spine_01": [
             (0.0, euler_to_quat(math.radians(10.0), math.radians(6.0), 0.0)),
@@ -1158,6 +1253,26 @@ def generate_production_veer_glb(output_path):
             (0.0, euler_to_quat(math.radians(88.0), 0.0, 0.0)),
             (0.275, euler_to_quat(math.radians(35.0), 0.0, 0.0)),
             (0.55, euler_to_quat(math.radians(88.0), 0.0, 0.0)),
+        ],
+        "arm_l": [
+            (0.0, euler_to_quat(math.radians(48.0), 0.0, math.radians(60.0))),
+            (0.275, euler_to_quat(math.radians(-48.0), 0.0, math.radians(60.0))),
+            (0.55, euler_to_quat(math.radians(48.0), 0.0, math.radians(60.0))),
+        ],
+        "forearm_l": [
+            (0.0, euler_to_quat(math.radians(55.0), 0.0, 0.0)),
+            (0.275, euler_to_quat(math.radians(75.0), 0.0, 0.0)),
+            (0.55, euler_to_quat(math.radians(55.0), 0.0, 0.0)),
+        ],
+        "arm_r": [
+            (0.0, euler_to_quat(math.radians(-48.0), 0.0, math.radians(-60.0))),
+            (0.275, euler_to_quat(math.radians(48.0), 0.0, math.radians(-60.0))),
+            (0.55, euler_to_quat(math.radians(-48.0), 0.0, math.radians(-60.0))),
+        ],
+        "forearm_r": [
+            (0.0, euler_to_quat(math.radians(75.0), 0.0, 0.0)),
+            (0.275, euler_to_quat(math.radians(55.0), 0.0, 0.0)),
+            (0.55, euler_to_quat(math.radians(75.0), 0.0, 0.0)),
         ],
         "chest": [
             (0.0, euler_to_quat(math.radians(16.0), 0.0, 0.0)),

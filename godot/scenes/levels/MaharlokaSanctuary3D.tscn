@@ -1,9 +1,9 @@
 [gd_scene load_steps=20 format=3 uid="uid://maharloka_sanctuary_scene"]
 
 [ext_resource type="Script" path="res://scripts/levels/maharloka_sanctuary_3d.gd" id="1_realm_script"]
-[ext_resource type="PackedScene" uid="uid://dp61vx580veer" path="res://scenes/player/Player3D.tscn" id="2_player"]
-[ext_resource type="PackedScene" uid="uid://bvygku61k5n04" path="res://scenes/ui/HUD3D.tscn" id="3_hud"]
-[ext_resource type="PackedScene" uid="uid://c_devi_tara_3d" path="res://scenes/entities/DeviTara3D.tscn" id="4_tara"]
+[ext_resource type="PackedScene" uid="uid://b7vyu9s2km13a" path="res://scenes/player/Player3D.tscn" id="2_player"]
+[ext_resource type="PackedScene" uid="uid://c6hu83mdu3e1a" path="res://scenes/ui/HUD3D.tscn" id="3_hud"]
+[ext_resource type="PackedScene" uid="uid://c6p87w4d3devi" path="res://scenes/entities/DeviTara3D.tscn" id="4_tara"]
 [ext_resource type="PackedScene" uid="uid://astral_rishi_scene" path="res://scenes/entities/AstralRishi3D.tscn" id="5_rishi"]
 [ext_resource type="PackedScene" uid="uid://scripture_golem_scene" path="res://scenes/entities/ScriptureGolem3D.tscn" id="6_golem"]
 [ext_resource type="PackedScene" uid="uid://boss_brihaspati_scene" path="res://scenes/entities/BossBrihaspati3D.tscn" id="7_boss_brihaspati"]

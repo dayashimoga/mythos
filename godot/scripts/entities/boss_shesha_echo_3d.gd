@@ -261,7 +261,9 @@ func take_damage_spec(attack_spec: CombatMath.AttackSpec) -> CombatMath.CombatHi
 	if current_state == State.DEFEATED:
 		return CombatMath.CombatHitResult.new()
 
-	var def_spec = CombatMath.DefenseSpec.new("boss_shesha_echo", global_position, -global_transform.basis.z)
+	var my_pos = global_position if is_inside_tree() else position
+	var my_facing = -global_transform.basis.z if is_inside_tree() else Vector3.FORWARD
+	var def_spec = CombatMath.DefenseSpec.new("boss_shesha_echo", my_pos, my_facing)
 	var res = CombatMath.resolve_attack(attack_spec, def_spec)
 
 	var prev_hp = current_health

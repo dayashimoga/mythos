@@ -1,9 +1,9 @@
 [gd_scene load_steps=18 format=3 uid="uid://svar_solar_citadel_scene"]
 
 [ext_resource type="Script" path="res://scripts/levels/svar_solar_citadel_3d.gd" id="1_realm_script"]
-[ext_resource type="PackedScene" uid="uid://dp61vx580veer" path="res://scenes/player/Player3D.tscn" id="2_player"]
-[ext_resource type="PackedScene" uid="uid://bvygku61k5n04" path="res://scenes/ui/HUD3D.tscn" id="3_hud"]
-[ext_resource type="PackedScene" uid="uid://c_devi_tara_3d" path="res://scenes/entities/DeviTara3D.tscn" id="4_tara"]
+[ext_resource type="PackedScene" uid="uid://b7vyu9s2km13a" path="res://scenes/player/Player3D.tscn" id="2_player"]
+[ext_resource type="PackedScene" uid="uid://c6hu83mdu3e1a" path="res://scenes/ui/HUD3D.tscn" id="3_hud"]
+[ext_resource type="PackedScene" uid="uid://c6p87w4d3devi" path="res://scenes/entities/DeviTara3D.tscn" id="4_tara"]
 [ext_resource type="PackedScene" uid="uid://surya_guardian_scene" path="res://scenes/entities/SuryaGuardian3D.tscn" id="5_guardian"]
 [ext_resource type="PackedScene" uid="uid://solar_gryphon_scene" path="res://scenes/entities/SolarGryphon3D.tscn" id="6_gryphon"]
 [ext_resource type="PackedScene" uid="uid://boss_surya_avatara_scene" path="res://scenes/entities/BossSuryaAvatara3D.tscn" id="7_boss_surya"]

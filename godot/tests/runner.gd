@@ -12,6 +12,9 @@ func _init() -> void:
 	var total_tests = 0
 	var passed_tests = 0
 	var failed_tests = 0
+	var audio_manager_script = load("res://scripts/audio/audio_manager_3d.gd")
+	var audio_mgr = audio_manager_script.new()
+	root.add_child(audio_mgr)
 
 	var test_combat_math = load("res://tests/unit/test_combat_math.gd")
 	var test_quest_manager = load("res://tests/unit/test_quest_manager.gd")
@@ -28,6 +31,7 @@ func _init() -> void:
 	var test_maharloka_realm = load("res://tests/integration/test_maharloka_realm_3d.gd")
 	var test_tapoloka_realm = load("res://tests/integration/test_tapoloka_realm_3d.gd")
 	var test_satyaloka_realm = load("res://tests/integration/test_satyaloka_realm_3d.gd")
+	var test_seven_realms_e2e = load("res://tests/integration/test_seven_realms_e2e_3d.gd")
 
 	var suites = [
 		{"name": "Combat Mathematics (Domain)", "runner": test_combat_math},
@@ -44,7 +48,8 @@ func _init() -> void:
 		{"name": "Chapter IV — Realm of Svar & Celestial Solar Citadels (Stage I)", "runner": test_svar_realm},
 		{"name": "Chapter V — Realm of Maharloka & Astral Libraries (Stage J)", "runner": test_maharloka_realm},
 		{"name": "Chapter VI — Realm of Janaloka / Tapoloka & Agni's Primordial Forge (Stage K)", "runner": test_tapoloka_realm},
-		{"name": "Chapter VII — Realm of Satyaloka / Brahmaloka & Cosmic Dharma (Stage L)", "runner": test_satyaloka_realm}
+		{"name": "Chapter VII — Realm of Satyaloka / Brahmaloka & Cosmic Dharma (Stage L)", "runner": test_satyaloka_realm},
+		{"name": "Suite 16: Complete Seven-Realm Rendered Scene Lifecycle & E2E Progression (Stage Q0)", "runner": test_seven_realms_e2e}
 	]
 
 	for suite in suites:

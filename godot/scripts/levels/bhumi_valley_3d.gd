@@ -359,13 +359,19 @@ func _handle_debug_navigation() -> void:
 	if Input.is_key_pressed(KEY_F1):
 		get_tree().change_scene_to_file("res://scenes/studio/CharacterStudio3D.tscn")
 	elif Input.is_key_pressed(KEY_F2):
-		get_tree().change_scene_to_file("res://scenes/levels/TestChamber3D.tscn")
+		get_tree().change_scene_to_file("res://scenes/levels/BhumiValley3D.tscn")
 	elif Input.is_key_pressed(KEY_F3):
 		get_tree().change_scene_to_file("res://scenes/levels/AntarikshaSkyRealm3D.tscn")
 	elif Input.is_key_pressed(KEY_F4):
 		get_tree().change_scene_to_file("res://scenes/levels/PatalaUnderworld3D.tscn")
 	elif Input.is_key_pressed(KEY_F5):
 		get_tree().change_scene_to_file("res://scenes/levels/SvarSolarCitadel3D.tscn")
+	elif Input.is_key_pressed(KEY_F6):
+		get_tree().change_scene_to_file("res://scenes/levels/MaharlokaSanctuary3D.tscn")
+	elif Input.is_key_pressed(KEY_F7):
+		get_tree().change_scene_to_file("res://scenes/levels/TapolokaForge3D.tscn")
+	elif Input.is_key_pressed(KEY_F8):
+		get_tree().change_scene_to_file("res://scenes/levels/SatyalokaApex3D.tscn")
 
 func _spawn_antariksha_portal() -> void:
 	var portal_pos = Vector3(12.0, 10.0, 32.0)

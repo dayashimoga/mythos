@@ -158,7 +158,9 @@ func take_damage_spec(attack_spec: CombatMath.AttackSpec) -> CombatMath.CombatHi
 	if current_state == State.DEFEATED:
 		return CombatMath.CombatHitResult.new()
 
-	var def_spec = CombatMath.DefenseSpec.new("naga_spitter", global_position, -global_transform.basis.z)
+	var my_pos = global_position if is_inside_tree() else position
+	var my_facing = -global_transform.basis.z if is_inside_tree() else Vector3.FORWARD
+	var def_spec = CombatMath.DefenseSpec.new("naga_spitter", my_pos, my_facing)
 	var res = CombatMath.resolve_attack(attack_spec, def_spec)
 
 	current_health = max(0, current_health - res.damage_dealt)

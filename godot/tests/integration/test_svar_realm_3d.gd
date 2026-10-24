@@ -174,9 +174,7 @@ static func _test_surya_guardian_combat_and_shield_block() -> Dictionary:
 	guardian.target_player = player
 
 	guardian.position = Vector3(0, 0, 8.0)
-	guardian.global_position = Vector3(0, 0, 8.0)
 	player.position = Vector3.ZERO
-	player.global_position = Vector3.ZERO
 
 	# Test telegraph transition
 	guardian.current_state = SuryaGuardianScript.State.SPEAR_CHARGE_TELEGRAPH
@@ -215,9 +213,7 @@ static func _test_solar_gryphon_hover_and_screech() -> Dictionary:
 	gryphon.target_player = player
 
 	gryphon.position = Vector3(0, 0, 6.0)
-	gryphon.global_position = Vector3(0, 0, 6.0)
 	player.position = Vector3.ZERO
-	player.global_position = Vector3.ZERO
 
 	var screech_signal = {"fired": false}
 	gryphon.sunflare_screech.connect(func(_o, _d): screech_signal["fired"] = true)

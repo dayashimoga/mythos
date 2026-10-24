@@ -1,6 +1,8 @@
 class_name PlayerController3D
 extends CharacterBody3D
 
+const AudioManager3D = preload("res://scripts/audio/audio_manager_3d.gd")
+
 ## Production 3D Third-Person Character Controller for Veer (Solar Guardian).
 ## Features:
 ## - Full skinned humanoid mesh with 24-bone Skeleton3D
@@ -17,6 +19,7 @@ extends CharacterBody3D
 signal health_changed(current: int, max_val: int)
 signal shards_changed(count: int)
 signal interacted_with(target_name: String)
+signal interaction_requested(target_name: String)
 signal locomotion_state_changed(state: String, speed: float)
 signal attack_hit(target: Node3D, damage: int, is_crit: bool)
 
@@ -234,7 +237,8 @@ func _physics_process(delta: float) -> void:
 		move_dir = (forward * -input_dir.y + right * input_dir.x).normalized()
 
 	# 8. Determine Target Speed
-	var is_sprinting = (Input.is_key_pressed(KEY_SHIFT) or Input.is_action_pressed("sprint") or Input.is_joy_button_pressed(0, JOY_BUTTON_LEFT_STICK)) and not is_guarding
+	var sprint_pressed = Input.is_key_pressed(KEY_SHIFT) or (InputMap.has_action("sprint") and Input.is_action_pressed("sprint")) or Input.is_joy_button_pressed(0, JOY_BUTTON_LEFT_STICK)
+	var is_sprinting = sprint_pressed and not is_guarding
 	var target_speed = 0.0
 	if move_dir.length_squared() > 0.001:
 		if is_guarding:
@@ -345,6 +349,7 @@ func _trigger_dash() -> void:
 	is_dashing = true
 	dash_timer = dash_duration
 	dash_cooldown_timer = dash_cooldown
+	AudioManager3D.play("dash_whoosh")
 
 	var horiz_vel = Vector3(velocity.x, 0, velocity.z)
 	if horiz_vel.length() > 0.5:
@@ -362,6 +367,8 @@ func _trigger_attack() -> void:
 	if combo_index > 3:
 		combo_index = 1
 
+	AudioManager3D.play("sword_slash", 1.0 + (combo_index - 1) * 0.15)
+
 	if combo_index == 1:
 		attack_duration = 0.35
 	elif combo_index == 2:
@@ -373,6 +380,7 @@ func _trigger_attack() -> void:
 
 func _trigger_parry() -> void:
 	parry_window_timer = parry_duration
+	AudioManager3D.play("parry_clink")
 	_play_anim("parry", 0.08, 1.2)
 
 func _trigger_interaction() -> void:
@@ -384,6 +392,7 @@ func _trigger_interaction() -> void:
 		if col and col.has_method("interact"):
 			col.interact(self)
 			interacted_with.emit(col.name)
+			interaction_requested.emit(col.name)
 			return
 
 	# 2. Second priority: Proximity Area
@@ -393,10 +402,12 @@ func _trigger_interaction() -> void:
 			if area.has_method("interact"):
 				area.interact(self)
 				interacted_with.emit(area.name)
+				interaction_requested.emit(area.name)
 				return
 			elif area.get_parent() and area.get_parent().has_method("interact"):
 				area.get_parent().interact(self)
 				interacted_with.emit(area.get_parent().name)
+				interaction_requested.emit(area.get_parent().name)
 				return
 
 func _on_melee_hitbox_area_entered(area: Area3D) -> void:
@@ -424,7 +435,8 @@ func _handle_melee_hit(target: Node3D) -> void:
 		dmg = int(attack_damage_base * 2.4)
 		poise_dmg = 75.0
 
-	var attack_spec = CombatMath.AttackSpec.new("veer", dmg, poise_dmg, global_position)
+	var p_pos_melee = global_position if is_inside_tree() else position
+	var attack_spec = CombatMath.AttackSpec.new("veer", dmg, poise_dmg, p_pos_melee)
 	if target.has_method("take_damage_spec"):
 		var res = target.take_damage_spec(attack_spec)
 		attack_hit.emit(target, res.damage_dealt, res.is_critical)
@@ -433,7 +445,9 @@ func _handle_melee_hit(target: Node3D) -> void:
 		attack_hit.emit(target, dmg, false)
 
 func take_damage_spec(attack_spec: CombatMath.AttackSpec) -> CombatMath.CombatHitResult:
-	var def_spec = CombatMath.DefenseSpec.new("veer", global_position, -visual_root.global_transform.basis.z)
+	var p_pos = global_position if is_inside_tree() else position
+	var p_facing = -visual_root.global_transform.basis.z if (visual_root and visual_root.is_inside_tree()) else Vector3.FORWARD
+	var def_spec = CombatMath.DefenseSpec.new("veer", p_pos, p_facing)
 	def_spec.is_guarding = is_guarding
 	def_spec.parry_window_timer = parry_window_timer
 

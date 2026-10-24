@@ -12,8 +12,8 @@ const SuryaPrismScript = preload("res://scripts/interactables/surya_prism_3d.gd"
 const SuryaMahapeethamScript = preload("res://scripts/interactables/surya_mahapeetham_3d.gd")
 
 @onready var player: CharacterBody3D = $Player3D
-@onready var hud: Control = $HUD3D
-@onready var tara_npc: Area3D = $DeviTaraSvar3D
+@onready var hud: HUD3D = $HUD3D if has_node("HUD3D") else null
+@onready var tara_npc: Node3D = $DeviTaraSvar3D if has_node("DeviTaraSvar3D") else null
 @onready var boss_surya: CharacterBody3D = $BossSuryaAvatara3D
 @onready var mahapeetham_altar: Area3D = $SuryaMahapeetham3D
 
@@ -40,6 +40,7 @@ func _ready() -> void:
 		player.interaction_requested.connect(_on_dialogue_requested)
 
 	if hud:
+		hud.next_realm_scene_path = "res://scenes/levels/MaharlokaSanctuary3D.tscn"
 		hud.retry_requested.connect(_on_retry_requested)
 		_refresh_objective_display()
 		hud.show_banner("✦ REALM OF SVAR: THE CELESTIAL SOLAR CITADEL ✦\nChannel the radiant solar prisms of Savitr.", 5.0)
@@ -66,14 +67,15 @@ func _physics_process(_delta: float) -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo:
-		if event.keycode == KEY_F2:
-			get_tree().change_scene_to_file("res://scenes/levels/BhumiValley3D.tscn")
-		elif event.keycode == KEY_F3:
-			get_tree().change_scene_to_file("res://scenes/levels/AntarikshaSkyRealm3D.tscn")
-		elif event.keycode == KEY_F4:
-			get_tree().change_scene_to_file("res://scenes/levels/PatalaUnderworld3D.tscn")
-		elif event.keycode == KEY_F6:
-			get_tree().change_scene_to_file("res://scenes/levels/MaharlokaSanctuary3D.tscn")
+		match event.keycode:
+			KEY_F1: get_tree().change_scene_to_file("res://scenes/studio/CharacterStudio3D.tscn")
+			KEY_F2: get_tree().change_scene_to_file("res://scenes/levels/BhumiValley3D.tscn")
+			KEY_F3: get_tree().change_scene_to_file("res://scenes/levels/AntarikshaSkyRealm3D.tscn")
+			KEY_F4: get_tree().change_scene_to_file("res://scenes/levels/PatalaUnderworld3D.tscn")
+			KEY_F5: get_tree().change_scene_to_file("res://scenes/levels/SvarSolarCitadel3D.tscn")
+			KEY_F6: get_tree().change_scene_to_file("res://scenes/levels/MaharlokaSanctuary3D.tscn")
+			KEY_F7: get_tree().change_scene_to_file("res://scenes/levels/TapolokaForge3D.tscn")
+			KEY_F8: get_tree().change_scene_to_file("res://scenes/levels/SatyalokaApex3D.tscn")
 
 func _refresh_objective_display() -> void:
 	if not quest_mgr or not hud:
@@ -140,10 +142,42 @@ func _on_mahapeetham_consecrated(_altar: Area3D = null) -> void:
 			save_state["unlockedRealms"].append(r)
 	SaveSystem.save_game(save_state)
 
+	_spawn_maharloka_portal()
+
 	if hud:
 		_refresh_objective_display()
-		hud.show_banner("☀️ GRAND SOLAR MAHAPEETHAM CONSECRATED!\nThe Eternal Dawn is Restored.", 5.0)
-		hud.show_victory_overlay(16, elapsed)
+		hud.show_banner("☀️ GRAND SOLAR MAHAPEETHAM CONSECRATED!\nThe Ascension Portal to Maharloka is Open. [Walk into Violet Astral Beam]", 6.0)
+		hud.show_victory_overlay(16, elapsed, "Svar Solar Citadel")
+
+func _spawn_maharloka_portal() -> void:
+	var portal_pos = Vector3(0.0, 1.2, 50.0)
+	if mahapeetham_altar:
+		portal_pos = mahapeetham_altar.global_position + Vector3(0, 1.2, 4.0)
+
+	var portal_area = Area3D.new()
+	portal_area.name = "MaharlokaAscensionPortal"
+	portal_area.collision_layer = 1
+	portal_area.collision_mask = 2
+	portal_area.position = portal_pos
+
+	var col = CollisionShape3D.new()
+	var shape = CylinderShape3D.new()
+	shape.radius = 2.5
+	shape.height = 4.0
+	col.shape = shape
+	portal_area.add_child(col)
+
+	var light = OmniLight3D.new()
+	light.light_color = Color(0.6, 0.3, 1.0)
+	light.light_energy = 8.0
+	light.omni_range = 10.0
+	portal_area.add_child(light)
+
+	portal_area.body_entered.connect(func(body: Node3D):
+		if body is CharacterBody3D or body.name == "Player":
+			get_tree().change_scene_to_file("res://scenes/levels/MaharlokaSanctuary3D.tscn")
+	)
+	add_child(portal_area)
 
 func _on_player_health_changed(curr: int, max_hp: int) -> void:
 	if hud:
