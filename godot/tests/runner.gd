@@ -20,6 +20,14 @@ func _init() -> void:
 	var test_veer_model = load("res://tests/unit/test_veer_model.gd")
 	var test_character_studio = load("res://tests/unit/test_character_studio.gd")
 	var test_traversal_3d = load("res://tests/integration/test_player_traversal_3d.gd")
+	var test_bhumi_world = load("res://tests/integration/test_bhumi_world_3d.gd")
+	var test_vertical_slice = load("res://tests/integration/test_gameplay_vertical_slice_3d.gd")
+	var test_antariksha_realm = load("res://tests/integration/test_antariksha_realm_3d.gd")
+	var test_patala_realm = load("res://tests/integration/test_patala_realm_3d.gd")
+	var test_svar_realm = load("res://tests/integration/test_svar_realm_3d.gd")
+	var test_maharloka_realm = load("res://tests/integration/test_maharloka_realm_3d.gd")
+	var test_tapoloka_realm = load("res://tests/integration/test_tapoloka_realm_3d.gd")
+	var test_satyaloka_realm = load("res://tests/integration/test_satyaloka_realm_3d.gd")
 
 	var suites = [
 		{"name": "Combat Mathematics (Domain)", "runner": test_combat_math},
@@ -28,7 +36,15 @@ func _init() -> void:
 		{"name": "Dialogue Runner (Domain)", "runner": test_dialogue_runner},
 		{"name": "Veer 3D Skinned Model & Rigging (Model/Anim)", "runner": test_veer_model},
 		{"name": "3D Character Studio (Viewer/Inspection)", "runner": test_character_studio},
-		{"name": "3D Physics, Camera & Traversal (Integration)", "runner": test_traversal_3d}
+		{"name": "3D Physics, Camera & Traversal (Integration)", "runner": test_traversal_3d},
+		{"name": "3D Landscape & World Architecture (Stage D)", "runner": test_bhumi_world},
+		{"name": "3D Gameplay Vertical Slice & Boss Fight (Stage E)", "runner": test_vertical_slice},
+		{"name": "Chapter II — Realm of Antariksha & Aerial Traversal (Stage G)", "runner": test_antariksha_realm},
+		{"name": "Chapter III — Realm of Patala & Subterranean Serpent Vaults (Stage H)", "runner": test_patala_realm},
+		{"name": "Chapter IV — Realm of Svar & Celestial Solar Citadels (Stage I)", "runner": test_svar_realm},
+		{"name": "Chapter V — Realm of Maharloka & Astral Libraries (Stage J)", "runner": test_maharloka_realm},
+		{"name": "Chapter VI — Realm of Janaloka / Tapoloka & Agni's Primordial Forge (Stage K)", "runner": test_tapoloka_realm},
+		{"name": "Chapter VII — Realm of Satyaloka / Brahmaloka & Cosmic Dharma (Stage L)", "runner": test_satyaloka_realm}
 	]
 
 	for suite in suites:
@@ -38,13 +54,15 @@ func _init() -> void:
 
 		for res in results:
 			total_tests += 1
-			if res.get("passed", false):
+			if res is Dictionary and res.get("passed", false):
 				passed_tests += 1
-				print("  ✓ %s" % res["name"])
+				print("  ✓ %s" % res.get("name", "unknown"))
 			else:
 				failed_tests += 1
 				all_passed = false
-				print("  ✗ FAILED: %s" % res["name"])
+				var t_name = res.get("name", "unnamed_test") if res is Dictionary else "null_result"
+				var t_msg = res.get("message", "") if res is Dictionary else ""
+				print("  ✗ FAILED: %s (Reason: %s)" % [t_name, t_msg])
 		print("")
 
 	print("--------------------------------------------------------")

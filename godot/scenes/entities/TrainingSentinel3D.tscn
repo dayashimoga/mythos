@@ -1,0 +1,101 @@
+[gd_scene load_steps=12 format=3 uid="uid://c5sentinel3d"]
+
+[ext_resource type="Script" path="res://scripts/entities/training_sentinel_3d.gd" id="1_sentinel"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_sentinel"]
+radius = 0.55
+height = 2.2
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_basalt"]
+albedo_color = Color(0.18, 0.16, 0.22, 1)
+metallic = 0.2
+roughness = 0.75
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_torso"]
+material = SubResource("StandardMaterial3D_basalt")
+top_radius = 0.45
+bottom_radius = 0.55
+height = 1.3
+radial_segments = 16
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_brass"]
+albedo_color = Color(0.9, 0.7, 0.2, 1)
+metallic = 0.85
+roughness = 0.25
+
+[sub_resource type="TorusMesh" id="TorusMesh_ring"]
+material = SubResource("StandardMaterial3D_brass")
+inner_radius = 0.75
+outer_radius = 0.9
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_core"]
+albedo_color = Color(0.2, 0.8, 1, 1)
+metallic = 0.1
+roughness = 0.1
+emission_enabled = true
+emission = Color(0.2, 0.85, 1, 1)
+emission_energy_multiplier = 2.5
+
+[sub_resource type="SphereMesh" id="SphereMesh_core"]
+material = SubResource("StandardMaterial3D_core")
+radius = 0.2
+height = 0.4
+radial_segments = 16
+rings = 8
+
+[sub_resource type="BoxMesh" id="BoxMesh_head"]
+material = SubResource("StandardMaterial3D_basalt")
+size = Vector3(0.5, 0.5, 0.45)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_strike"]
+size = Vector3(2.2, 1.6, 2.4)
+
+[node name="TrainingSentinel3D" type="CharacterBody3D" groups=["targetable"]]
+collision_layer = 4
+collision_mask = 1
+script = ExtResource("1_sentinel")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1, 0)
+shape = SubResource("CapsuleShape3D_sentinel")
+
+[node name="Visual" type="Node3D" parent="."]
+
+[node name="Torso" type="MeshInstance3D" parent="Visual"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.85, 0)
+mesh = SubResource("CylinderMesh_torso")
+
+[node name="Head" type="MeshInstance3D" parent="Visual"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.75, 0)
+mesh = SubResource("BoxMesh_head")
+
+[node name="Core" type="MeshInstance3D" parent="Visual"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.05, 0)
+mesh = SubResource("SphereMesh_core")
+
+[node name="CoreLight" type="OmniLight3D" parent="Visual"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.05, 0)
+light_color = Color(0.2, 0.85, 1, 1)
+light_energy = 1.2
+omni_range = 4.5
+
+[node name="OrbitalRing" type="MeshInstance3D" parent="Visual"]
+transform = Transform3D(0.965926, 0.258819, 0, -0.258819, 0.965926, 0, 0, 0, 1, 0, 1.05, 0)
+mesh = SubResource("TorusMesh_ring")
+
+[node name="StatusLabel" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.45, 0)
+billboard = 1
+text = "ASURA TRAINING SENTINEL
+HP: 150/150 | POISE: 100%"
+font_size = 28
+outline_size = 6
+
+[node name="PracticeStrikeArea" type="Area3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.0, -1.2)
+collision_layer = 0
+collision_mask = 2
+monitoring = false
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="PracticeStrikeArea"]
+shape = SubResource("BoxShape3D_strike")

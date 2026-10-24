@@ -1,0 +1,38 @@
+[gd_scene load_steps=5 format=3 uid="uid://brahman_bridge_scene"]
+
+[ext_resource type="Script" path="res://scripts/interactables/brahman_bridge_3d.gd" id="1_script"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_bridge"]
+size = Vector3(4.0, 0.6, 12.0)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_bridge"]
+transparency = 1
+albedo_color = Color(0.4, 0.6, 1.0, 0.15)
+roughness = 0.2
+emission_enabled = true
+emission = Color(0.2, 0.4, 0.8, 1)
+emission_energy_multiplier = 0.5
+
+[sub_resource type="BoxMesh" id="BoxMesh_bridge"]
+material = SubResource("StandardMaterial3D_bridge")
+size = Vector3(4.0, 0.6, 12.0)
+
+[node name="BrahmanBridge3D" type="StaticBody3D" groups=["bridges"]]
+collision_layer = 1
+collision_mask = 0
+script = ExtResource("1_script")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0)
+shape = SubResource("BoxShape3D_bridge")
+
+[node name="VisualMesh" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0)
+material_override = SubResource("StandardMaterial3D_bridge")
+mesh = SubResource("BoxMesh_bridge")
+
+[node name="BridgeLight" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+light_color = Color(0.3, 0.5, 0.9, 1)
+light_energy = 0.5
+omni_range = 10.0

@@ -1,0 +1,27 @@
+[gd_scene load_steps=4 format=3 uid="uid://tapo_peetham_scene"]
+
+[ext_resource type="Script" path="res://scripts/interactables/tapo_peetham_3d.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://assets/environment/tapo_agni_peetham.glb" id="2_mesh"]
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_peetham"]
+height = 2.5
+radius = 3.2
+
+[node name="TapoPeetham3D" type="Area3D" groups=["interactables", "shrines"]]
+collision_layer = 16
+collision_mask = 2
+script = ExtResource("1_script")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, 0)
+shape = SubResource("CylinderShape3D_peetham")
+
+[node name="VisualMesh" type="Node3D" parent="."]
+
+[node name="PeethamModel" parent="VisualMesh" instance=ExtResource("2_mesh")]
+
+[node name="BrazierLight" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.2, 0)
+light_color = Color(1, 0.45, 0.1, 1)
+light_energy = 3.0
+omni_range = 12.0

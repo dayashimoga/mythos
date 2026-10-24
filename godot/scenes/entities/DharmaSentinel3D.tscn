@@ -1,0 +1,38 @@
+[gd_scene load_steps=5 format=3 uid="uid://dharma_sentinel_scene"]
+
+[ext_resource type="Script" path="res://scripts/entities/dharma_sentinel_3d.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://assets/characters/enemies/dharma_sentinel.glb" id="2_glb"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_sentinel"]
+radius = 0.65
+height = 2.2
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_spear"]
+size = Vector3(2.4, 2.0, 3.2)
+
+[node name="DharmaSentinel3D" type="CharacterBody3D" groups=["enemies"]]
+collision_layer = 4
+collision_mask = 3
+script = ExtResource("1_script")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1, 0)
+shape = SubResource("CapsuleShape3D_sentinel")
+
+[node name="VisualMesh" type="Node3D" parent="."]
+
+[node name="DharmaSentinelModel" parent="VisualMesh" instance=ExtResource("2_glb")]
+
+[node name="SpearHitbox" type="Area3D" parent="."]
+collision_layer = 8
+collision_mask = 2
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="SpearHitbox"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1, -1.6)
+shape = SubResource("BoxShape3D_spear")
+
+[node name="SentinelLight" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.8, 0)
+light_color = Color(0.8, 0.9, 1, 1)
+light_energy = 2.0
+omni_range = 8.0

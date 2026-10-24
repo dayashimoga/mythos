@@ -1,0 +1,174 @@
+[gd_scene load_steps=19 format=3 uid="uid://tapoloka_forge_scene"]
+
+[ext_resource type="Script" path="res://scripts/levels/tapoloka_forge_3d.gd" id="1_realm_script"]
+[ext_resource type="PackedScene" uid="uid://dp61vx580veer" path="res://scenes/player/Player3D.tscn" id="2_player"]
+[ext_resource type="PackedScene" uid="uid://bvygku61k5n04" path="res://scenes/ui/HUD3D.tscn" id="3_hud"]
+[ext_resource type="PackedScene" uid="uid://c_devi_tara_3d" path="res://scenes/entities/DeviTara3D.tscn" id="4_tara"]
+[ext_resource type="PackedScene" uid="uid://agni_berserker_scene" path="res://scenes/entities/AgniBerserker3D.tscn" id="5_berserker"]
+[ext_resource type="PackedScene" uid="uid://tapas_magma_hound_scene" path="res://scenes/entities/TapasMagmaHound3D.tscn" id="6_hound"]
+[ext_resource type="PackedScene" uid="uid://boss_agni_rudra_scene" path="res://scenes/entities/BossAgniRudra3D.tscn" id="7_boss_rudra"]
+[ext_resource type="PackedScene" uid="uid://magma_geyser_scene" path="res://scenes/interactables/MagmaGeyser3D.tscn" id="8_geyser"]
+[ext_resource type="PackedScene" uid="uid://primordial_forge_scene" path="res://scenes/interactables/PrimordialForge3D.tscn" id="9_forge"]
+[ext_resource type="PackedScene" uid="uid://tapo_peetham_scene" path="res://scenes/interactables/TapoPeetham3D.tscn" id="10_peetham"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_tapo"]
+sky_top_color = Color(0.38, 0.08, 0.05, 1)
+sky_horizon_color = Color(0.95, 0.45, 0.1, 1)
+ground_bottom_color = Color(0.12, 0.03, 0.02, 1)
+ground_horizon_color = Color(0.65, 0.22, 0.05, 1)
+
+[sub_resource type="Sky" id="Sky_tapo"]
+sky_material = SubResource("ProceduralSkyMaterial_tapo")
+
+[sub_resource type="Environment" id="Environment_tapo"]
+background_mode = 2
+sky = SubResource("Sky_tapo")
+ambient_light_source = 3
+ambient_light_color = Color(1.0, 0.7, 0.4, 1)
+ambient_light_energy = 0.9
+tonemap_mode = 2
+glow_enabled = true
+glow_intensity = 0.85
+glow_bloom = 0.35
+fog_enabled = true
+fog_light_color = Color(0.85, 0.35, 0.1, 1)
+fog_density = 0.0012
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_volcanic_basalt"]
+albedo_color = Color(0.2, 0.18, 0.22, 1)
+metallic = 0.45
+roughness = 0.55
+
+[sub_resource type="BoxMesh" id="BoxMesh_entry"]
+material = SubResource("StandardMaterial3D_volcanic_basalt")
+size = Vector3(24, 2, 22)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_entry"]
+size = Vector3(24, 2, 22)
+
+[sub_resource type="BoxMesh" id="BoxMesh_foundry"]
+material = SubResource("StandardMaterial3D_volcanic_basalt")
+size = Vector3(34, 2, 30)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_foundry"]
+size = Vector3(34, 2, 30)
+
+[sub_resource type="BoxMesh" id="BoxMesh_caldera"]
+material = SubResource("StandardMaterial3D_volcanic_basalt")
+size = Vector3(42, 2, 42)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_caldera"]
+size = Vector3(42, 2, 42)
+
+[sub_resource type="BoxMesh" id="BoxMesh_sanctum"]
+material = SubResource("StandardMaterial3D_volcanic_basalt")
+size = Vector3(22, 2, 20)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_sanctum"]
+size = Vector3(22, 2, 20)
+
+[node name="TapolokaForge3D" type="Node3D"]
+script = ExtResource("1_realm_script")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_tapo")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.866, -0.354, 0.354, 0, 0.707, 0.707, -0.5, -0.612, 0.612, 0, 50, 0)
+light_color = Color(1.0, 0.82, 0.6, 1)
+light_energy = 1.6
+shadow_enabled = true
+
+[node name="Player3D" parent="." instance=ExtResource("2_player")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+
+[node name="HUD3D" parent="." instance=ExtResource("3_hud")]
+
+[node name="DeviTaraTapo3D" parent="." instance=ExtResource("4_tara")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.0, -5.0)
+
+[node name="EntryTerrace" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="EntryTerrace"]
+mesh = SubResource("BoxMesh_entry")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="EntryTerrace"]
+shape = SubResource("BoxShape3D_entry")
+
+[node name="MagmaGeyser1" parent="." instance=ExtResource("8_geyser")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.0, -9)
+geyser_id = "geyser_entry_to_foundry"
+eruption_force = 18.0
+
+[node name="FoundryTerrace" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 16.0, -38)
+collision_layer = 1
+collision_mask = 0
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="FoundryTerrace"]
+mesh = SubResource("BoxMesh_foundry")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="FoundryTerrace"]
+shape = SubResource("BoxShape3D_foundry")
+
+[node name="PrimordialForge1" parent="." instance=ExtResource("9_forge")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 17.0, -36)
+forge_id = "forge_agni_1"
+
+[node name="PrimordialForge2" parent="." instance=ExtResource("9_forge")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 17.0, -36)
+forge_id = "forge_agni_2"
+
+[node name="AgniBerserker1" parent="." instance=ExtResource("5_berserker")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 17.0, -40)
+
+[node name="TapasMagmaHound1" parent="." instance=ExtResource("6_hound")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 17.0, -40)
+
+[node name="MagmaGeyser2" parent="." instance=ExtResource("8_geyser")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 17.0, -50)
+geyser_id = "geyser_foundry_to_caldera"
+eruption_force = 18.0
+
+[node name="CalderaArena" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 30.0, -82)
+collision_layer = 1
+collision_mask = 0
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="CalderaArena"]
+mesh = SubResource("BoxMesh_caldera")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="CalderaArena"]
+shape = SubResource("BoxShape3D_caldera")
+
+[node name="BossAgniRudra3D" parent="." instance=ExtResource("7_boss_rudra")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 31.0, -84)
+
+[node name="AgniBerserker2" parent="." instance=ExtResource("5_berserker")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, 31.0, -88)
+
+[node name="TapasMagmaHound2" parent="." instance=ExtResource("6_hound")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 31.0, -88)
+
+[node name="SanctumTerrace" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 34.0, -112)
+collision_layer = 1
+collision_mask = 0
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="SanctumTerrace"]
+mesh = SubResource("BoxMesh_sanctum")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="SanctumTerrace"]
+shape = SubResource("BoxShape3D_sanctum")
+
+[node name="TapoPeetham3D" parent="." instance=ExtResource("10_peetham")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 35.0, -112)
+
+[node name="CalderaLight" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 40, -82)
+light_color = Color(1.0, 0.5, 0.1, 1)
+light_energy = 4.0
+omni_range = 38.0

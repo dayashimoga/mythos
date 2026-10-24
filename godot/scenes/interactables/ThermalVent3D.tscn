@@ -1,0 +1,37 @@
+[gd_scene load_steps=5 format=3 uid="uid://thermal_vent_scene"]
+
+[ext_resource type="Script" path="res://scripts/interactables/thermal_vent_3d.gd" id="1_script"]
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_vent"]
+height = 24.0
+radius = 6.0
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ring"]
+transparency = 1
+albedo_color = Color(0.1, 0.8, 0.9, 0.3)
+emission_enabled = true
+emission = Color(0.1, 0.8, 0.9, 1)
+emission_energy_multiplier = 1.8
+
+[sub_resource type="TorusMesh" id="TorusMesh_base"]
+material = SubResource("StandardMaterial3D_ring")
+inner_radius = 4.8
+outer_radius = 6.0
+
+[node name="ThermalVent3D" type="Area3D" groups=["thermal_vents"]]
+collision_layer = 16
+collision_mask = 2
+script = ExtResource("1_script")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 12, 0)
+shape = SubResource("CylinderShape3D_vent")
+
+[node name="BaseRing" type="MeshInstance3D" parent="."]
+mesh = SubResource("TorusMesh_base")
+
+[node name="VentLight" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+light_color = Color(0.2, 0.9, 1, 1)
+light_energy = 2.0
+omni_range = 10.0

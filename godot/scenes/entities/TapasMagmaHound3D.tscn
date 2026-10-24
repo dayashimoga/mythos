@@ -1,0 +1,37 @@
+[gd_scene load_steps=5 format=3 uid="uid://tapas_magma_hound_scene"]
+
+[ext_resource type="Script" path="res://scripts/entities/tapas_magma_hound_3d.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://assets/characters/enemies/tapas_magma_hound.glb" id="2_glb"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_hound"]
+size = Vector3(0.9, 1.1, 1.8)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_pounce"]
+size = Vector3(1.8, 1.4, 2.4)
+
+[node name="TapasMagmaHound3D" type="CharacterBody3D" groups=["enemies"]]
+collision_layer = 4
+collision_mask = 3
+script = ExtResource("1_script")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.55, 0)
+shape = SubResource("BoxShape3D_hound")
+
+[node name="VisualMesh" type="Node3D" parent="."]
+
+[node name="HoundModel" parent="VisualMesh" instance=ExtResource("2_glb")]
+
+[node name="PounceHitbox" type="Area3D" parent="."]
+collision_layer = 8
+collision_mask = 2
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="PounceHitbox"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, 0.6)
+shape = SubResource("BoxShape3D_pounce")
+
+[node name="HoundLight" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.9, 0)
+light_color = Color(1, 0.45, 0.1, 1)
+light_energy = 1.5
+omni_range = 6.0

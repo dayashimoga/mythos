@@ -1,0 +1,182 @@
+[gd_scene load_steps=18 format=3 uid="uid://svar_solar_citadel_scene"]
+
+[ext_resource type="Script" path="res://scripts/levels/svar_solar_citadel_3d.gd" id="1_realm_script"]
+[ext_resource type="PackedScene" uid="uid://dp61vx580veer" path="res://scenes/player/Player3D.tscn" id="2_player"]
+[ext_resource type="PackedScene" uid="uid://bvygku61k5n04" path="res://scenes/ui/HUD3D.tscn" id="3_hud"]
+[ext_resource type="PackedScene" uid="uid://c_devi_tara_3d" path="res://scenes/entities/DeviTara3D.tscn" id="4_tara"]
+[ext_resource type="PackedScene" uid="uid://surya_guardian_scene" path="res://scenes/entities/SuryaGuardian3D.tscn" id="5_guardian"]
+[ext_resource type="PackedScene" uid="uid://solar_gryphon_scene" path="res://scenes/entities/SolarGryphon3D.tscn" id="6_gryphon"]
+[ext_resource type="PackedScene" uid="uid://boss_surya_avatara_scene" path="res://scenes/entities/BossSuryaAvatara3D.tscn" id="7_boss_surya"]
+[ext_resource type="PackedScene" uid="uid://solar_light_bridge_scene" path="res://scenes/interactables/SolarLightBridge3D.tscn" id="8_light_bridge"]
+[ext_resource type="PackedScene" uid="uid://surya_prism_scene" path="res://scenes/interactables/SuryaPrism3D.tscn" id="9_prism"]
+[ext_resource type="PackedScene" uid="uid://surya_mahapeetham_scene" path="res://scenes/interactables/SuryaMahapeetham3D.tscn" id="10_mahapeetham"]
+[ext_resource type="PackedScene" path="res://assets/environment/celestial_sun_shikhara.glb" id="11_shikhara"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_svar"]
+sky_top_color = Color(0.92, 0.72, 0.28, 1)
+sky_horizon_color = Color(1.0, 0.9, 0.65, 1)
+ground_bottom_color = Color(0.35, 0.22, 0.1, 1)
+ground_horizon_color = Color(0.85, 0.7, 0.45, 1)
+
+[sub_resource type="Sky" id="Sky_svar"]
+sky_material = SubResource("ProceduralSkyMaterial_svar")
+
+[sub_resource type="Environment" id="Environment_svar"]
+background_mode = 2
+sky = SubResource("Sky_svar")
+ambient_light_source = 3
+ambient_light_color = Color(1.0, 0.92, 0.75, 1)
+ambient_light_energy = 0.95
+tonemap_mode = 2
+glow_enabled = true
+glow_intensity = 0.7
+glow_bloom = 0.25
+fog_enabled = true
+fog_light_color = Color(1.0, 0.92, 0.7, 1)
+fog_density = 0.0012
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_gold_marble"]
+albedo_color = Color(0.95, 0.92, 0.85, 1)
+metallic = 0.2
+roughness = 0.35
+
+[sub_resource type="BoxMesh" id="BoxMesh_bastion_entry"]
+material = SubResource("StandardMaterial3D_gold_marble")
+size = Vector3(22, 2, 20)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_bastion_entry"]
+size = Vector3(22, 2, 20)
+
+[sub_resource type="BoxMesh" id="BoxMesh_bastion_mid"]
+material = SubResource("StandardMaterial3D_gold_marble")
+size = Vector3(28, 2, 24)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_bastion_mid"]
+size = Vector3(28, 2, 24)
+
+[sub_resource type="BoxMesh" id="BoxMesh_bastion_boss"]
+material = SubResource("StandardMaterial3D_gold_marble")
+size = Vector3(36, 2, 36)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_bastion_boss"]
+size = Vector3(36, 2, 36)
+
+[sub_resource type="BoxMesh" id="BoxMesh_bastion_sanctum"]
+material = SubResource("StandardMaterial3D_gold_marble")
+size = Vector3(20, 2, 18)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_bastion_sanctum"]
+size = Vector3(20, 2, 18)
+
+[node name="SvarSolarCitadel3D" type="Node3D"]
+script = ExtResource("1_realm_script")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_svar")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.866, -0.354, 0.354, 0, 0.707, 0.707, -0.5, -0.612, 0.612, 0, 50, 0)
+light_color = Color(1.0, 0.96, 0.88, 1)
+light_energy = 1.6
+shadow_enabled = true
+
+[node name="Player3D" parent="." instance=ExtResource("2_player")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+
+[node name="HUD3D" parent="." instance=ExtResource("3_hud")]
+
+[node name="DeviTaraSvar3D" parent="." instance=ExtResource("4_tara")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.0, -5.0)
+
+[node name="EntryBastion" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="EntryBastion"]
+mesh = SubResource("BoxMesh_bastion_entry")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="EntryBastion"]
+shape = SubResource("BoxShape3D_bastion_entry")
+
+[node name="SolarLightBridge1" parent="." instance=ExtResource("8_light_bridge")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -22)
+
+[node name="MidBastion" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -46)
+collision_layer = 1
+collision_mask = 0
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="MidBastion"]
+mesh = SubResource("BoxMesh_bastion_mid")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MidBastion"]
+shape = SubResource("BoxShape3D_bastion_mid")
+
+[node name="SuryaPrism1" parent="." instance=ExtResource("9_prism")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 1.0, -44)
+prism_id = "prism_1"
+target_step = 2
+
+[node name="SuryaPrism2" parent="." instance=ExtResource("9_prism")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 1.0, -44)
+prism_id = "prism_2"
+target_step = 2
+
+[node name="SuryaGuardian1" parent="." instance=ExtResource("5_guardian")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 1.0, -48)
+
+[node name="SuryaGuardian2" parent="." instance=ExtResource("5_guardian")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 1.0, -48)
+
+[node name="SolarGryphon1" parent="." instance=ExtResource("6_gryphon")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, -52)
+
+[node name="SolarLightBridge2" parent="." instance=ExtResource("8_light_bridge")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, -70)
+
+[node name="ApexCitadel" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.0, -94)
+collision_layer = 1
+collision_mask = 0
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="ApexCitadel"]
+mesh = SubResource("BoxMesh_bastion_boss")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ApexCitadel"]
+shape = SubResource("BoxShape3D_bastion_boss")
+
+[node name="BossSuryaAvatara3D" parent="." instance=ExtResource("7_boss_surya")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.0, -96)
+
+[node name="SanctumBastion" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6.0, -118)
+collision_layer = 1
+collision_mask = 0
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="SanctumBastion"]
+mesh = SubResource("BoxMesh_bastion_sanctum")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="SanctumBastion"]
+shape = SubResource("BoxShape3D_bastion_sanctum")
+
+[node name="SuryaMahapeetham3D" parent="." instance=ExtResource("10_mahapeetham")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 7.0, -118)
+
+[node name="SunShikharaLeft" parent="." instance=ExtResource("11_shikhara")]
+transform = Transform3D(1.2, 0, 0, 0, 1.2, 0, 0, 0, 1.2, -14, 4.0, -94)
+
+[node name="SunShikharaRight" parent="." instance=ExtResource("11_shikhara")]
+transform = Transform3D(1.2, 0, 0, 0, 1.2, 0, 0, 0, 1.2, 14, 4.0, -94)
+
+[node name="CitadelLight1" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5, -46)
+light_color = Color(1.0, 0.9, 0.5, 1)
+light_energy = 2.5
+omni_range = 24.0
+
+[node name="CitadelLight2" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 9, -94)
+light_color = Color(1.0, 0.85, 0.4, 1)
+light_energy = 3.5
+omni_range = 32.0

@@ -1,0 +1,55 @@
+[gd_scene load_steps=6 format=3 uid="uid://boss_matarishvan_scene"]
+
+[ext_resource type="Script" path="res://scripts/entities/boss_matarishvan_3d.gd" id="1_script"]
+[ext_resource type="PackedScene" uid="uid://e_boss_matarishvan" path="res://assets/characters/enemies/boss_matarishvan.glb" id="2_glb"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_body"]
+radius = 0.95
+height = 3.3
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_sweep"]
+size = Vector3(4.8, 2.2, 3.5)
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_slam"]
+height = 2.5
+radius = 6.5
+
+[node name="BossMatarishvan3D" type="CharacterBody3D" groups=["bosses", "enemies"]]
+collision_layer = 4
+collision_mask = 3
+script = ExtResource("1_script")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.65, 0)
+shape = SubResource("CapsuleShape3D_body")
+
+[node name="VisualMesh" type="Node3D" parent="."]
+
+[node name="BossMatarishvanModel" parent="VisualMesh" instance=ExtResource("2_glb")]
+
+[node name="SweepHitbox" type="Area3D" parent="."]
+collision_layer = 8
+collision_mask = 2
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="SweepHitbox"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.8, -1.8)
+shape = SubResource("BoxShape3D_sweep")
+
+[node name="SlamHitbox" type="Area3D" parent="."]
+collision_layer = 8
+collision_mask = 2
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="SlamHitbox"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, 0)
+shape = SubResource("CylinderShape3D_slam")
+
+[node name="TempestCoreLight" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.1, 0.4)
+light_color = Color(0.2, 0.95, 1, 1)
+light_energy = 3.5
+omni_range = 14.0
+
+[node name="TelegraphRing" type="Decal" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+size = Vector3(13, 2, 13)
+modulate = Color(1, 0.2, 0.1, 0.8)

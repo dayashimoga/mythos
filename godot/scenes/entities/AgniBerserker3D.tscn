@@ -1,0 +1,38 @@
+[gd_scene load_steps=5 format=3 uid="uid://agni_berserker_scene"]
+
+[ext_resource type="Script" path="res://scripts/entities/agni_berserker_3d.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://assets/characters/enemies/agni_berserker.glb" id="2_glb"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_berserker"]
+radius = 0.6
+height = 2.2
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_slash"]
+size = Vector3(2.6, 2.0, 3.0)
+
+[node name="AgniBerserker3D" type="CharacterBody3D" groups=["enemies"]]
+collision_layer = 4
+collision_mask = 3
+script = ExtResource("1_script")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1, 0)
+shape = SubResource("CapsuleShape3D_berserker")
+
+[node name="VisualMesh" type="Node3D" parent="."]
+
+[node name="AgniBerserkerModel" parent="VisualMesh" instance=ExtResource("2_glb")]
+
+[node name="SlashHitbox" type="Area3D" parent="."]
+collision_layer = 8
+collision_mask = 2
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="SlashHitbox"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1, -1.4)
+shape = SubResource("BoxShape3D_slash")
+
+[node name="FlameLight" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, 0)
+light_color = Color(1, 0.45, 0.1, 1)
+light_energy = 2.0
+omni_range = 8.0

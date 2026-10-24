@@ -1,0 +1,35 @@
+[gd_scene load_steps=5 format=3 uid="uid://astral_glyph_scene"]
+
+[ext_resource type="Script" path="res://scripts/interactables/astral_glyph_3d.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://assets/environment/floating_scroll_altar.glb" id="2_altar_mesh"]
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_glyph"]
+height = 5.0
+radius = 2.5
+
+[sub_resource type="TorusMesh" id="TorusMesh_ring"]
+inner_radius = 2.0
+outer_radius = 2.4
+
+[node name="AstralGlyph3D" type="Area3D" groups=["astral_glyphs", "interactables"]]
+collision_layer = 16
+collision_mask = 6
+script = ExtResource("1_script")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, 0)
+shape = SubResource("CylinderShape3D_glyph")
+
+[node name="VisualMesh" type="Node3D" parent="."]
+
+[node name="AltarModel" parent="VisualMesh" instance=ExtResource("2_altar_mesh")]
+
+[node name="AuraRing" type="MeshInstance3D" parent="VisualMesh"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1, 0)
+mesh = SubResource("TorusMesh_ring")
+
+[node name="GlyphLight" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.0, 0)
+light_color = Color(0.4, 0.7, 1, 1)
+light_energy = 3.5
+omni_range = 7.0

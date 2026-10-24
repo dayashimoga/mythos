@@ -1,0 +1,27 @@
+[gd_scene load_steps=4 format=3 uid="uid://surya_prism_scene"]
+
+[ext_resource type="Script" path="res://scripts/interactables/surya_prism_3d.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://assets/environment/solar_prism_pillar.glb" id="2_pillar_mesh"]
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_prism"]
+height = 4.8
+radius = 1.8
+
+[node name="SuryaPrism3D" type="Area3D" groups=["interactables", "surya_prisms"]]
+collision_layer = 16
+collision_mask = 2
+script = ExtResource("1_script")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.4, 0)
+shape = SubResource("CylinderShape3D_prism")
+
+[node name="VisualMesh" type="Node3D" parent="."]
+
+[node name="PillarModel" parent="VisualMesh" instance=ExtResource("2_pillar_mesh")]
+
+[node name="PrismLight" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.2, 0)
+light_color = Color(0.4, 0.9, 1.0, 1)
+light_energy = 2.8
+omni_range = 10.0

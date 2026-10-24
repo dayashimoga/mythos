@@ -1,0 +1,27 @@
+[gd_scene load_steps=4 format=3 uid="uid://naga_spitter_scene"]
+
+[ext_resource type="Script" path="res://scripts/entities/naga_spitter_3d.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://assets/characters/enemies/naga_spitter.glb" id="2_glb"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_spitter"]
+radius = 0.55
+height = 2.1
+
+[node name="NagaSpitter3D" type="CharacterBody3D" groups=["enemies"]]
+collision_layer = 4
+collision_mask = 3
+script = ExtResource("1_script")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.05, 0)
+shape = SubResource("CapsuleShape3D_spitter")
+
+[node name="VisualMesh" type="Node3D" parent="."]
+
+[node name="NagaSpitterModel" parent="VisualMesh" instance=ExtResource("2_glb")]
+
+[node name="VenomLight" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, -0.4)
+light_color = Color(0.1, 0.95, 0.3, 1)
+light_energy = 2.0
+omni_range = 6.0

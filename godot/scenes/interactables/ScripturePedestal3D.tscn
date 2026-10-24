@@ -1,0 +1,27 @@
+[gd_scene load_steps=4 format=3 uid="uid://scripture_pedestal_scene"]
+
+[ext_resource type="Script" path="res://scripts/interactables/scripture_pedestal_3d.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://assets/environment/floating_scroll_altar.glb" id="2_altar_mesh"]
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_pedestal"]
+height = 2.5
+radius = 1.8
+
+[node name="ScripturePedestal3D" type="Area3D" groups=["interactables", "scripture_pedestals"]]
+collision_layer = 16
+collision_mask = 2
+script = ExtResource("1_script")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, 0)
+shape = SubResource("CylinderShape3D_pedestal")
+
+[node name="VisualMesh" type="Node3D" parent="."]
+
+[node name="AltarModel" parent="VisualMesh" instance=ExtResource("2_altar_mesh")]
+
+[node name="PedestalLight" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.8, 0)
+light_color = Color(0.8, 0.6, 0.3, 1)
+light_energy = 1.5
+omni_range = 5.0

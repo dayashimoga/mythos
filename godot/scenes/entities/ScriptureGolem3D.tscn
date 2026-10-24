@@ -1,0 +1,38 @@
+[gd_scene load_steps=5 format=3 uid="uid://scripture_golem_scene"]
+
+[ext_resource type="Script" path="res://scripts/entities/scripture_golem_3d.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://assets/characters/enemies/scripture_golem.glb" id="2_glb"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_golem"]
+radius = 0.75
+height = 2.4
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_slam"]
+size = Vector3(3.2, 2.0, 3.5)
+
+[node name="ScriptureGolem3D" type="CharacterBody3D" groups=["enemies"]]
+collision_layer = 4
+collision_mask = 3
+script = ExtResource("1_script")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, 0)
+shape = SubResource("CapsuleShape3D_golem")
+
+[node name="VisualMesh" type="Node3D" parent="."]
+
+[node name="ScriptureGolemModel" parent="VisualMesh" instance=ExtResource("2_glb")]
+
+[node name="SlamHitbox" type="Area3D" parent="."]
+collision_layer = 8
+collision_mask = 2
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="SlamHitbox"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.0, -1.8)
+shape = SubResource("BoxShape3D_slam")
+
+[node name="GolemLight" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.8, 0)
+light_color = Color(0.3, 0.5, 0.9, 1)
+light_energy = 1.5
+omni_range = 8.0

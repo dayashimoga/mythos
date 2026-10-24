@@ -24,6 +24,18 @@ function verifyAppendOnly() {
     }
 
     for (const file of FILES_TO_CHECK) {
+      const fullPath = path.resolve(process.cwd(), file);
+      const headContent = execSync(`git show HEAD:${file}`, { stdio: 'pipe' }).toString();
+      const currentContent = fs.readFileSync(fullPath, 'utf8');
+
+      // True mathematical append-only: currentContent must preserve headContent exactly
+      const cleanHead = headContent.replace(/\r\n/g, '\n');
+      const cleanCurrent = currentContent.replace(/\r\n/g, '\n');
+
+      if (cleanCurrent.startsWith(cleanHead) || cleanCurrent.startsWith(cleanHead.trimEnd() + '\n')) {
+        continue;
+      }
+
       // Check diff against HEAD
       const diff = execSync(`git diff HEAD -- ${file}`, { stdio: 'pipe' }).toString();
       if (!diff) {

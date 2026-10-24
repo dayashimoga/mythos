@@ -48,6 +48,12 @@ jobs:
           - platform: Web
             output_dir: builds/web
             output_file: index.html
+          - platform: macOS
+            output_dir: builds/macos
+            output_file: mythos_3d.zip
+          - platform: Android
+            output_dir: builds/android
+            output_file: mythos_3d.apk
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4

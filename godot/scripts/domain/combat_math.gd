@@ -24,6 +24,24 @@ class PoiseData:
 		current = p_max
 		stagger_duration = p_duration
 
+	func take_poise_damage(amount: float) -> bool:
+		current = max(0.0, current - amount)
+		if current <= 0.0 and not is_staggered:
+			is_staggered = true
+			stagger_timer = stagger_duration
+			return true
+		return false
+
+	func damage(amount: float) -> bool:
+		return take_poise_damage(amount)
+
+	func update(delta: float) -> void:
+		if is_staggered:
+			stagger_timer = max(0.0, stagger_timer - delta)
+			if stagger_timer <= 0.0:
+				is_staggered = false
+				current = max_poise
+
 class AttackSpec:
 	var attacker_id: String = ""
 	var damage: int = 25

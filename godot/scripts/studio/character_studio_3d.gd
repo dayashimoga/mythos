@@ -1,14 +1,19 @@
 class_name CharacterStudio3D
 extends Node3D
 
-## Production 3D Character Studio & Inspection Viewer for Hero Veer.
+## Production 3D Character Studio & Inspection Viewer for Hero Veer (Solar Guardian).
 ## Features:
-## - 360° free orbit camera with zoom, height pan, and auto-rotation
+## - 360° free orbit camera with zoom (1.2m - 6.5m), height pan, and auto-rotation
 ## - 4 Cinematic lighting presets (Surya Dawn, High Noon, Twilight Tapas, Agni Forge)
-## - Complete animation picker for all 15 production animations
-## - Playback speed scaling (0.25x - 2.0x) and pause/resume
-## - Skeletal joint overlay visualization
-## - Seamless return to gameplay test chamber
+## - Complete animation picker for all 18 production animations:
+##   * Locomotion: Idle, Walk, Run, Sprint, Turn
+##   * Combat: Slash 1, Slash 2, Finisher, Combo, Block, Parry, Hit Reaction
+##   * Agility & Actions: Jump, Fall, Land, Dodge, Interact
+##   * Ceremonial & Finale: Victory, Defeat
+## - Playback speed scaling (0.25x - 2.0x) and Pause / Resume
+## - Camera focus presets (Face / Bust, Full Body, Surya Khadga Weapon)
+## - 3D skeletal joint overlay visualization
+## - Clean, responsive UI with zero clipped labels and standard UTF-8 glyphs
 
 @onready var veer_instance: Node3D = $Pedestal/VeerModel
 @onready var camera_pivot: Node3D = $CameraPivot
@@ -16,16 +21,17 @@ extends Node3D
 @onready var spring_arm: SpringArm3D = $CameraPivot/SpringArm3D
 @onready var sun_light: DirectionalLight3D = $Lights/DirectionalLight3D
 @onready var rim_light: OmniLight3D = $Lights/RimLight3D
+@onready var fill_light: OmniLight3D = $Lights/FillLight3D
 @onready var under_light: OmniLight3D = $Lights/UnderLight3D
 @onready var world_env: WorldEnvironment = $WorldEnvironment
 @onready var joint_container: Node3D = $JointContainer
 
 # UI References
-@onready var current_anim_label: Label = $UI/Panel/VBox/Header/CurrentAnimLabel
-@onready var speed_slider: HSlider = $UI/Panel/VBox/SpeedBox/SpeedSlider
-@onready var speed_label: Label = $UI/Panel/VBox/SpeedBox/SpeedLabel
-@onready var auto_rotate_check: CheckBox = $UI/Panel/VBox/TogglesBox/AutoRotateCheck
-@onready var skeleton_check: CheckBox = $UI/Panel/VBox/TogglesBox/SkeletonCheck
+@onready var current_anim_label: Label = find_child("CurrentAnimLabel", true, false) as Label
+@onready var speed_slider: HSlider = find_child("SpeedSlider", true, false) as HSlider
+@onready var speed_label: Label = find_child("SpeedLabel", true, false) as Label
+@onready var auto_rotate_check: CheckBox = find_child("AutoRotateCheck", true, false) as CheckBox
+@onready var skeleton_check: CheckBox = find_child("SkeletonCheck", true, false) as CheckBox
 
 var anim_player: AnimationPlayer = null
 var skeleton: Skeleton3D = null
@@ -37,16 +43,17 @@ var auto_rotate: bool = false
 var auto_rotate_speed: float = 18.0 # deg/sec
 var mouse_sensitivity: float = 0.004
 var zoom_speed: float = 0.4
-var min_zoom: float = 1.4
+var min_zoom: float = 1.2
 var max_zoom: float = 6.5
 var target_zoom: float = 3.2
+var is_paused: bool = false
+var saved_speed: float = 1.0
 
 # Lighting Presets
 enum LightPreset { SURYA_DAWN, HIGH_NOON, TWILIGHT_TAPAS, AGNI_FORGE }
 var current_preset: LightPreset = LightPreset.SURYA_DAWN
 
 func _ready() -> void:
-	# Locate AnimationPlayer and Skeleton3D
 	anim_player = _find_animation_player(veer_instance)
 	skeleton = _find_skeleton(veer_instance)
 
@@ -65,42 +72,88 @@ func _ready() -> void:
 	_setup_ui_connections()
 
 func _setup_ui_connections() -> void:
-	# Animation Buttons
+	# Animation Buttons map
 	var anim_buttons = {
-		$UI/Panel/VBox/LocomotionRow/BtnIdle: "idle",
-		$UI/Panel/VBox/LocomotionRow/BtnWalk: "walk",
-		$UI/Panel/VBox/LocomotionRow/BtnJog: "jog",
-		$UI/Panel/VBox/LocomotionRow/BtnSprint: "sprint",
+		# Locomotion
+		"BtnIdle": "idle",
+		"BtnWalk": "walk",
+		"BtnRun": "run",
+		"BtnSprint": "sprint",
+		"BtnTurn": "turn",
 
-		$UI/Panel/VBox/CombatRow1/BtnAtk1: "attack_light_1",
-		$UI/Panel/VBox/CombatRow1/BtnAtk2: "attack_light_2",
-		$UI/Panel/VBox/CombatRow1/BtnFinisher: "attack_heavy_finisher",
+		# Combat & Defense
+		"BtnAtk1": "attack_light_1",
+		"BtnAtk2": "attack_light_2",
+		"BtnFinisher": "attack_heavy_finisher",
+		"BtnCombo": "combo",
+		"BtnBlock": "block",
+		"BtnParry": "parry",
+		"BtnHit": "hit_reaction",
 
-		$UI/Panel/VBox/CombatRow2/BtnBlock: "block",
-		$UI/Panel/VBox/CombatRow2/BtnDodge: "dodge",
-		$UI/Panel/VBox/CombatRow2/BtnHit: "hit_reaction",
+		# Actions & Agility
+		"BtnJump": "jump",
+		"BtnFall": "fall",
+		"BtnLand": "landing",
+		"BtnDodge": "dodge",
+		"BtnInteract": "interact",
 
-		$UI/Panel/VBox/ActionRow/BtnJump: "jump",
-		$UI/Panel/VBox/ActionRow/BtnFall: "jump_fall",
-		$UI/Panel/VBox/ActionRow/BtnLand: "jump_land",
-		$UI/Panel/VBox/ActionRow/BtnInteract: "interact",
+		# Ceremonial
+		"BtnVictory": "victory",
+		"BtnDefeat": "defeat",
 	}
 
-	for btn in anim_buttons:
-		if btn:
-			var anim_name = anim_buttons[btn]
-			btn.pressed.connect(func(): play_animation(anim_name))
+	for btn_name in anim_buttons:
+		var btn = find_child(btn_name, true, false)
+		if btn is Button:
+			var a_name = anim_buttons[btn_name]
+			btn.pressed.connect(func(): play_animation(a_name))
 
 	# Lighting Preset Buttons
-	var btn_dawn = $UI/Panel/VBox/LightingRow/BtnDawn
-	var btn_noon = $UI/Panel/VBox/LightingRow/BtnNoon
-	var btn_twilight = $UI/Panel/VBox/LightingRow/BtnTwilight
-	var btn_forge = $UI/Panel/VBox/LightingRow/BtnForge
+	var btn_dawn = find_child("BtnDawn", true, false)
+	var btn_noon = find_child("BtnNoon", true, false)
+	var btn_twilight = find_child("BtnTwilight", true, false)
+	var btn_forge = find_child("BtnForge", true, false)
 
 	if btn_dawn: btn_dawn.pressed.connect(func(): apply_lighting_preset(LightPreset.SURYA_DAWN))
 	if btn_noon: btn_noon.pressed.connect(func(): apply_lighting_preset(LightPreset.HIGH_NOON))
 	if btn_twilight: btn_twilight.pressed.connect(func(): apply_lighting_preset(LightPreset.TWILIGHT_TAPAS))
 	if btn_forge: btn_forge.pressed.connect(func(): apply_lighting_preset(LightPreset.AGNI_FORGE))
+
+	# Camera Focus Preset Buttons
+	var btn_focus_head = find_child("BtnFocusHead", true, false)
+	var btn_focus_body = find_child("BtnFocusBody", true, false)
+	var btn_focus_weapon = find_child("BtnFocusWeapon", true, false)
+
+	if btn_focus_head:
+		btn_focus_head.pressed.connect(func():
+			camera_pivot.position = Vector3(0, 1.70, 0)
+			target_zoom = 1.6
+		)
+	if btn_focus_body:
+		btn_focus_body.pressed.connect(func():
+			camera_pivot.position = Vector3(0, 1.15, 0)
+			target_zoom = 3.4
+		)
+	if btn_focus_weapon:
+		btn_focus_weapon.pressed.connect(func():
+			camera_pivot.position = Vector3(0.55, 1.45, 0.25)
+			target_zoom = 1.8
+		)
+
+	# Play / Pause Toggle
+	var btn_pause = find_child("BtnPause", true, false)
+	if btn_pause:
+		btn_pause.pressed.connect(func():
+			is_paused = not is_paused
+			if anim_player:
+				if is_paused:
+					saved_speed = anim_player.speed_scale
+					anim_player.speed_scale = 0.0
+					btn_pause.text = "Resume"
+				else:
+					anim_player.speed_scale = saved_speed if saved_speed > 0 else 1.0
+					btn_pause.text = "Pause"
+		)
 
 	# Speed Slider
 	if speed_slider:
@@ -113,7 +166,7 @@ func _setup_ui_connections() -> void:
 		skeleton_check.toggled.connect(_on_skeleton_toggled)
 
 	# Return Button
-	var btn_return = $UI/TopBar/BtnReturn
+	var btn_return = find_child("BtnReturn", true, false)
 	if btn_return:
 		btn_return.pressed.connect(_return_to_chamber)
 
@@ -169,11 +222,18 @@ func play_animation(anim_name: String) -> void:
 		return
 
 	anim_player.play(actual_name, 0.18)
+	if is_paused:
+		is_paused = false
+		var btn_pause = find_child("BtnPause", true, false)
+		if btn_pause: btn_pause.text = "Pause"
+		if speed_slider: anim_player.speed_scale = speed_slider.value
+
 	if current_anim_label:
-		current_anim_label.text = "ANIMATION: " + anim_name.to_upper()
+		current_anim_label.text = "ANIMATION: " + anim_name.to_upper().replace("_", " ")
 
 func _on_speed_changed(val: float) -> void:
-	if anim_player:
+	saved_speed = val
+	if anim_player and not is_paused:
 		anim_player.speed_scale = val
 	if speed_label:
 		speed_label.text = "SPEED: %.2fx" % val
@@ -185,6 +245,8 @@ func apply_lighting_preset(preset: LightPreset) -> void:
 		sun_light = get_node_or_null("Lights/DirectionalLight3D")
 	if not rim_light:
 		rim_light = get_node_or_null("Lights/RimLight3D")
+	if not fill_light:
+		fill_light = get_node_or_null("Lights/FillLight3D")
 	if not under_light:
 		under_light = get_node_or_null("Lights/UnderLight3D")
 	if not world_env:
@@ -195,49 +257,62 @@ func apply_lighting_preset(preset: LightPreset) -> void:
 
 	match preset:
 		LightPreset.SURYA_DAWN:
-			sun_light.rotation_degrees = Vector3(-28.0, 42.0, 0.0)
-			sun_light.light_color = Color(1.0, 0.82, 0.58)
-			sun_light.light_energy = 1.9
-			rim_light.light_color = Color(1.0, 0.9, 0.7)
-			rim_light.light_energy = 1.4
-			under_light.light_energy = 0.2
+			sun_light.rotation_degrees = Vector3(-32.0, 45.0, 0.0)
+			sun_light.light_color = Color(1.0, 0.88, 0.65)
+			sun_light.light_energy = 2.2
+			rim_light.light_color = Color(1.0, 0.92, 0.75)
+			rim_light.light_energy = 1.6
+			if fill_light:
+				fill_light.light_color = Color(0.85, 0.75, 0.95)
+				fill_light.light_energy = 1.2
+			under_light.light_color = Color(1.0, 0.65, 0.2)
+			under_light.light_energy = 0.5
 			if world_env and world_env.environment:
-				world_env.environment.background_energy_multiplier = 0.95
-				world_env.environment.ambient_light_color = Color(0.32, 0.22, 0.16)
+				world_env.environment.background_energy_multiplier = 1.1
+				world_env.environment.ambient_light_color = Color(0.42, 0.35, 0.30)
 
 		LightPreset.HIGH_NOON:
-			sun_light.rotation_degrees = Vector3(-72.0, 15.0, 0.0)
-			sun_light.light_color = Color(1.0, 0.97, 0.90)
-			sun_light.light_energy = 2.4
-			rim_light.light_color = Color(1.0, 0.85, 0.6)
-			rim_light.light_energy = 0.8
-			under_light.light_energy = 0.1
+			sun_light.rotation_degrees = Vector3(-75.0, 20.0, 0.0)
+			sun_light.light_color = Color(1.0, 0.98, 0.92)
+			sun_light.light_energy = 2.6
+			rim_light.light_color = Color(1.0, 0.88, 0.7)
+			rim_light.light_energy = 1.0
+			if fill_light:
+				fill_light.light_color = Color(0.8, 0.85, 0.95)
+				fill_light.light_energy = 1.4
+			under_light.light_energy = 0.2
 			if world_env and world_env.environment:
-				world_env.environment.background_energy_multiplier = 1.2
-				world_env.environment.ambient_light_color = Color(0.28, 0.26, 0.24)
+				world_env.environment.background_energy_multiplier = 1.35
+				world_env.environment.ambient_light_color = Color(0.38, 0.36, 0.35)
 
 		LightPreset.TWILIGHT_TAPAS:
-			sun_light.rotation_degrees = Vector3(-12.0, -110.0, 0.0)
-			sun_light.light_color = Color(0.35, 0.55, 1.0)
-			sun_light.light_energy = 1.2
-			rim_light.light_color = Color(0.0, 0.95, 1.0) # Celestial cyan rim
-			rim_light.light_energy = 2.2
-			under_light.light_energy = 0.1
+			sun_light.rotation_degrees = Vector3(-18.0, -110.0, 0.0)
+			sun_light.light_color = Color(0.45, 0.60, 1.0)
+			sun_light.light_energy = 1.4
+			rim_light.light_color = Color(0.0, 0.95, 1.0)
+			rim_light.light_energy = 2.4
+			if fill_light:
+				fill_light.light_color = Color(0.9, 0.45, 0.25)
+				fill_light.light_energy = 1.1
+			under_light.light_energy = 0.3
 			if world_env and world_env.environment:
-				world_env.environment.background_energy_multiplier = 0.45
-				world_env.environment.ambient_light_color = Color(0.08, 0.09, 0.18)
+				world_env.environment.background_energy_multiplier = 0.8
+				world_env.environment.ambient_light_color = Color(0.22, 0.20, 0.32)
 
 		LightPreset.AGNI_FORGE:
-			sun_light.rotation_degrees = Vector3(-35.0, 160.0, 0.0)
-			sun_light.light_color = Color(0.65, 0.20, 0.08)
-			sun_light.light_energy = 0.8
-			rim_light.light_color = Color(1.0, 0.45, 0.05)
-			rim_light.light_energy = 1.8
-			under_light.light_color = Color(1.0, 0.35, 0.0)
-			under_light.light_energy = 3.2 # Fiery underlighting
+			sun_light.rotation_degrees = Vector3(-40.0, 150.0, 0.0)
+			sun_light.light_color = Color(0.75, 0.25, 0.10)
+			sun_light.light_energy = 1.2
+			rim_light.light_color = Color(1.0, 0.55, 0.15)
+			rim_light.light_energy = 2.0
+			if fill_light:
+				fill_light.light_color = Color(0.9, 0.35, 0.1)
+				fill_light.light_energy = 1.5
+			under_light.light_color = Color(1.0, 0.45, 0.0)
+			under_light.light_energy = 3.5
 			if world_env and world_env.environment:
-				world_env.environment.background_energy_multiplier = 0.35
-				world_env.environment.ambient_light_color = Color(0.18, 0.06, 0.02)
+				world_env.environment.background_energy_multiplier = 0.75
+				world_env.environment.ambient_light_color = Color(0.30, 0.12, 0.06)
 
 func _on_skeleton_toggled(active: bool) -> void:
 	if not joint_container:

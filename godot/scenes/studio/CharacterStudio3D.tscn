@@ -1,13 +1,13 @@
-[gd_scene load_steps=10 format=3 uid="uid://c8m4p7k1y3n9v"]
+[gd_scene load_steps=14 format=3 uid="uid://c8m4p7k1y3n9v"]
 
 [ext_resource type="Script" path="res://scripts/studio/character_studio_3d.gd" id="1_studio"]
 [ext_resource type="PackedScene" path="res://assets/characters/veer/veer.glb" id="2_veer"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_studio"]
-sky_top_color = Color(0.12, 0.15, 0.28, 1)
-sky_horizon_color = Color(0.38, 0.26, 0.20, 1)
-ground_bottom_color = Color(0.08, 0.08, 0.12, 1)
-ground_horizon_color = Color(0.25, 0.18, 0.15, 1)
+sky_top_color = Color(0.18, 0.22, 0.38, 1)
+sky_horizon_color = Color(0.55, 0.4, 0.28, 1)
+ground_bottom_color = Color(0.1, 0.09, 0.14, 1)
+ground_horizon_color = Color(0.32, 0.24, 0.2, 1)
 
 [sub_resource type="Sky" id="Sky_studio"]
 sky_material = SubResource("ProceduralSkyMaterial_studio")
@@ -16,12 +16,24 @@ sky_material = SubResource("ProceduralSkyMaterial_studio")
 background_mode = 2
 sky = SubResource("Sky_studio")
 ambient_light_source = 2
-ambient_light_color = Color(0.25, 0.22, 0.28, 1)
+ambient_light_color = Color(0.42, 0.35, 0.3, 1)
+ambient_light_energy = 1.1
 tonemap_mode = 3
-ssr_enabled = false
 glow_enabled = true
-glow_intensity = 0.8
-glow_bloom = 0.15
+glow_intensity = 0.6
+glow_bloom = 0.12
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_floor"]
+albedo_color = Color(0.12, 0.11, 0.14, 1)
+metallic = 0.1
+roughness = 0.85
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_floor"]
+material = SubResource("StandardMaterial3D_floor")
+top_radius = 8.5
+bottom_radius = 8.8
+height = 0.2
+radial_segments = 48
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_pedestal"]
 albedo_color = Color(0.14, 0.15, 0.18, 1)
@@ -50,6 +62,21 @@ bottom_radius = 2.22
 height = 0.04
 radial_segments = 36
 
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_brazier"]
+albedo_color = Color(1, 0.65, 0.1, 1)
+metallic = 0.8
+roughness = 0.2
+emission_enabled = true
+emission = Color(1, 0.55, 0.05, 1)
+emission_energy_multiplier = 2.5
+
+[sub_resource type="SphereMesh" id="SphereMesh_brazier"]
+material = SubResource("StandardMaterial3D_brazier")
+radius = 0.16
+height = 0.32
+radial_segments = 16
+rings = 8
+
 [node name="CharacterStudio3D" type="Node3D"]
 script = ExtResource("1_studio")
 
@@ -70,11 +97,39 @@ light_color = Color(1, 0.9, 0.75, 1)
 light_energy = 1.4
 omni_range = 6.0
 
+[node name="FillLight3D" type="OmniLight3D" parent="Lights"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.2, 1.8, 2.2)
+light_color = Color(0.85, 0.75, 0.95, 1)
+light_energy = 1.2
+omni_range = 6.0
+
 [node name="UnderLight3D" type="OmniLight3D" parent="Lights"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1, 0)
 light_color = Color(1, 0.45, 0.05, 1)
 light_energy = 0.2
 omni_range = 3.5
+
+[node name="SanctumFloor" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.45, 0)
+mesh = SubResource("CylinderMesh_floor")
+
+[node name="Braziers" type="Node3D" parent="."]
+
+[node name="Brazier1" type="MeshInstance3D" parent="Braziers"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.8, 0.4, 2.8)
+mesh = SubResource("SphereMesh_brazier")
+
+[node name="Brazier2" type="MeshInstance3D" parent="Braziers"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.8, 0.4, 2.8)
+mesh = SubResource("SphereMesh_brazier")
+
+[node name="Brazier3" type="MeshInstance3D" parent="Braziers"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.8, 0.4, -2.8)
+mesh = SubResource("SphereMesh_brazier")
+
+[node name="Brazier4" type="MeshInstance3D" parent="Braziers"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.8, 0.4, -2.8)
+mesh = SubResource("SphereMesh_brazier")
 
 [node name="Pedestal" type="Node3D" parent="."]
 
@@ -125,12 +180,12 @@ layout_mode = 2
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(1, 0.85, 0.3, 1)
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 17
 text = "✦ MYTHOS 3D CHARACTER STUDIO — HERO VEER (SOLAR GUARDIAN) ✦"
 
 [node name="BtnReturn" type="Button" parent="UI/TopBar/Margin/HBox"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 14
+theme_override_font_sizes/font_size = 13
 text = "[ Return to Chamber (ESC) ]"
 
 [node name="Panel" type="PanelContainer" parent="UI"]
@@ -138,171 +193,279 @@ anchors_preset = 11
 anchor_left = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -340.0
-offset_top = 64.0
-offset_right = -16.0
-offset_bottom = -16.0
+offset_left = -380.0
+offset_top = 62.0
+offset_right = -14.0
+offset_bottom = -14.0
 grow_horizontal = 0
 grow_vertical = 2
 
-[node name="VBox" type="VBoxContainer" parent="UI/Panel"]
+[node name="Scroll" type="ScrollContainer" parent="UI/Panel"]
 layout_mode = 2
-theme_override_constants/separation = 7
+horizontal_scroll_mode = 0
 
-[node name="Header" type="HBoxContainer" parent="UI/Panel/VBox"]
+[node name="Margin" type="MarginContainer" parent="UI/Panel/Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 12
+
+[node name="VBox" type="VBoxContainer" parent="UI/Panel/Scroll/Margin"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 6
+
+[node name="Header" type="HBoxContainer" parent="UI/Panel/Scroll/Margin/VBox"]
 layout_mode = 2
 
-[node name="CurrentAnimLabel" type="Label" parent="UI/Panel/VBox/Header"]
+[node name="CurrentAnimLabel" type="Label" parent="UI/Panel/Scroll/Margin/VBox/Header"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_colors/font_color = Color(0.2, 0.9, 1, 1)
-theme_override_font_sizes/font_size = 14
+theme_override_font_sizes/font_size = 13
 text = "ANIMATION: IDLE"
 
-[node name="SecLoco" type="Label" parent="UI/Panel/VBox"]
+[node name="BtnPause" type="Button" parent="UI/Panel/Scroll/Margin/VBox/Header"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+text = "Pause"
+
+[node name="SecFocus" type="Label" parent="UI/Panel/Scroll/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
+theme_override_font_sizes/font_size = 11
+text = "── CAMERA FOCUS ──"
+
+[node name="FocusRow" type="HBoxContainer" parent="UI/Panel/Scroll/Margin/VBox"]
+layout_mode = 2
+
+[node name="BtnFocusHead" type="Button" parent="UI/Panel/Scroll/Margin/VBox/FocusRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 11
+text = "Head / Tilak"
+
+[node name="BtnFocusBody" type="Button" parent="UI/Panel/Scroll/Margin/VBox/FocusRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 11
+text = "Full Body"
+
+[node name="BtnFocusWeapon" type="Button" parent="UI/Panel/Scroll/Margin/VBox/FocusRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 11
+text = "Surya Khadga"
+
+[node name="SecLoco" type="Label" parent="UI/Panel/Scroll/Margin/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
 theme_override_font_sizes/font_size = 11
 text = "── LOCOMOTION ──"
 
-[node name="LocomotionRow" type="HBoxContainer" parent="UI/Panel/VBox"]
+[node name="LocomotionRow1" type="HBoxContainer" parent="UI/Panel/Scroll/Margin/VBox"]
 layout_mode = 2
 
-[node name="BtnIdle" type="Button" parent="UI/Panel/VBox/LocomotionRow"]
+[node name="BtnIdle" type="Button" parent="UI/Panel/Scroll/Margin/VBox/LocomotionRow1"]
 layout_mode = 2
 size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 11
 text = "Idle"
 
-[node name="BtnWalk" type="Button" parent="UI/Panel/VBox/LocomotionRow"]
+[node name="BtnWalk" type="Button" parent="UI/Panel/Scroll/Margin/VBox/LocomotionRow1"]
 layout_mode = 2
 size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 11
 text = "Walk"
 
-[node name="BtnJog" type="Button" parent="UI/Panel/VBox/LocomotionRow"]
+[node name="BtnRun" type="Button" parent="UI/Panel/Scroll/Margin/VBox/LocomotionRow1"]
 layout_mode = 2
 size_flags_horizontal = 3
-text = "Jog"
+theme_override_font_sizes/font_size = 11
+text = "Run"
 
-[node name="BtnSprint" type="Button" parent="UI/Panel/VBox/LocomotionRow"]
+[node name="LocomotionRow2" type="HBoxContainer" parent="UI/Panel/Scroll/Margin/VBox"]
+layout_mode = 2
+
+[node name="BtnSprint" type="Button" parent="UI/Panel/Scroll/Margin/VBox/LocomotionRow2"]
 layout_mode = 2
 size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 11
 text = "Sprint"
 
-[node name="SecCombat" type="Label" parent="UI/Panel/VBox"]
+[node name="BtnTurn" type="Button" parent="UI/Panel/Scroll/Margin/VBox/LocomotionRow2"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 11
+text = "Turn"
+
+[node name="SecCombat" type="Label" parent="UI/Panel/Scroll/Margin/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
 theme_override_font_sizes/font_size = 11
 text = "── COMBAT & DEFENSE ──"
 
-[node name="CombatRow1" type="HBoxContainer" parent="UI/Panel/VBox"]
+[node name="CombatRow1" type="HBoxContainer" parent="UI/Panel/Scroll/Margin/VBox"]
 layout_mode = 2
 
-[node name="BtnAtk1" type="Button" parent="UI/Panel/VBox/CombatRow1"]
+[node name="BtnAtk1" type="Button" parent="UI/Panel/Scroll/Margin/VBox/CombatRow1"]
 layout_mode = 2
 size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 11
 text = "Slash 1"
 
-[node name="BtnAtk2" type="Button" parent="UI/Panel/VBox/CombatRow1"]
+[node name="BtnAtk2" type="Button" parent="UI/Panel/Scroll/Margin/VBox/CombatRow1"]
 layout_mode = 2
 size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 11
 text = "Slash 2"
 
-[node name="BtnFinisher" type="Button" parent="UI/Panel/VBox/CombatRow1"]
+[node name="BtnFinisher" type="Button" parent="UI/Panel/Scroll/Margin/VBox/CombatRow1"]
 layout_mode = 2
 size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 11
 text = "Finisher"
 
-[node name="CombatRow2" type="HBoxContainer" parent="UI/Panel/VBox"]
+[node name="CombatRow2" type="HBoxContainer" parent="UI/Panel/Scroll/Margin/VBox"]
 layout_mode = 2
 
-[node name="BtnBlock" type="Button" parent="UI/Panel/VBox/CombatRow2"]
+[node name="BtnCombo" type="Button" parent="UI/Panel/Scroll/Margin/VBox/CombatRow2"]
 layout_mode = 2
 size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 11
+text = "Combo"
+
+[node name="BtnBlock" type="Button" parent="UI/Panel/Scroll/Margin/VBox/CombatRow2"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 11
 text = "Block"
 
-[node name="BtnDodge" type="Button" parent="UI/Panel/VBox/CombatRow2"]
+[node name="BtnParry" type="Button" parent="UI/Panel/Scroll/Margin/VBox/CombatRow2"]
 layout_mode = 2
 size_flags_horizontal = 3
-text = "Dodge"
+theme_override_font_sizes/font_size = 11
+text = "Parry"
 
-[node name="BtnHit" type="Button" parent="UI/Panel/VBox/CombatRow2"]
+[node name="BtnHit" type="Button" parent="UI/Panel/Scroll/Margin/VBox/CombatRow2"]
 layout_mode = 2
 size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 11
 text = "Hit"
 
-[node name="SecActions" type="Label" parent="UI/Panel/VBox"]
+[node name="SecActions" type="Label" parent="UI/Panel/Scroll/Margin/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
 theme_override_font_sizes/font_size = 11
 text = "── AERIAL & ACTIONS ──"
 
-[node name="ActionRow" type="HBoxContainer" parent="UI/Panel/VBox"]
+[node name="ActionRow1" type="HBoxContainer" parent="UI/Panel/Scroll/Margin/VBox"]
 layout_mode = 2
 
-[node name="BtnJump" type="Button" parent="UI/Panel/VBox/ActionRow"]
+[node name="BtnJump" type="Button" parent="UI/Panel/Scroll/Margin/VBox/ActionRow1"]
 layout_mode = 2
 size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 11
 text = "Jump"
 
-[node name="BtnFall" type="Button" parent="UI/Panel/VBox/ActionRow"]
+[node name="BtnFall" type="Button" parent="UI/Panel/Scroll/Margin/VBox/ActionRow1"]
 layout_mode = 2
 size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 11
 text = "Fall"
 
-[node name="BtnLand" type="Button" parent="UI/Panel/VBox/ActionRow"]
+[node name="BtnLand" type="Button" parent="UI/Panel/Scroll/Margin/VBox/ActionRow1"]
 layout_mode = 2
 size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 11
 text = "Land"
 
-[node name="BtnInteract" type="Button" parent="UI/Panel/VBox/ActionRow"]
+[node name="ActionRow2" type="HBoxContainer" parent="UI/Panel/Scroll/Margin/VBox"]
+layout_mode = 2
+
+[node name="BtnDodge" type="Button" parent="UI/Panel/Scroll/Margin/VBox/ActionRow2"]
 layout_mode = 2
 size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 11
+text = "Dodge"
+
+[node name="BtnInteract" type="Button" parent="UI/Panel/Scroll/Margin/VBox/ActionRow2"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 11
 text = "Interact"
 
-[node name="SecLighting" type="Label" parent="UI/Panel/VBox"]
+[node name="SecCeremony" type="Label" parent="UI/Panel/Scroll/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
+theme_override_font_sizes/font_size = 11
+text = "── CEREMONIAL ──"
+
+[node name="CeremonyRow" type="HBoxContainer" parent="UI/Panel/Scroll/Margin/VBox"]
+layout_mode = 2
+
+[node name="BtnVictory" type="Button" parent="UI/Panel/Scroll/Margin/VBox/CeremonyRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 11
+text = "Victory ✦"
+
+[node name="BtnDefeat" type="Button" parent="UI/Panel/Scroll/Margin/VBox/CeremonyRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 11
+text = "Defeat"
+
+[node name="SecLighting" type="Label" parent="UI/Panel/Scroll/Margin/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
 theme_override_font_sizes/font_size = 11
 text = "── LIGHTING PRESETS ──"
 
-[node name="LightingRow" type="HBoxContainer" parent="UI/Panel/VBox"]
+[node name="LightingRow" type="HBoxContainer" parent="UI/Panel/Scroll/Margin/VBox"]
 layout_mode = 2
 
-[node name="BtnDawn" type="Button" parent="UI/Panel/VBox/LightingRow"]
+[node name="BtnDawn" type="Button" parent="UI/Panel/Scroll/Margin/VBox/LightingRow"]
 layout_mode = 2
 size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 11
 text = "Dawn"
 
-[node name="BtnNoon" type="Button" parent="UI/Panel/VBox/LightingRow"]
+[node name="BtnNoon" type="Button" parent="UI/Panel/Scroll/Margin/VBox/LightingRow"]
 layout_mode = 2
 size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 11
 text = "Noon"
 
-[node name="BtnTwilight" type="Button" parent="UI/Panel/VBox/LightingRow"]
+[node name="BtnTwilight" type="Button" parent="UI/Panel/Scroll/Margin/VBox/LightingRow"]
 layout_mode = 2
 size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 11
 text = "Twilight"
 
-[node name="BtnForge" type="Button" parent="UI/Panel/VBox/LightingRow"]
+[node name="BtnForge" type="Button" parent="UI/Panel/Scroll/Margin/VBox/LightingRow"]
 layout_mode = 2
 size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 11
 text = "Forge"
 
-[node name="SecInspect" type="Label" parent="UI/Panel/VBox"]
+[node name="SecInspect" type="Label" parent="UI/Panel/Scroll/Margin/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
 theme_override_font_sizes/font_size = 11
 text = "── PLAYBACK & INSPECTION ──"
 
-[node name="SpeedBox" type="HBoxContainer" parent="UI/Panel/VBox"]
+[node name="SpeedBox" type="HBoxContainer" parent="UI/Panel/Scroll/Margin/VBox"]
 layout_mode = 2
 
-[node name="SpeedLabel" type="Label" parent="UI/Panel/VBox/SpeedBox"]
+[node name="SpeedLabel" type="Label" parent="UI/Panel/Scroll/Margin/VBox/SpeedBox"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 12
+theme_override_font_sizes/font_size = 11
 text = "SPEED: 1.00x"
 
-[node name="SpeedSlider" type="HSlider" parent="UI/Panel/VBox/SpeedBox"]
+[node name="SpeedSlider" type="HSlider" parent="UI/Panel/Scroll/Margin/VBox/SpeedBox"]
 layout_mode = 2
 size_flags_horizontal = 3
 min_value = 0.25
@@ -310,24 +473,24 @@ max_value = 2.0
 step = 0.05
 value = 1.0
 
-[node name="TogglesBox" type="HBoxContainer" parent="UI/Panel/VBox"]
+[node name="TogglesBox" type="HBoxContainer" parent="UI/Panel/Scroll/Margin/VBox"]
 layout_mode = 2
 
-[node name="AutoRotateCheck" type="CheckBox" parent="UI/Panel/VBox/TogglesBox"]
+[node name="AutoRotateCheck" type="CheckBox" parent="UI/Panel/Scroll/Margin/VBox/TogglesBox"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 12
+theme_override_font_sizes/font_size = 11
 text = "Auto-Rotate"
 
-[node name="SkeletonCheck" type="CheckBox" parent="UI/Panel/VBox/TogglesBox"]
+[node name="SkeletonCheck" type="CheckBox" parent="UI/Panel/Scroll/Margin/VBox/TogglesBox"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 12
+theme_override_font_sizes/font_size = 11
 text = "Show Joints"
 
-[node name="ControlsNote" type="Label" parent="UI/Panel/VBox"]
+[node name="ControlsNote" type="Label" parent="UI/Panel/Scroll/Margin/VBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.55, 0.55, 0.6, 1)
+theme_override_colors/font_color = Color(0.65, 0.65, 0.72, 1)
 theme_override_font_sizes/font_size = 10
 text = "Left-Drag: Orbit | Wheel: Zoom | Mid-Drag: Pan"
 horizontal_alignment = 1

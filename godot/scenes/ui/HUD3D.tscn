@@ -1,4 +1,4 @@
-[gd_scene load_steps=4 format=3 uid="uid://c6hu83mdu3e1a"]
+[gd_scene load_steps=11 format=3 uid="uid://c6hu83mdu3e1a"]
 
 [ext_resource type="Script" path="res://scripts/ui/hud_3d.gd" id="1_hud3d"]
 
@@ -16,6 +16,60 @@ corner_radius_top_right = 6
 corner_radius_bottom_right = 6
 corner_radius_bottom_left = 6
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_boss_hp_fill"]
+bg_color = Color(0.9, 0.1, 0.2, 0.95)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_dialogue_bg"]
+bg_color = Color(0.06, 0.08, 0.14, 0.92)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.9, 0.75, 0.3, 0.9)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_lock_bg"]
+bg_color = Color(0.08, 0.12, 0.2, 0.9)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.2, 0.85, 1, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_touch_btn"]
+bg_color = Color(0.12, 0.14, 0.22, 0.75)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(1, 0.8, 0.2, 0.8)
+corner_radius_top_left = 24
+corner_radius_top_right = 24
+corner_radius_bottom_right = 24
+corner_radius_bottom_left = 24
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_overlay_defeat"]
+bg_color = Color(0.05, 0.02, 0.02, 0.85)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_overlay_victory"]
+bg_color = Color(0.02, 0.05, 0.08, 0.85)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(1, 0.85, 0.2, 1)
+
 [node name="HUD3D" type="CanvasLayer"]
 script = ExtResource("1_hud3d")
 
@@ -25,21 +79,23 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/margin_left = 24
-theme_override_constants/margin_top = 20
-theme_override_constants/margin_right = 24
-theme_override_constants/margin_bottom = 20
+mouse_filter = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 16
 
 [node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
 layout_mode = 2
-theme_override_constants/separation = 12
+mouse_filter = 2
+theme_override_constants/separation = 10
 
 [node name="TopBar" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
-theme_override_constants/separation = 20
+theme_override_constants/separation = 16
 
 [node name="HealthBar" type="ProgressBar" parent="MarginContainer/VBoxContainer/TopBar"]
-custom_minimum_size = Vector2(240, 24)
+custom_minimum_size = Vector2(220, 22)
 layout_mode = 2
 theme_override_styles/background = SubResource("StyleBoxFlat_hp_bg")
 theme_override_styles/fill = SubResource("StyleBoxFlat_hp_fill")
@@ -54,7 +110,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_font_sizes/font_size = 13
+theme_override_font_sizes/font_size = 12
 text = "HP: 100 / 100"
 horizontal_alignment = 1
 vertical_alignment = 1
@@ -65,16 +121,21 @@ layout_mode = 2
 [node name="ShardsLabel" type="Label" parent="MarginContainer/VBoxContainer/TopBar/ShardsPanel"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.2, 0.9, 1, 1)
-theme_override_font_sizes/font_size = 14
+theme_override_font_sizes/font_size = 13
 text = "✦ ASTRA SHARDS: 0 / 3"
 
 [node name="Spacer" type="Control" parent="MarginContainer/VBoxContainer/TopBar"]
 layout_mode = 2
 size_flags_horizontal = 3
 
+[node name="BtnToggleTouch" type="Button" parent="MarginContainer/VBoxContainer/TopBar"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "[ Touch Controls ]"
+
 [node name="BtnStudio" type="Button" parent="MarginContainer/VBoxContainer/TopBar"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 13
+theme_override_font_sizes/font_size = 12
 text = "[F1] 3D Character Studio"
 
 [node name="ObjectivePanel" type="PanelContainer" parent="MarginContainer/VBoxContainer"]
@@ -84,8 +145,37 @@ size_flags_horizontal = 0
 [node name="ObjectiveLabel" type="Label" parent="MarginContainer/VBoxContainer/ObjectivePanel"]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.85, 0.3, 1)
-theme_override_font_sizes/font_size = 14
-text = "MISSION: Recover 3 Astra Shards & Kindle the Sun Altar"
+theme_override_font_sizes/font_size = 13
+text = "MISSION: Recover 3 Astra Shards & Defeat General Kalanemi"
+
+[node name="TargetLockPanel" type="PanelContainer" parent="MarginContainer/VBoxContainer"]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_styles/panel = SubResource("StyleBoxFlat_lock_bg")
+
+[node name="Margin" type="MarginContainer" parent="MarginContainer/VBoxContainer/TargetLockPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 6
+
+[node name="HBox" type="HBoxContainer" parent="MarginContainer/VBoxContainer/TargetLockPanel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="TargetLabel" type="Label" parent="MarginContainer/VBoxContainer/TargetLockPanel/Margin/HBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.2, 0.9, 1, 1)
+theme_override_font_sizes/font_size = 13
+text = "⌖ TARGET LOCKED: ASURA TRAINING SENTINEL"
+
+[node name="UnlockHint" type="Label" parent="MarginContainer/VBoxContainer/TargetLockPanel/Margin/HBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.7, 0.8, 1)
+theme_override_font_sizes/font_size = 11
+text = "[TAB / MMB / R3: Unlock]"
 
 [node name="ControlsPanel" type="PanelContainer" parent="MarginContainer"]
 layout_mode = 2
@@ -102,23 +192,120 @@ theme_override_constants/margin_bottom = 8
 [node name="ControlsLabel" type="Label" parent="MarginContainer/ControlsPanel/Margin"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.8, 0.85, 0.9, 0.9)
+theme_override_font_sizes/font_size = 11
+text = "[W/A/S/D / L-Stick] Move  |  [Shift] Sprint
+[RMB Drag / R-Stick] Orbit  |  [Scroll] Zoom
+[Space / A Button] Jump   |  [F / B] Dash
+[LMB / X Button] Surya Combo Slash
+[Q / LB] Guard  |  [Tab / R3] Lock-On
+[E / Y Button] Interact / Dialogue"
+
+[node name="BossPanel" type="PanelContainer" parent="."]
+visible = false
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -260.0
+offset_top = 50.0
+offset_right = 260.0
+offset_bottom = 110.0
+grow_horizontal = 2
+
+[node name="VBox" type="VBoxContainer" parent="BossPanel"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="BossNameLabel" type="Label" parent="BossPanel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.2, 0.1, 1)
+theme_override_font_sizes/font_size = 14
+text = "☠ KALANEMI — CORRUPTED ASURA GENERAL ☠"
+horizontal_alignment = 1
+
+[node name="BossHealthBar" type="ProgressBar" parent="BossPanel/VBox"]
+custom_minimum_size = Vector2(500, 24)
+layout_mode = 2
+theme_override_styles/background = SubResource("StyleBoxFlat_hp_bg")
+theme_override_styles/fill = SubResource("StyleBoxFlat_boss_hp_fill")
+value = 350.0
+show_percentage = false
+
+[node name="Label" type="Label" parent="BossPanel/VBox/BossHealthBar"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 theme_override_font_sizes/font_size = 12
-text = "[W/A/S/D] Camera-Relative Move
-[Right-Click Drag] 3D Camera Orbit
-[Space] Jump   [Shift] Prana Dash
-[Left-Click / K] Surya Combo Slash
-[E] Interact / Kindle Altar
-[Scroll Wheel] Camera Zoom"
+text = "HP: 350 / 350"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="DialoguePanel" type="PanelContainer" parent="."]
+visible = false
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -320.0
+offset_top = -180.0
+offset_right = 320.0
+offset_bottom = -30.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_dialogue_bg")
+
+[node name="Margin" type="MarginContainer" parent="DialoguePanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 14
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 14
+
+[node name="VBox" type="VBoxContainer" parent="DialoguePanel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="HBox" type="HBoxContainer" parent="DialoguePanel/Margin/VBox"]
+layout_mode = 2
+
+[node name="SpeakerLabel" type="Label" parent="DialoguePanel/Margin/VBox/HBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0.3, 1)
+theme_override_font_sizes/font_size = 15
+text = "Devi Tara"
+
+[node name="RoleLabel" type="Label" parent="DialoguePanel/Margin/VBox/HBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.8, 1, 1)
+theme_override_font_sizes/font_size = 12
+text = "[Celestial Oracle of Tapas]"
+
+[node name="TextLabel" type="Label" parent="DialoguePanel/Margin/VBox"]
+custom_minimum_size = Vector2(580, 50)
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+text = "Arise, Child of the Sun. The Wheel of Time falters..."
+autowrap_mode = 2
+
+[node name="BtnNext" type="Button" parent="DialoguePanel/Margin/VBox"]
+layout_mode = 2
+size_flags_horizontal = 8
+theme_override_font_sizes/font_size = 11
+text = "[ Space / Click to Advance ]"
 
 [node name="BannerPanel" type="PanelContainer" parent="."]
+visible = false
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -280.0
+offset_left = -300.0
 offset_top = -60.0
-offset_right = 280.0
+offset_right = 300.0
 offset_bottom = 60.0
 grow_horizontal = 2
 grow_vertical = 2
@@ -131,3 +318,140 @@ text = "✦ SANCTUM OF ASTRA ✦"
 horizontal_alignment = 1
 vertical_alignment = 1
 autowrap_mode = 2
+
+[node name="DefeatOverlay" type="PanelContainer" parent="."]
+visible = false
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_overlay_defeat")
+
+[node name="VBox" type="VBoxContainer" parent="DefeatOverlay"]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+theme_override_constants/separation = 16
+
+[node name="Title" type="Label" parent="DefeatOverlay/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.2, 0.2, 1)
+theme_override_font_sizes/font_size = 32
+text = "FALLEN IN BATTLE"
+horizontal_alignment = 1
+
+[node name="Subtitle" type="Label" parent="DefeatOverlay/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.7, 0.7, 1)
+theme_override_font_sizes/font_size = 14
+text = "The shadows of Tamas claim this vessel."
+horizontal_alignment = 1
+
+[node name="BtnRetry" type="Button" parent="DefeatOverlay/VBox"]
+custom_minimum_size = Vector2(280, 42)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "[ R ] Respawn at Last Attuned Checkpoint"
+
+[node name="VictoryOverlay" type="PanelContainer" parent="."]
+visible = false
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -280.0
+offset_top = -140.0
+offset_right = 280.0
+offset_bottom = 140.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_overlay_victory")
+
+[node name="VBox" type="VBoxContainer" parent="VictoryOverlay"]
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+theme_override_constants/separation = 12
+
+[node name="Title" type="Label" parent="VictoryOverlay/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0.2, 1)
+theme_override_font_sizes/font_size = 24
+text = "☀️ REALM OF BHUMI CONSECRATED! ☀️"
+horizontal_alignment = 1
+
+[node name="SummaryLabel" type="Label" parent="VictoryOverlay/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.85, 0.9, 1, 1)
+theme_override_font_sizes/font_size = 13
+text = "✦ All 5 Astra Shards Purified
+✦ General Kalanemi Cleansed
+✦ Rta Restored — Realm 2 (Antariksha) Unlocked!"
+horizontal_alignment = 1
+
+[node name="BtnAscend" type="Button" parent="VictoryOverlay/VBox"]
+custom_minimum_size = Vector2(300, 42)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "[ E ] Ascend to Chapter II: Realm of Antariksha"
+
+[node name="TouchControls" type="Control" parent="."]
+visible = false
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="TouchButtons" type="HBoxContainer" parent="TouchControls"]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -380.0
+offset_top = -120.0
+offset_right = -20.0
+offset_bottom = -20.0
+grow_horizontal = 0
+grow_vertical = 0
+theme_override_constants/separation = 10
+
+[node name="BtnTouchAttack" type="Button" parent="TouchControls/TouchButtons"]
+custom_minimum_size = Vector2(64, 64)
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+theme_override_styles/normal = SubResource("StyleBoxFlat_touch_btn")
+text = "Slash"
+
+[node name="BtnTouchJump" type="Button" parent="TouchControls/TouchButtons"]
+custom_minimum_size = Vector2(64, 64)
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+theme_override_styles/normal = SubResource("StyleBoxFlat_touch_btn")
+text = "Jump"
+
+[node name="BtnTouchDash" type="Button" parent="TouchControls/TouchButtons"]
+custom_minimum_size = Vector2(64, 64)
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+theme_override_styles/normal = SubResource("StyleBoxFlat_touch_btn")
+text = "Dash"
+
+[node name="BtnTouchGuard" type="Button" parent="TouchControls/TouchButtons"]
+custom_minimum_size = Vector2(64, 64)
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+theme_override_styles/normal = SubResource("StyleBoxFlat_touch_btn")
+text = "Guard"
+
+[node name="BtnTouchInteract" type="Button" parent="TouchControls/TouchButtons"]
+custom_minimum_size = Vector2(64, 64)
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+theme_override_styles/normal = SubResource("StyleBoxFlat_touch_btn")
+text = "Interact"

@@ -1,0 +1,50 @@
+[gd_scene load_steps=6 format=3 uid="uid://boss_surya_avatara_scene"]
+
+[ext_resource type="Script" path="res://scripts/entities/boss_surya_avatara_3d.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://assets/characters/enemies/boss_surya_avatara.glb" id="2_glb"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_body"]
+radius = 1.4
+height = 4.2
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_cleave"]
+size = Vector3(5.5, 2.5, 4.0)
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_quake"]
+height = 2.4
+radius = 10.0
+
+[node name="BossSuryaAvatara3D" type="CharacterBody3D" groups=["bosses", "enemies"]]
+collision_layer = 4
+collision_mask = 3
+script = ExtResource("1_script")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.1, 0)
+shape = SubResource("CapsuleShape3D_body")
+
+[node name="VisualMesh" type="Node3D" parent="."]
+
+[node name="BossSuryaAvataraModel" parent="VisualMesh" instance=ExtResource("2_glb")]
+
+[node name="CleaveHitbox" type="Area3D" parent="."]
+collision_layer = 8
+collision_mask = 2
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="CleaveHitbox"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.0, -2.0)
+shape = SubResource("BoxShape3D_cleave")
+
+[node name="QuakeHitbox" type="Area3D" parent="."]
+collision_layer = 8
+collision_mask = 2
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="QuakeHitbox"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, 0)
+shape = SubResource("CylinderShape3D_quake")
+
+[node name="SolarHaloLight" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.5, 0)
+light_color = Color(1.0, 0.75, 0.15, 1)
+light_energy = 4.0
+omni_range = 18.0

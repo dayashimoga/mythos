@@ -1,0 +1,189 @@
+[gd_scene load_steps=20 format=3 uid="uid://maharloka_sanctuary_scene"]
+
+[ext_resource type="Script" path="res://scripts/levels/maharloka_sanctuary_3d.gd" id="1_realm_script"]
+[ext_resource type="PackedScene" uid="uid://dp61vx580veer" path="res://scenes/player/Player3D.tscn" id="2_player"]
+[ext_resource type="PackedScene" uid="uid://bvygku61k5n04" path="res://scenes/ui/HUD3D.tscn" id="3_hud"]
+[ext_resource type="PackedScene" uid="uid://c_devi_tara_3d" path="res://scenes/entities/DeviTara3D.tscn" id="4_tara"]
+[ext_resource type="PackedScene" uid="uid://astral_rishi_scene" path="res://scenes/entities/AstralRishi3D.tscn" id="5_rishi"]
+[ext_resource type="PackedScene" uid="uid://scripture_golem_scene" path="res://scenes/entities/ScriptureGolem3D.tscn" id="6_golem"]
+[ext_resource type="PackedScene" uid="uid://boss_brihaspati_scene" path="res://scenes/entities/BossBrihaspati3D.tscn" id="7_boss_brihaspati"]
+[ext_resource type="PackedScene" uid="uid://astral_glyph_scene" path="res://scenes/interactables/AstralGlyph3D.tscn" id="8_astral_glyph"]
+[ext_resource type="PackedScene" uid="uid://scripture_pedestal_scene" path="res://scenes/interactables/ScripturePedestal3D.tscn" id="9_pedestal"]
+[ext_resource type="PackedScene" uid="uid://mahar_mandala_scene" path="res://scenes/interactables/MaharMandala3D.tscn" id="10_mandala"]
+[ext_resource type="PackedScene" path="res://assets/environment/astral_library_shelf.glb" id="11_shelf"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_mahar"]
+sky_top_color = Color(0.12, 0.08, 0.32, 1)
+sky_horizon_color = Color(0.35, 0.25, 0.65, 1)
+ground_bottom_color = Color(0.05, 0.04, 0.12, 1)
+ground_horizon_color = Color(0.2, 0.15, 0.35, 1)
+
+[sub_resource type="Sky" id="Sky_mahar"]
+sky_material = SubResource("ProceduralSkyMaterial_mahar")
+
+[sub_resource type="Environment" id="Environment_mahar"]
+background_mode = 2
+sky = SubResource("Sky_mahar")
+ambient_light_source = 3
+ambient_light_color = Color(0.65, 0.75, 1.0, 1)
+ambient_light_energy = 0.85
+tonemap_mode = 2
+glow_enabled = true
+glow_intensity = 0.8
+glow_bloom = 0.3
+fog_enabled = true
+fog_light_color = Color(0.25, 0.2, 0.45, 1)
+fog_density = 0.001
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_astral_stone"]
+albedo_color = Color(0.35, 0.38, 0.52, 1)
+metallic = 0.3
+roughness = 0.4
+
+[sub_resource type="BoxMesh" id="BoxMesh_terrace_entry"]
+material = SubResource("StandardMaterial3D_astral_stone")
+size = Vector3(24, 2, 22)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_terrace_entry"]
+size = Vector3(24, 2, 22)
+
+[sub_resource type="BoxMesh" id="BoxMesh_terrace_archive"]
+material = SubResource("StandardMaterial3D_astral_stone")
+size = Vector3(32, 2, 28)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_terrace_archive"]
+size = Vector3(32, 2, 28)
+
+[sub_resource type="BoxMesh" id="BoxMesh_terrace_boss"]
+material = SubResource("StandardMaterial3D_astral_stone")
+size = Vector3(40, 2, 40)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_terrace_boss"]
+size = Vector3(40, 2, 40)
+
+[sub_resource type="BoxMesh" id="BoxMesh_terrace_sanctum"]
+material = SubResource("StandardMaterial3D_astral_stone")
+size = Vector3(22, 2, 20)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_terrace_sanctum"]
+size = Vector3(22, 2, 20)
+
+[node name="MaharlokaSanctuary3D" type="Node3D"]
+script = ExtResource("1_realm_script")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_mahar")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.866, -0.354, 0.354, 0, 0.707, 0.707, -0.5, -0.612, 0.612, 0, 50, 0)
+light_color = Color(0.8, 0.85, 1.0, 1)
+light_energy = 1.4
+shadow_enabled = true
+
+[node name="Player3D" parent="." instance=ExtResource("2_player")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
+
+[node name="HUD3D" parent="." instance=ExtResource("3_hud")]
+
+[node name="DeviTaraMahar3D" parent="." instance=ExtResource("4_tara")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.0, -5.0)
+
+[node name="EntryTerrace" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+collision_layer = 1
+collision_mask = 0
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="EntryTerrace"]
+mesh = SubResource("BoxMesh_terrace_entry")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="EntryTerrace"]
+shape = SubResource("BoxShape3D_terrace_entry")
+
+[node name="ShelfLeft1" parent="." instance=ExtResource("11_shelf")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9, 1.0, -6)
+
+[node name="ShelfRight1" parent="." instance=ExtResource("11_shelf")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 1.0, -6)
+
+[node name="AstralGlyph1" parent="." instance=ExtResource("8_astral_glyph")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.0, -9)
+glyph_id = "glyph_entry_to_archive"
+levitation_speed = 14.0
+
+[node name="ArchiveTerrace" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 14.0, -36)
+collision_layer = 1
+collision_mask = 0
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="ArchiveTerrace"]
+mesh = SubResource("BoxMesh_terrace_archive")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ArchiveTerrace"]
+shape = SubResource("BoxShape3D_terrace_archive")
+
+[node name="ScripturePedestal1" parent="." instance=ExtResource("9_pedestal")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 15.0, -34)
+pedestal_id = "scripture_rigveda"
+scripture_title = "Rigveda: Hymn of the Cosmic Breath"
+
+[node name="ScripturePedestal2" parent="." instance=ExtResource("9_pedestal")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 15.0, -34)
+pedestal_id = "scripture_upanishad"
+scripture_title = "Mandukya: The Geometry of Om"
+
+[node name="ScriptureGolem1" parent="." instance=ExtResource("6_golem")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 15.0, -38)
+
+[node name="ScriptureGolem2" parent="." instance=ExtResource("6_golem")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 15.0, -38)
+
+[node name="AstralRishi1" parent="." instance=ExtResource("5_rishi")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 16.5, -42)
+
+[node name="ShelfArchive1" parent="." instance=ExtResource("11_shelf")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, 15.0, -42)
+
+[node name="ShelfArchive2" parent="." instance=ExtResource("11_shelf")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 12, 15.0, -42)
+
+[node name="AstralGlyph2" parent="." instance=ExtResource("8_astral_glyph")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 15.0, -47)
+glyph_id = "glyph_archive_to_boss"
+levitation_speed = 14.0
+
+[node name="GrandObservatory" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 26.0, -78)
+collision_layer = 1
+collision_mask = 0
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="GrandObservatory"]
+mesh = SubResource("BoxMesh_terrace_boss")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="GrandObservatory"]
+shape = SubResource("BoxShape3D_terrace_boss")
+
+[node name="BossBrihaspati3D" parent="." instance=ExtResource("7_boss_brihaspati")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 27.0, -80)
+
+[node name="AstralRishi2" parent="." instance=ExtResource("5_rishi")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12, 28.5, -84)
+
+[node name="SanctumTerrace" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 29.0, -106)
+collision_layer = 1
+collision_mask = 0
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="SanctumTerrace"]
+mesh = SubResource("BoxMesh_terrace_sanctum")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="SanctumTerrace"]
+shape = SubResource("BoxShape3D_terrace_sanctum")
+
+[node name="MaharMandala3D" parent="." instance=ExtResource("10_mandala")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 30.0, -106)
+
+[node name="ObservatoryLight" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 34, -78)
+light_color = Color(0.4, 0.7, 1.0, 1)
+light_energy = 3.5
+omni_range = 36.0

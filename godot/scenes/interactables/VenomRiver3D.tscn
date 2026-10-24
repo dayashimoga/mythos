@@ -1,0 +1,37 @@
+[gd_scene load_steps=5 format=3 uid="uid://venom_river_scene"]
+
+[ext_resource type="Script" path="res://scripts/interactables/venom_river_3d.gd" id="1_script"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_river"]
+size = Vector3(40, 1.5, 14)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_venom"]
+transparency = 1
+albedo_color = Color(0.08, 0.75, 0.25, 0.85)
+roughness = 0.1
+emission_enabled = true
+emission = Color(0.05, 0.6, 0.15, 1)
+emission_energy_multiplier = 2.2
+
+[sub_resource type="BoxMesh" id="BoxMesh_river"]
+material = SubResource("StandardMaterial3D_venom")
+size = Vector3(40, 0.4, 14)
+
+[node name="VenomRiver3D" type="Area3D" groups=["hazards"]]
+collision_layer = 16
+collision_mask = 6
+script = ExtResource("1_script")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+shape = SubResource("BoxShape3D_river")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.2, 0)
+mesh = SubResource("BoxMesh_river")
+
+[node name="VenomLight" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+light_color = Color(0.1, 0.9, 0.25, 1)
+light_energy = 1.6
+omni_range = 14.0

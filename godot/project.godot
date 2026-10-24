@@ -9,7 +9,7 @@ config_version=5
 config/name="Mythos: Astra & The Seven Realms"
 config/description="Genuine 3D third-person action RPG set in Vedic and Puranic mythology."
 config/version="1.15.0-3d"
-run/main_scene="res://scenes/levels/TestChamber3D.tscn"
+run/main_scene="res://scenes/levels/BhumiValley3D.tscn"
 config/features=PackedStringArray("4.3", "Forward Plus")
 config/icon="res://icon.svg"
 
