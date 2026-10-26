@@ -10,6 +10,7 @@ const BossAgniRudraScript = preload("res://scripts/entities/boss_agni_rudra_3d.g
 const MagmaGeyserScript = preload("res://scripts/interactables/magma_geyser_3d.gd")
 const PrimordialForgeScript = preload("res://scripts/interactables/primordial_forge_3d.gd")
 const TapoPeethamScript = preload("res://scripts/interactables/tapo_peetham_3d.gd")
+const CinematicDirectorScript = preload("res://scripts/cinematics/cinematic_director_3d.gd")
 
 @onready var player: CharacterBody3D = $Player3D
 @onready var hud: HUD3D = $HUD3D if has_node("HUD3D") else null
@@ -25,9 +26,13 @@ const TARGET_FORGES: int = 2
 var last_checkpoint_pos: Vector3 = Vector3(0, 1.5, 0)
 var level_start_time: float = 0.0
 var is_realm_cleansed: bool = false
+var cinematic_director: Node = null
+var _boss_intro_played: bool = false
 
 func _ready() -> void:
 	level_start_time = Time.get_ticks_msec() / 1000.0
+	AudioManager3D.set_ambience("tapoloka")
+	_setup_cinematic_director()
 	quest_mgr = QuestManagerScript.new()
 	dialogue_runner = DialogueRunnerScript.new()
 
@@ -40,10 +45,15 @@ func _ready() -> void:
 		player.interaction_requested.connect(_on_dialogue_requested)
 
 	if hud:
+		hud.set_quest_manager(quest_mgr, "Tapoloka")
+		hud.update_weapon("Agni-Gada")
 		hud.next_realm_scene_path = "res://scenes/levels/SatyalokaApex3D.tscn"
 		hud.retry_requested.connect(_on_retry_requested)
 		_refresh_objective_display()
 		hud.show_banner("✦ REALM OF TAPOLOKA: AGNI'S PRIMORDIAL FORGE ✦\nRekindle the sacred fire of divine asceticism.", 5.0)
+
+	if cinematic_director:
+		cinematic_director.play_realm_intro("tapoloka")
 
 	if tara_npc:
 		tara_npc.dialogue_requested.connect(func(): _on_dialogue_requested("tara_tapo"))
@@ -59,6 +69,14 @@ func _ready() -> void:
 
 	if tapo_peetham_altar:
 		tapo_peetham_altar.peetham_consecrated.connect(_on_peetham_consecrated)
+
+func _setup_cinematic_director() -> void:
+	if has_node("CinematicDirector3D"):
+		cinematic_director = $CinematicDirector3D
+	else:
+		cinematic_director = CinematicDirectorScript.new()
+		cinematic_director.name = "CinematicDirector3D"
+		add_child(cinematic_director)
 
 func _physics_process(_delta: float) -> void:
 	# Void Fall Safeguard
@@ -102,6 +120,11 @@ func _on_forge_attuned(_forge_id: String) -> void:
 		_refresh_objective_display()
 
 func _on_boss_health_changed(curr: int, max_hp: int) -> void:
+	if not _boss_intro_played and boss_agni:
+		_boss_intro_played = true
+		if cinematic_director:
+			cinematic_director.play_boss_intro("agni", "Agni Rudra", "Primordial Fire Titan", boss_agni.global_position)
+
 	if hud:
 		hud.show_boss_bar("Agni Rudra — Primordial Fire Titan", curr, max_hp)
 
@@ -138,6 +161,9 @@ func _on_peetham_consecrated(_altar: Area3D = null) -> void:
 	SaveSystem.save_game(save_state)
 
 	_spawn_satyaloka_portal()
+
+	if cinematic_director and tapo_peetham_altar:
+		cinematic_director.play_consecration_victory("Tapoloka", tapo_peetham_altar.global_position)
 
 	if hud:
 		_refresh_objective_display()
@@ -216,6 +242,9 @@ func _on_dialogue_requested(dialogue_id: String) -> void:
 	if dialogue_id == "tara_intro":
 		start_node = "tara_intro"
 
+	if tara_npc and tara_npc.has_method("play_talk"):
+		tara_npc.play_talk()
+
 	if dialogue_runner.start(start_node):
 		_display_active_dialogue_node()
 
@@ -223,6 +252,8 @@ func _display_active_dialogue_node() -> void:
 	if not dialogue_runner or not dialogue_runner.is_active:
 		if hud:
 			hud.hide_dialogue()
+		if tara_npc and tara_npc.has_method("play_idle"):
+			tara_npc.play_idle()
 		return
 
 	var node = dialogue_runner.nodes.get(dialogue_runner.current_node_id, null)
@@ -232,6 +263,8 @@ func _display_active_dialogue_node() -> void:
 				_display_active_dialogue_node()
 			else:
 				hud.hide_dialogue()
+				if tara_npc and tara_npc.has_method("play_bless"):
+					tara_npc.play_bless()
 				if quest_mgr:
 					quest_mgr.update_objective_progress("purification_of_tapoloka", "commune_tara_forge", 1)
 					_refresh_objective_display()

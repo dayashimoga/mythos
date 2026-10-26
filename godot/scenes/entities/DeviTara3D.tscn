@@ -1,79 +1,53 @@
-[gd_scene load_steps=12 format=3 uid="uid://c6p87w4d3devi"]
+[gd_scene load_steps=8 format=3 uid="uid://c6p87w4d3devi"]
 
 [ext_resource type="Script" path="res://scripts/entities/devi_tara_3d.gd" id="1_tara"]
-
-[sub_resource type="StandardMaterial3D" id="Mat_TaraSilk"]
-transparency = 1
-albedo_color = Color(0.18, 0.68, 0.75, 0.88)
-roughness = 0.25
-metallic = 0.1
-emission_enabled = true
-emission = Color(0.08, 0.32, 0.42, 1)
-
-[sub_resource type="CapsuleMesh" id="CapsuleMesh_Body"]
-material = SubResource("Mat_TaraSilk")
-radius = 0.35
-height = 1.65
-
-[sub_resource type="StandardMaterial3D" id="Mat_TaraFace"]
-albedo_color = Color(0.85, 0.65, 0.48, 1)
-roughness = 0.4
-metallic = 0.05
-emission_enabled = true
-emission = Color(0.15, 0.10, 0.05, 1)
-
-[sub_resource type="SphereMesh" id="SphereMesh_Head"]
-material = SubResource("Mat_TaraFace")
-radius = 0.22
-height = 0.44
+[ext_resource type="PackedScene" path="res://assets/characters/npcs/devi_tara.scn" id="2_model"]
 
 [sub_resource type="StandardMaterial3D" id="Mat_TaraGold"]
-albedo_color = Color(0.95, 0.78, 0.22, 1)
-roughness = 0.2
-metallic = 0.92
+transparency = 1
+albedo_color = Color(0.95, 0.82, 0.35, 0.75)
+roughness = 0.15
+metallic = 0.9
 emission_enabled = true
-emission = Color(0.35, 0.28, 0.05, 1)
+emission = Color(0.35, 0.28, 0.08, 1)
 
 [sub_resource type="CylinderMesh" id="CylinderMesh_Crown"]
 material = SubResource("Mat_TaraGold")
-top_radius = 0.08
-bottom_radius = 0.22
-height = 0.45
+top_radius = 0.02
+bottom_radius = 0.14
+height = 0.25
 
 [sub_resource type="TorusMesh" id="TorusMesh_Aura"]
 material = SubResource("Mat_TaraGold")
 inner_radius = 0.75
-outer_radius = 0.95
+outer_radius = 0.92
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_Interact"]
-radius = 2.8
+radius = 3.2
 
 [node name="DeviTara3D" type="Node3D" groups=["interactables", "npcs"]]
 script = ExtResource("1_tara")
 
 [node name="VisualRoot" type="Node3D" parent="."]
 
-[node name="BodyMesh" type="MeshInstance3D" parent="VisualRoot"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.85, 0)
-mesh = SubResource("CapsuleMesh_Body")
+[node name="ModelRoot" type="Node3D" parent="VisualRoot"]
 
-[node name="HeadMesh" type="MeshInstance3D" parent="VisualRoot"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.82, 0)
-mesh = SubResource("SphereMesh_Head")
+[node name="devi_tara" parent="VisualRoot/ModelRoot" instance=ExtResource("2_model")]
 
 [node name="CrownMesh" type="MeshInstance3D" parent="VisualRoot"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.15, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.12, 0)
+visible = false
 mesh = SubResource("CylinderMesh_Crown")
 
 [node name="AuraRing" type="MeshInstance3D" parent="VisualRoot"]
-transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 1.75, -0.15)
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 1.76, 0.18)
 mesh = SubResource("TorusMesh_Aura")
 
 [node name="PranaLight" type="OmniLight3D" parent="VisualRoot"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, 0.2)
-light_color = Color(0.25, 0.85, 0.95, 1)
-light_energy = 2.2
-omni_range = 5.0
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.75, 0.25)
+light_color = Color(0.25, 0.88, 0.98, 1)
+light_energy = 2.6
+omni_range = 6.0
 
 [node name="InteractionArea" type="Area3D" parent="."]
 collision_layer = 16
@@ -84,7 +58,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, 0)
 shape = SubResource("SphereShape3D_Interact")
 
 [node name="PromptLabel" type="Label3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.65, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, 0)
 billboard = 1
 no_depth_test = true
 text = "[E] Converse with Devi Tara"

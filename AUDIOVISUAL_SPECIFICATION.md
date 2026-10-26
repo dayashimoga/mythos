@@ -185,3 +185,26 @@ Vocal syllables are produced using an oscillator carrier coupled with parallel b
 3. **Raga Dynamic Blending:** Zero clicks or audible phase pops during transition between quiet exploration and high-tension boss battle.
 4. **Cinematic Continuity:** 100% state restoration upon cutscene skip (`ESC`), verified by automated regression tests.
 5. **Code Coverage:** Global coverage across all audiovisual subsystems maintained at $\ge 90\%$ Statements/Lines and $\ge 85\%$ Branches.
+
+---
+
+## 9. 3D Engine Audiovisual Polish & Spatial Mixing Architecture (Stage Q7)
+
+### 9.1 In-Engine 3D Audio Subsystem (`AudioManager3D`)
+- **Spatial Attenuation**: 3D positional sound emitter pooling (`AudioStreamPlayer3D`) with unit size $4.0\text{m}$, max distance $45.0\text{m}$, and realistic logarithmic distance falloff.
+- **Footstep Foley Synchronization**: Synchronized with Veer's skeletal gait phase in `PlayerController3D` (`_update_footstep_audio`), calculating contact timing for left and right foot strikes on stone and consecrated terrain.
+- **Multi-Bus Decibel Attenuation**: Live player control over `master_volume`, `sfx_volume`, and `ambience_volume` via `PauseMenu3D` sliders with linear-to-dB conversion (`linear_to_db(vol * master)` down to $-80.0\text{ dB}$).
+- **Seven-Realm Atmospheric Soundscapes**: Dynamic dual-stream crossfading (`ambient_player_a` and `ambient_player_b` over $1.2\text{s}$ tween) delivering procedural 16-bit 44.1kHz audio stems across all 7 Lokas:
+  - *Bhumi:* Dandaka sacred grove rustling, wind through ancient pillars, temple bell hums.
+  - *Antariksha:* Roaring aerodynamic high-altitude gusts, gale updrafts, celestial turbines.
+  - *Patala:* Subterranean cavern resonance, mineral water drips, low-frequency serpentine rumble.
+  - *Svar:* Solar light prism resonance, sunlit marble acoustic reflections, brass drone.
+  - *Maharloka:* Ethereal astral glyph levitation hums, chanting harmonics, tranquil stillness.
+  - *Tapoloka:* Magma geyser bubbling, caldera volcanic heat rush, deep furnace combustion.
+  - *Satyaloka:* Harmonic cosmic lotus singing bowls, transcendent tanpura frequencies.
+
+### 9.2 In-Engine VFX & Camera Combat Polish
+- **Hit-Stop Micro-Freezes**: Authoritative $0.06\text{s}$ time dilation on successful combo melee strikes, emphasizing kinetic impact weight.
+- **Torus Slash Arc Meshes**: Geometric golden solar slash arcs dynamically spawned along Veer's sunsteel blade path, fading smoothly over $0.14\text{s}$.
+- **Camera Trauma & Accessibility Shake Limits**: Rotational trauma shake system in `OrbitCamera3D` operating with quadratic decay ($\text{shake} = \text{trauma}^2 \times \text{multiplier}$), scaling instantaneously with the player's accessibility settings and fully suppressed when `reduced_motion` is enabled.
+

@@ -40,9 +40,40 @@ var hover_base_y: float = 3.5
 @onready var tempest_core_light: OmniLight3D = $TempestCoreLight
 @onready var telegraph_ring: Decal = $TelegraphRing
 
+var anim_player: AnimationPlayer = null
+
 signal boss_health_changed(current: int, max_hp: int)
 signal boss_phase_changed(phase: int)
 signal boss_defeated()
+
+func _find_anim_player(node: Node) -> AnimationPlayer:
+	if node is AnimationPlayer:
+		return node
+	for child in node.get_children():
+		var found = _find_anim_player(child)
+		if found:
+			return found
+	return null
+
+func _play_anim(anim_name: String, blend_time: float = 0.15) -> void:
+	if not anim_player:
+		anim_player = _find_anim_player(self)
+	if anim_player and anim_player.has_animation(anim_name):
+		if anim_player.current_animation != anim_name:
+			anim_player.play(anim_name, blend_time)
+
+func _apply_camera_trauma(amount: float) -> void:
+	if not is_inside_tree():
+		return
+	var cameras = get_tree().get_nodes_in_group("camera_3d")
+	for cam in cameras:
+		if cam.has_method("add_trauma"):
+			cam.add_trauma(amount)
+			return
+	if target_player and target_player.has_node("OrbitCamera3D"):
+		var cam = target_player.get_node("OrbitCamera3D")
+		if cam.has_method("add_trauma"):
+			cam.add_trauma(amount)
 
 func _init() -> void:
 	add_to_group("bosses")
@@ -54,6 +85,8 @@ func _init() -> void:
 func _ready() -> void:
 	arena_center = global_position
 	current_health = max_health
+	anim_player = _find_anim_player(self)
+	_play_anim("boss_idle")
 	if sweep_hitbox:
 		sweep_hitbox.monitoring = false
 		sweep_hitbox.body_entered.connect(_on_sweep_hit_body)
@@ -99,12 +132,14 @@ func _physics_process(delta: float) -> void:
 			_process_staggered(delta)
 
 func _process_idle(_delta: float) -> void:
+	_play_anim("boss_idle")
 	if target_player and global_position.distance_to(target_player.global_position) <= perception_radius:
 		current_state = State.HOVER_COMBAT
 		state_timer = 0.0
 
 func _process_hover_combat(delta: float) -> void:
 	if not target_player:
+		_play_anim("boss_idle")
 		return
 
 	var dist = global_position.distance_to(target_player.global_position)
@@ -119,9 +154,11 @@ func _process_hover_combat(delta: float) -> void:
 		var dir = (target_player.global_position - global_position).normalized()
 		velocity.x = dir.x * speed
 		velocity.z = dir.z * speed
+		_play_anim("boss_walk")
 	else:
 		velocity.x = lerp(velocity.x, 0.0, 4.0 * delta)
 		velocity.z = lerp(velocity.z, 0.0, 4.0 * delta)
+		_play_anim("boss_idle")
 
 	move_and_slide()
 
@@ -137,6 +174,7 @@ func _start_sweep_attack() -> void:
 	current_state = State.GALE_SWEEP_TELEGRAPH
 	state_timer = 0.0
 	velocity = Vector3.ZERO
+	_play_anim("boss_cleave_telegraph")
 	if tempest_core_light:
 		tempest_core_light.light_energy = 5.0
 		tempest_core_light.light_color = Color(1.0, 0.3, 0.1)
@@ -146,6 +184,7 @@ func _process_sweep_telegraph(delta: float) -> void:
 	if state_timer >= (0.6 if current_phase == 2 else 0.85):
 		current_state = State.GALE_SWEEP_ATTACK
 		state_timer = 0.0
+		_play_anim("boss_cleave_attack")
 		if sweep_hitbox:
 			sweep_hitbox.monitoring = true
 
@@ -170,6 +209,7 @@ func _start_tempest_vortex() -> void:
 	current_state = State.TEMPEST_VORTEX
 	state_timer = 0.0
 	velocity = Vector3.ZERO
+	_play_anim("boss_vortex_channel")
 
 func _process_vortex(delta: float) -> void:
 	state_timer += delta
@@ -187,6 +227,7 @@ func _start_dive_slam() -> void:
 	current_state = State.DIVE_SLAM_TELEGRAPH
 	state_timer = 0.0
 	dive_target_pos = target_player.global_position if target_player else arena_center
+	_play_anim("boss_slam_leap")
 	if telegraph_ring:
 		telegraph_ring.global_position = Vector3(dive_target_pos.x, arena_center.y + 0.1, dive_target_pos.z)
 		telegraph_ring.visible = true
@@ -201,6 +242,7 @@ func _process_dive_telegraph(delta: float) -> void:
 		current_state = State.DIVE_SLAM_IMPACT
 		state_timer = 0.0
 		global_position = Vector3(dive_target_pos.x, global_position.y, dive_target_pos.z)
+		_play_anim("boss_slam_impact")
 		if slam_hitbox:
 			slam_hitbox.monitoring = true
 
@@ -211,6 +253,7 @@ func _process_dive_impact(delta: float) -> void:
 	move_and_slide()
 
 	if is_on_floor() or global_position.y <= arena_center.y + 0.5 or state_timer >= 0.8:
+		_apply_camera_trauma(0.65)
 		if telegraph_ring:
 			telegraph_ring.visible = false
 		if slam_hitbox:
@@ -258,6 +301,7 @@ func take_damage(amount: int, poise_dmg: float = 25.0) -> void:
 		if broken and current_state != State.STAGGERED:
 			current_state = State.STAGGERED
 			state_timer = 0.0
+			_play_anim("boss_stagger")
 			if sweep_hitbox:
 				sweep_hitbox.monitoring = false
 			if slam_hitbox:
@@ -276,6 +320,8 @@ func _trigger_phase_two() -> void:
 	is_enraged = true
 	current_state = State.ENRAGE_ROAR
 	state_timer = 0.0
+	_play_anim("boss_roar")
+	_apply_camera_trauma(0.50)
 	boss_phase_changed.emit(2)
 
 	if tempest_core_light:
@@ -296,6 +342,7 @@ func _on_slam_hit_body(body: Node3D) -> void:
 
 func _die() -> void:
 	current_state = State.DEFEATED
+	_play_anim("boss_defeat")
 	if sweep_hitbox:
 		sweep_hitbox.monitoring = false
 	if slam_hitbox:

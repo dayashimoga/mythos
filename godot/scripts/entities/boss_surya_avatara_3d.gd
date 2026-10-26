@@ -31,6 +31,7 @@ var target_player: Node3D = null
 var state_timer: float = 0.0
 var attack_cooldown: float = 0.0
 var arena_center: Vector3 = Vector3.ZERO
+var anim_player: AnimationPlayer = null
 
 @onready var visual_mesh: Node3D = $VisualMesh
 @onready var cleave_hitbox: Area3D = $CleaveHitbox
@@ -42,6 +43,35 @@ signal boss_phase_changed(phase: int)
 signal boss_defeated()
 signal solar_burst_triggered(epicenter: Vector3)
 
+func _find_anim_player(node: Node) -> AnimationPlayer:
+	if node is AnimationPlayer:
+		return node
+	for child in node.get_children():
+		var found = _find_anim_player(child)
+		if found:
+			return found
+	return null
+
+func _play_anim(anim_name: String, blend_time: float = 0.15) -> void:
+	if not anim_player:
+		anim_player = _find_anim_player(self)
+	if anim_player and anim_player.has_animation(anim_name):
+		if anim_player.current_animation != anim_name:
+			anim_player.play(anim_name, blend_time)
+
+func _apply_camera_trauma(amount: float) -> void:
+	if not is_inside_tree():
+		return
+	var cameras = get_tree().get_nodes_in_group("camera_3d")
+	for cam in cameras:
+		if cam.has_method("add_trauma"):
+			cam.add_trauma(amount)
+			return
+	if target_player and target_player.has_node("OrbitCamera3D"):
+		var cam = target_player.get_node("OrbitCamera3D")
+		if cam.has_method("add_trauma"):
+			cam.add_trauma(amount)
+
 func _init() -> void:
 	add_to_group("bosses")
 	add_to_group("enemies")
@@ -52,6 +82,8 @@ func _init() -> void:
 func _ready() -> void:
 	arena_center = global_position
 	current_health = max_health
+	anim_player = _find_anim_player(self)
+	_play_anim("boss_idle")
 	if cleave_hitbox:
 		cleave_hitbox.monitoring = false
 		cleave_hitbox.body_entered.connect(_on_cleave_hit_body)
@@ -107,6 +139,7 @@ func _safe_look_at(target_pos: Vector3) -> void:
 
 func _process_idle(delta: float) -> void:
 	state_timer += delta
+	_play_anim("boss_idle")
 	if target_player and is_instance_valid(target_player):
 		var dist = _get_entity_pos(self).distance_to(_get_entity_pos(target_player))
 		if dist <= perception_radius:
@@ -115,6 +148,7 @@ func _process_idle(delta: float) -> void:
 
 func _process_approach(delta: float) -> void:
 	state_timer += delta
+	_play_anim("boss_walk")
 	if not target_player or not is_instance_valid(target_player):
 		return
 
@@ -143,6 +177,7 @@ func _process_approach(delta: float) -> void:
 
 func _process_cleave_telegraph(delta: float) -> void:
 	state_timer += delta
+	_play_anim("boss_cleave_telegraph")
 	if target_player and is_instance_valid(target_player):
 		_safe_look_at(_get_entity_pos(target_player))
 
@@ -153,6 +188,7 @@ func _process_cleave_telegraph(delta: float) -> void:
 	if state_timer >= telegraph_duration:
 		current_state = State.GREATSWORD_CLEAVE_EXECUTE
 		state_timer = 0.0
+		_play_anim("boss_cleave_attack", 0.05)
 		if cleave_hitbox:
 			cleave_hitbox.monitoring = true
 
@@ -171,6 +207,7 @@ func _process_cleave_execute(delta: float) -> void:
 func _process_beam_barrage(delta: float) -> void:
 	state_timer += delta
 	velocity = Vector3.ZERO
+	_play_anim("boss_solar_beam_channel")
 
 	if state_timer >= 0.3 and state_timer - delta < 0.3:
 		_fire_solar_beam(0.0)
@@ -201,6 +238,7 @@ func _fire_solar_beam(_offset_angle: float) -> void:
 func _process_pillar_quake(delta: float) -> void:
 	state_timer += delta
 	velocity = Vector3.ZERO
+	_play_anim("boss_supernova_impact")
 
 	if state_timer <= 0.6:
 		if solar_halo_light:
@@ -208,6 +246,7 @@ func _process_pillar_quake(delta: float) -> void:
 	elif state_timer >= 0.6 and state_timer - delta < 0.6:
 		if quake_hitbox:
 			quake_hitbox.monitoring = true
+		_apply_camera_trauma(0.65)
 		solar_burst_triggered.emit(_get_entity_pos(self))
 	elif state_timer >= 0.95:
 		if quake_hitbox:
@@ -219,6 +258,10 @@ func _process_pillar_quake(delta: float) -> void:
 func _process_enrage_roar(delta: float) -> void:
 	state_timer += delta
 	velocity = Vector3.ZERO
+	_play_anim("boss_enrage_flare")
+	if state_timer < delta * 1.5:
+		_apply_camera_trauma(0.50)
+
 	if solar_halo_light:
 		solar_halo_light.light_color = Color(1.0, 0.95, 0.7, 1.0)
 		solar_halo_light.light_energy = 7.0
@@ -230,6 +273,7 @@ func _process_enrage_roar(delta: float) -> void:
 func _process_stagger(delta: float) -> void:
 	state_timer += delta
 	velocity = velocity.move_toward(Vector3.ZERO, 15.0 * delta)
+	_play_anim("boss_cleave_telegraph")
 	if state_timer >= 2.0:
 		current_state = State.SOLAR_APPROACH
 		state_timer = 0.0
@@ -310,6 +354,7 @@ func _die() -> void:
 	current_state = State.DEFEATED
 	current_health = 0
 	velocity = Vector3.ZERO
+	_play_anim("boss_defeat", 0.1)
 	if cleave_hitbox:
 		cleave_hitbox.monitoring = false
 	if quake_hitbox:
@@ -317,5 +362,6 @@ func _die() -> void:
 	boss_defeated.emit()
 	if is_inside_tree():
 		var tween = create_tween()
+		tween.tween_interval(1.2)
 		tween.tween_property(self, "scale", Vector3.ZERO, 1.2)
 		tween.tween_callback(queue_free)

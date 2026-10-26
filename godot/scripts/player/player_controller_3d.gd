@@ -2,32 +2,44 @@ class_name PlayerController3D
 extends CharacterBody3D
 
 const AudioManager3D = preload("res://scripts/audio/audio_manager_3d.gd")
+const CombatMath = preload("res://scripts/domain/combat_math.gd")
 
-## Production 3D Third-Person Character Controller for Veer (Solar Guardian).
+## Stage Q2 — Production Realistic 3D Humanoid Locomotion and Character Controller for Veer.
 ## Features:
-## - Full skinned humanoid mesh with 24-bone Skeleton3D
-## - Camera-relative locomotion with smooth rotation & target-locked strafing
-## - Speed-matched gait synchronization (Walk, Jog, Sprint) eliminating foot sliding
+## - Full 24-bone Skeleton3D humanoid animation integration
+## - Programmatic AnimationTree with AnimationNodeStateMachine & AnimationNodeBlendSpace2D
+## - Seamless speed-matched gait blending (Idle, Walk, Jog, Run, Sprint, Walk Backward, Strafing)
+## - Dynamic body lean / banking roll into turns and forward acceleration pitch
+## - Turn-in-place state selection (90 deg left/right, 180 deg)
+## - Grounded foot placement with gait-phase stride tracking & 3D footstep audio
 ## - Slope handling with constant speed, stair snapping (0.45m), and slope velocity alignment
 ## - Enhanced jump with jump buffering (0.15s), coyote time (0.12s), and variable jump cutoff
 ## - 4-directional Prana Dash (Dodge) with invulnerability frames
-## - 3-hit Surya combo attack sequence with active 3D melee hitboxes & CombatMath integration
+## - 3-hit Surya combo attack sequence with contact-synchronized 3D melee hitboxes & CombatMath
 ## - Directional shield guard stance (absorbs 75% dmg) and 140ms perfect parry deflection
+## - BoneAttachment3D sockets for weapon (right hand) and shield (left hand)
 ## - Multi-input support: Keyboard & Mouse, Gamepad analog sticks/buttons, Touch triggers
 ## - Forward raycast and proximity area spatial interactions with shrines and Astra shards
 
 signal health_changed(current: int, max_val: int)
 signal shards_changed(count: int)
+signal prana_changed(current: float, max_val: float)
+signal nearby_prompt_changed(prompt_text: String)
 signal interacted_with(target_name: String)
 signal interaction_requested(target_name: String)
 signal locomotion_state_changed(state: String, speed: float)
 signal attack_hit(target: Node3D, damage: int, is_crit: bool)
+signal attack_phase_changed(phase: String, combo_index: int)
+signal footstep_contact(foot_index: int, pos: Vector3, surface_type: String)
+signal animation_state_entered(state_name: String)
 
 @export_group("Locomotion")
 @export var walk_speed: float = 4.2
 @export var jog_speed: float = 7.5
 @export var sprint_speed: float = 10.5
 @export var guard_speed: float = 2.2
+@export var strafe_speed: float = 3.8
+@export var backward_speed: float = 3.5
 @export var acceleration: float = 42.0
 @export var air_acceleration: float = 18.0
 @export var friction: float = 35.0
@@ -44,6 +56,8 @@ signal attack_hit(target: Node3D, damage: int, is_crit: bool)
 @export_group("Combat Stats")
 @export var max_health: int = 100
 @export var attack_damage_base: int = 25
+@export var max_prana: float = 100.0
+@export var prana_regen: float = 24.0
 
 # Node References
 @onready var camera_arm: SpringArm3D = $CameraArm
@@ -52,11 +66,22 @@ signal attack_hit(target: Node3D, damage: int, is_crit: bool)
 @onready var interact_raycast: RayCast3D = $InteractRayCast
 @onready var melee_hitbox: Area3D = $MeleeHitbox
 
+# Animation System
 var anim_player: AnimationPlayer = null
+var anim_tree: AnimationTree = null
+var anim_playback: AnimationNodeStateMachinePlayback = null
+var locomotion_blend_space: AnimationNodeBlendSpace2D = null
 var current_anim: String = ""
+var current_state: String = "Locomotion"
+
+# Bone Sockets
+var weapon_socket: BoneAttachment3D = null
+var shield_socket: BoneAttachment3D = null
 
 # Gameplay State
 var health: int = 100
+var prana: float = 100.0
+var active_prompt_cache: String = ""
 var shards_collected: int = 0
 var is_dashing: bool = false
 var dash_timer: float = 0.0
@@ -75,12 +100,19 @@ var attack_duration: float = 0.35
 var combo_index: int = 0
 var combo_window_timer: float = 0.0
 var hit_enemies: Array[Node3D] = []
+var hit_stop_timer: float = 0.0
+var slash_arc: MeshInstance3D = null
 
 # Traversal & Kinematics State
 var was_on_floor: bool = true
 var landing_timer: float = 0.0
 var coyote_timer: float = 0.0
 var jump_buffer_timer: float = 0.0
+
+# Kinematics & Secondary Physics
+var previous_yaw: float = 0.0
+var gait_cycle_phase: float = 0.0
+var last_footstep_phase: float = 0.0
 
 # Aerial Glider & Harpoon Grapple (Chapter II: Antariksha)
 var is_gliding: bool = false
@@ -91,25 +123,183 @@ var grapple_target_pos: Vector3 = Vector3.ZERO
 var grapple_speed: float = 24.0
 
 func _ready() -> void:
+	if not visual_root:
+		visual_root = get_node_or_null("Visual")
+	if not camera_arm:
+		camera_arm = get_node_or_null("CameraArm")
+	if not melee_hitbox:
+		melee_hitbox = get_node_or_null("MeleeHitbox")
+	if not interact_detector:
+		interact_detector = get_node_or_null("InteractDetector")
+	if not interact_raycast:
+		interact_raycast = get_node_or_null("InteractRayCast")
+
 	health = max_health
 	floor_snap_length = 0.45
 	floor_max_angle = deg_to_rad(48.0)
 	floor_stop_on_slope = true
 	floor_constant_speed = true
 
-	anim_player = _find_animation_player(visual_root)
+	anim_player = _find_animation_player(visual_root if visual_root else self)
 	if anim_player:
 		anim_player.playback_default_blend_time = 0.16
+		_setup_animation_tree()
+		_setup_bone_sockets()
 
 	if melee_hitbox:
 		melee_hitbox.area_entered.connect(_on_melee_hitbox_area_entered)
 		melee_hitbox.body_entered.connect(_on_melee_hitbox_body_entered)
 		melee_hitbox.monitoring = false
 
+	if visual_root:
+		previous_yaw = visual_root.rotation.y
+		_setup_slash_arc()
+
 	health_changed.emit(health, max_health)
 	shards_changed.emit(shards_collected)
 
+## Construct and bind Godot AnimationTree with AnimationNodeStateMachine & BlendSpace2D
+func _setup_animation_tree() -> void:
+	if not anim_player:
+		return
+
+	anim_tree = find_child("AnimationTree", true, false) as AnimationTree
+	if not anim_tree:
+		anim_tree = AnimationTree.new()
+		anim_tree.name = "AnimationTree"
+		add_child(anim_tree)
+
+	anim_tree.anim_player = anim_tree.get_path_to(anim_player)
+
+	if not anim_tree.tree_root:
+		_build_production_animation_tree()
+
+	anim_tree.active = true
+	anim_playback = anim_tree.get("parameters/playback")
+
+func _build_production_animation_tree() -> void:
+	var state_machine = AnimationNodeStateMachine.new()
+
+	# 1. Locomotion 2D Blend Space (X = Lateral [-strafe, +strafe], Y = Longitudinal [-back, +forward])
+	locomotion_blend_space = AnimationNodeBlendSpace2D.new()
+	locomotion_blend_space.min_space = Vector2(-11.0, -11.0)
+	locomotion_blend_space.max_space = Vector2(11.0, 11.0)
+	locomotion_blend_space.auto_triangles = true
+
+	var add_bs_point = func(anim_name: String, pos: Vector2):
+		if anim_player.has_animation(anim_name):
+			var node = AnimationNodeAnimation.new()
+			node.animation = anim_name
+			locomotion_blend_space.add_blend_point(node, pos)
+
+	add_bs_point.call("idle", Vector2(0.0, 0.0))
+	add_bs_point.call("walk", Vector2(0.0, 4.2))
+	add_bs_point.call("jog", Vector2(0.0, 7.5))
+	add_bs_point.call("sprint", Vector2(0.0, 10.5))
+	add_bs_point.call("walk_backward", Vector2(0.0, -3.5))
+	add_bs_point.call("strafe_left", Vector2(-3.8, 0.0))
+	add_bs_point.call("strafe_right", Vector2(3.8, 0.0))
+
+	# Diagonals for responsive omnidirectional movement
+	add_bs_point.call("walk", Vector2(-2.5, 3.0))
+	add_bs_point.call("walk", Vector2(2.5, 3.0))
+	add_bs_point.call("walk_backward", Vector2(-2.5, -2.5))
+	add_bs_point.call("walk_backward", Vector2(2.5, -2.5))
+
+	state_machine.add_node("Locomotion", locomotion_blend_space)
+
+	# 2. Discrete Action Nodes
+	var discrete_actions = [
+		{"name": "jump", "xfade_in": 0.12, "xfade_out": 0.16, "at_end": false},
+		{"name": "fall", "xfade_in": 0.15, "xfade_out": 0.16, "at_end": false},
+		{"name": "landing", "xfade_in": 0.08, "xfade_out": 0.18, "at_end": true},
+		{"name": "dodge", "xfade_in": 0.08, "xfade_out": 0.16, "at_end": true},
+		{"name": "block", "xfade_in": 0.12, "xfade_out": 0.15, "at_end": false},
+		{"name": "parry", "xfade_in": 0.06, "xfade_out": 0.15, "at_end": true},
+		{"name": "attack_light_1", "xfade_in": 0.08, "xfade_out": 0.16, "at_end": true},
+		{"name": "attack_light_2", "xfade_in": 0.08, "xfade_out": 0.16, "at_end": true},
+		{"name": "attack_heavy_finisher", "xfade_in": 0.10, "xfade_out": 0.20, "at_end": true},
+		{"name": "hit_reaction", "xfade_in": 0.06, "xfade_out": 0.18, "at_end": true},
+		{"name": "interact", "xfade_in": 0.12, "xfade_out": 0.18, "at_end": true},
+		{"name": "turn_left_90", "xfade_in": 0.10, "xfade_out": 0.16, "at_end": true},
+		{"name": "turn_right_90", "xfade_in": 0.10, "xfade_out": 0.16, "at_end": true},
+		{"name": "turn_180", "xfade_in": 0.12, "xfade_out": 0.18, "at_end": true},
+		{"name": "walk_stop", "xfade_in": 0.12, "xfade_out": 0.16, "at_end": true},
+		{"name": "run_stop", "xfade_in": 0.12, "xfade_out": 0.18, "at_end": true},
+		{"name": "victory", "xfade_in": 0.20, "xfade_out": 0.25, "at_end": true},
+		{"name": "defeat", "xfade_in": 0.20, "xfade_out": 0.25, "at_end": false}
+	]
+
+	for act in discrete_actions:
+		var anim_name: String = act["name"]
+		if anim_player.has_animation(anim_name):
+			var node_anim = AnimationNodeAnimation.new()
+			node_anim.animation = anim_name
+			state_machine.add_node(anim_name, node_anim)
+
+			# Transition from Locomotion -> Action
+			var trans_to = AnimationNodeStateMachineTransition.new()
+			trans_to.xfade_time = act["xfade_in"]
+			state_machine.add_transition("Locomotion", anim_name, trans_to)
+
+			# Transition from Action -> Locomotion
+			var trans_back = AnimationNodeStateMachineTransition.new()
+			trans_back.xfade_time = act["xfade_out"]
+			if act["at_end"]:
+				trans_back.switch_mode = AnimationNodeStateMachineTransition.SWITCH_MODE_AT_END
+			state_machine.add_transition(anim_name, "Locomotion", trans_back)
+
+	# Transition between Jump and Fall
+	if anim_player.has_animation("jump") and anim_player.has_animation("fall"):
+		var trans_jf = AnimationNodeStateMachineTransition.new()
+		trans_jf.xfade_time = 0.15
+		state_machine.add_transition("jump", "fall", trans_jf)
+
+	# Transition between Fall and Landing
+	if anim_player.has_animation("fall") and anim_player.has_animation("landing"):
+		var trans_fl = AnimationNodeStateMachineTransition.new()
+		trans_fl.xfade_time = 0.08
+		state_machine.add_transition("fall", "landing", trans_fl)
+
+	# Initial transition from Start to Locomotion
+	var trans_start = AnimationNodeStateMachineTransition.new()
+	state_machine.add_transition("Start", "Locomotion", trans_start)
+
+	anim_tree.tree_root = state_machine
+
+## Setup BoneAttachment3D sockets for weapon and shield
+func _setup_bone_sockets() -> void:
+	var skeleton = _find_skeleton(visual_root if visual_root else self)
+	if not skeleton:
+		return
+
+	var r_bone_idx = skeleton.find_bone("socket_right_hand")
+	if r_bone_idx == -1:
+		r_bone_idx = skeleton.find_bone("hand_r")
+
+	if r_bone_idx != -1:
+		weapon_socket = skeleton.find_child("WeaponSocket", true, false) as BoneAttachment3D
+		if not weapon_socket:
+			weapon_socket = BoneAttachment3D.new()
+			weapon_socket.name = "WeaponSocket"
+			weapon_socket.bone_name = skeleton.get_bone_name(r_bone_idx)
+			skeleton.add_child(weapon_socket)
+
+	var l_bone_idx = skeleton.find_bone("hand_l")
+	if l_bone_idx != -1:
+		shield_socket = skeleton.find_child("ShieldSocket", true, false) as BoneAttachment3D
+		if not shield_socket:
+			shield_socket = BoneAttachment3D.new()
+			shield_socket.name = "ShieldSocket"
+			shield_socket.bone_name = skeleton.get_bone_name(l_bone_idx)
+			skeleton.add_child(shield_socket)
+
 func _physics_process(delta: float) -> void:
+	# 0. Hit-Stop Frame Freeze (Crunchy impact pause)
+	if hit_stop_timer > 0.0:
+		hit_stop_timer -= delta
+		return
+
 	var on_floor = is_on_floor()
 
 	# 1. Coyote Time & Floor Tracking
@@ -119,7 +309,7 @@ func _physics_process(delta: float) -> void:
 		is_grappling = false
 		if not was_on_floor:
 			was_on_floor = true
-			landing_timer = 0.18
+			landing_timer = 0.22
 		if velocity.y < 0:
 			velocity.y = -0.5 # Maintain slight downward adherence for stairs
 	else:
@@ -127,7 +317,7 @@ func _physics_process(delta: float) -> void:
 			was_on_floor = false
 		coyote_timer = max(0.0, coyote_timer - delta)
 
-		# Chapter II: Aerial Glider logic (holding jump while falling)
+		# Aerial Glider logic (holding jump while falling)
 		var jump_held = Input.is_action_pressed("jump") or Input.is_key_pressed(KEY_SPACE)
 		if velocity.y < 0 and jump_held and not is_guarding and not is_grappling:
 			is_gliding = true
@@ -151,8 +341,8 @@ func _physics_process(delta: float) -> void:
 			combo_index = 0
 
 	# 3. Read Input & Modes
-	var is_locked_on = camera_arm.has_method("is_locked_on") and camera_arm.is_locked_on()
-	var locked_target = camera_arm.get_locked_target() if is_locked_on else null
+	var is_locked_on = camera_arm != null and camera_arm.has_method("is_locked_on") and camera_arm.is_locked_on()
+	var locked_target = camera_arm.get_locked_target() if (is_locked_on and camera_arm) else null
 
 	is_guarding = (Input.is_key_pressed(KEY_Q) or Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT) or Input.is_joy_button_pressed(0, JOY_BUTTON_LEFT_SHOULDER)) and not is_attacking and not is_dashing and not is_gliding
 
@@ -180,16 +370,35 @@ func _physics_process(delta: float) -> void:
 		_update_locomotion_animation(delta)
 		return
 
-	# 5. Handle Active Melee Attack
+	# 6. Handle Active Melee Attack
 	if is_attacking:
 		attack_timer -= delta
-		velocity.x = move_toward(velocity.x, 0.0, friction * 0.8 * delta)
-		velocity.z = move_toward(velocity.z, 0.0, friction * 0.8 * delta)
+		# Natural attack weight transfer & momentum
+		velocity.x = move_toward(velocity.x, 0.0, friction * 0.7 * delta)
+		velocity.z = move_toward(velocity.z, 0.0, friction * 0.7 * delta)
 
-		# Enable hitbox during active middle frames
+		# Synchronize hitbox monitoring & slash arc with weapon swing arc (20% to 75% of duration)
 		var progress = 1.0 - (attack_timer / attack_duration)
-		if melee_hitbox:
-			melee_hitbox.monitoring = (progress >= 0.20 and progress <= 0.75)
+		if progress < 0.20:
+			attack_phase_changed.emit("windup", combo_index)
+			if melee_hitbox:
+				melee_hitbox.monitoring = false
+			if slash_arc:
+				slash_arc.visible = false
+		elif progress <= 0.75:
+			attack_phase_changed.emit("active", combo_index)
+			if melee_hitbox:
+				melee_hitbox.monitoring = true
+			if slash_arc:
+				slash_arc.visible = true
+				var arc_scale = 1.0 + (combo_index - 1) * 0.25
+				slash_arc.scale = Vector3(arc_scale, 0.08, arc_scale)
+		else:
+			attack_phase_changed.emit("recovery", combo_index)
+			if melee_hitbox:
+				melee_hitbox.monitoring = false
+			if slash_arc:
+				slash_arc.visible = false
 
 		# Face locked target or attack direction
 		if locked_target and is_instance_valid(locked_target):
@@ -200,15 +409,16 @@ func _physics_process(delta: float) -> void:
 			is_attacking = false
 			if melee_hitbox:
 				melee_hitbox.monitoring = false
+			if slash_arc:
+				slash_arc.visible = false
 			combo_window_timer = 0.55
 
 		move_and_slide()
 		_update_locomotion_animation(delta)
 		return
 
-	# 6. Read Locomotion Input Vector (Keyboard + Gamepad Analog Stick)
+	# 7. Read Locomotion Input Vector
 	var input_dir = Vector2.ZERO
-	# Keyboard
 	if Input.is_action_pressed("move_forward") or Input.is_key_pressed(KEY_W):
 		input_dir.y -= 1.0
 	if Input.is_action_pressed("move_backward") or Input.is_key_pressed(KEY_S):
@@ -218,7 +428,6 @@ func _physics_process(delta: float) -> void:
 	if Input.is_action_pressed("move_right") or Input.is_key_pressed(KEY_D):
 		input_dir.x += 1.0
 
-	# Gamepad Left Stick
 	var joy_x = Input.get_joy_axis(0, JOY_AXIS_LEFT_X)
 	var joy_y = Input.get_joy_axis(0, JOY_AXIS_LEFT_Y)
 	if abs(joy_x) > 0.15 or abs(joy_y) > 0.15:
@@ -228,7 +437,7 @@ func _physics_process(delta: float) -> void:
 	if input_dir.length_squared() > 1.0:
 		input_dir = input_dir.normalized()
 
-	# 7. Transform Movement Camera-Relative
+	# 8. Transform Movement Camera-Relative
 	var move_dir = Vector3.ZERO
 	if input_dir.length_squared() > 0.001:
 		var cam_rot_y = camera_arm.rotation.y if camera_arm else 0.0
@@ -236,7 +445,7 @@ func _physics_process(delta: float) -> void:
 		var right = Vector3(cos(cam_rot_y), 0, -sin(cam_rot_y))
 		move_dir = (forward * -input_dir.y + right * input_dir.x).normalized()
 
-	# 8. Determine Target Speed
+	# 9. Determine Target Speed
 	var sprint_pressed = Input.is_key_pressed(KEY_SHIFT) or (InputMap.has_action("sprint") and Input.is_action_pressed("sprint")) or Input.is_joy_button_pressed(0, JOY_BUTTON_LEFT_STICK)
 	var is_sprinting = sprint_pressed and not is_guarding
 	var target_speed = 0.0
@@ -250,7 +459,7 @@ func _physics_process(delta: float) -> void:
 		else:
 			target_speed = jog_speed
 
-	# 9. Horizontal Acceleration / Friction (with air control)
+	# 10. Horizontal Acceleration / Friction (with air control)
 	var current_accel = acceleration if on_floor else air_acceleration
 	if move_dir.length_squared() > 0.001:
 		velocity.x = move_toward(velocity.x, move_dir.x * target_speed, current_accel * delta)
@@ -274,7 +483,23 @@ func _physics_process(delta: float) -> void:
 			velocity.x = move_toward(velocity.x, 0.0, friction * delta)
 			velocity.z = move_toward(velocity.z, 0.0, friction * delta)
 
-	# 10. Jump Execution (Buffered + Coyote Time)
+	# 11. Turn-In-Place Detection (when standing still)
+	var horiz_speed = Vector2(velocity.x, velocity.z).length()
+	if on_floor and horiz_speed < 0.2 and not is_attacking and not is_dashing and not is_guarding:
+		var cam_rot_y = camera_arm.rotation.y if camera_arm else visual_root.rotation.y
+		var turn_diff = wrapf(cam_rot_y - visual_root.rotation.y, -PI, PI)
+		if abs(turn_diff) > deg_to_rad(70.0):
+			if turn_diff > deg_to_rad(130.0) or turn_diff < -deg_to_rad(130.0):
+				_travel_to("turn_180")
+			elif turn_diff > 0:
+				_travel_to("turn_left_90")
+			else:
+				_travel_to("turn_right_90")
+
+	# 12. Dynamic Body Lean & Banking Physics
+	_update_body_lean_physics(delta, horiz_speed)
+
+	# 13. Jump Execution (Buffered + Coyote Time)
 	if (Input.is_action_just_pressed("jump") or Input.is_key_pressed(KEY_SPACE) or Input.is_joy_button_pressed(0, JOY_BUTTON_A)) and not is_guarding:
 		jump_buffer_timer = 0.15
 
@@ -288,30 +513,96 @@ func _physics_process(delta: float) -> void:
 	if Input.is_action_just_released("jump") or (Input.is_key_pressed(KEY_SPACE) == false and not on_floor and velocity.y > 2.0):
 		velocity.y *= 0.55
 
-	# 11. Execute Kinematics with Slope Floor Snapping
+	# 14. Execute Kinematics with Slope Floor Snapping
 	move_and_slide()
 
-	# 12. Update Animation State Machine
+	# 15. Footstep Phase Contact Tracking
+	_update_footstep_audio(delta, on_floor, horiz_speed)
+
+	# 16. Update Animation State Machine & Blend Spaces
 	_update_locomotion_animation(delta)
 
+	# 17. Prana (Energy) System & Dynamic Regeneration
+	var is_sprinting_now = (Input.is_key_pressed(KEY_SHIFT) or (InputMap.has_action("sprint") and Input.is_action_pressed("sprint"))) and not is_guarding
+	if is_sprinting_now and horiz_speed > 0.5:
+		prana = max(0.0, prana - 15.0 * delta)
+	elif not is_dashing and not is_attacking:
+		prana = min(max_prana, prana + prana_regen * delta)
+	prana_changed.emit(prana, max_prana)
+
+	# 18. Contextual Interaction Prompt Detection
+	var nearby_prompt = get_nearby_interactable_prompt()
+	if nearby_prompt != active_prompt_cache:
+		active_prompt_cache = nearby_prompt
+		nearby_prompt_changed.emit(active_prompt_cache)
+
+## Dynamic body lean: roll banking into turns and pitch lean during acceleration
+func _update_body_lean_physics(delta: float, horiz_speed: float) -> void:
+	if not visual_root:
+		return
+
+	var current_yaw = visual_root.rotation.y
+	var yaw_diff = wrapf(current_yaw - previous_yaw, -PI, PI)
+	previous_yaw = current_yaw
+	var yaw_rate = yaw_diff / max(0.0001, delta)
+
+	# Bank roll into turns (proportional to yaw rate and speed)
+	var speed_ratio = clamp(horiz_speed / sprint_speed, 0.0, 1.0)
+	var target_bank_roll = -clamp(yaw_rate * 0.075, -0.16, 0.16) * speed_ratio
+	visual_root.rotation.z = lerp_angle(visual_root.rotation.z, target_bank_roll, 10.0 * delta)
+
+	# Forward athletic pitch lean based on speed
+	var target_forward_pitch = clamp((horiz_speed / sprint_speed) * 0.08, 0.0, 0.11)
+	visual_root.rotation.x = lerp_angle(visual_root.rotation.x, target_forward_pitch, 8.0 * delta)
+
+## Gait stride tracking for footstep contact timing and 3D audio triggering
+func _update_footstep_audio(delta: float, on_floor: bool, horiz_speed: float) -> void:
+	if on_floor and horiz_speed > 0.35:
+		var stride_length = 1.5
+		if horiz_speed > 8.5:
+			stride_length = 2.8 # Sprint
+		elif horiz_speed > 5.0:
+			stride_length = 2.2 # Jog
+
+		gait_cycle_phase += (horiz_speed / stride_length) * delta
+		if gait_cycle_phase >= 1.0:
+			gait_cycle_phase -= 1.0
+			_emit_footstep(0) # Left foot strike
+		elif gait_cycle_phase >= 0.5 and last_footstep_phase < 0.5:
+			_emit_footstep(1) # Right foot strike
+
+		last_footstep_phase = gait_cycle_phase
+	else:
+		gait_cycle_phase = 0.0
+		last_footstep_phase = 0.0
+
+func _emit_footstep(foot_index: int) -> void:
+	var contact_pos = global_position
+	if visual_root:
+		var lateral_offset = -0.22 if foot_index == 0 else 0.22
+		contact_pos += visual_root.transform.basis.x * lateral_offset
+
+	footstep_contact.emit(foot_index, contact_pos, "stone")
+	AudioManager3D.play_3d("footstep_stone", contact_pos, randf_range(0.96, 1.06))
+
 func _unhandled_input(event: InputEvent) -> void:
-	# Prana Dash Trigger (Shift + Space or Controller B)
+	# Prana Dash Trigger
 	if event.is_action_pressed("dash") or (event is InputEventJoypadButton and event.button_index == JOY_BUTTON_B and event.pressed):
 		_trigger_dash()
 
-	# Melee Attack Trigger (LMB, 'K', Controller X)
+	# Melee Attack Trigger
 	if (event.is_action_pressed("attack") or (event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT) or (event is InputEventJoypadButton and event.button_index == JOY_BUTTON_X and event.pressed)) and not is_guarding:
 		_trigger_attack()
 
-	# Interact Trigger ('E', Controller Y)
+	# Interact Trigger
 	if event.is_action_pressed("interact") or (event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_E) or (event is InputEventJoypadButton and event.button_index == JOY_BUTTON_Y and event.pressed):
 		_trigger_interaction()
 
-	# Parry Trigger ('F', Controller RB)
+	# Parry Trigger
 	if (event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_F) or (event is InputEventJoypadButton and event.button_index == JOY_BUTTON_RIGHT_SHOULDER and event.pressed):
 		_trigger_parry()
 
-	# Harpoon Grapple Trigger ('G', 'C', or Middle Click)
+	# Harpoon Grapple Trigger
 	if (event is InputEventKey and event.pressed and not event.echo and (event.keycode == KEY_G or event.keycode == KEY_C)) or (event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_MIDDLE):
 		_trigger_grapple()
 
@@ -349,6 +640,8 @@ func _trigger_dash() -> void:
 	is_dashing = true
 	dash_timer = dash_duration
 	dash_cooldown_timer = dash_cooldown
+	prana = max(0.0, prana - 20.0)
+	prana_changed.emit(prana, max_prana)
 	AudioManager3D.play("dash_whoosh")
 
 	var horiz_vel = Vector3(velocity.x, 0, velocity.z)
@@ -381,12 +674,11 @@ func _trigger_attack() -> void:
 func _trigger_parry() -> void:
 	parry_window_timer = parry_duration
 	AudioManager3D.play("parry_clink")
-	_play_anim("parry", 0.08, 1.2)
+	_travel_to("parry")
 
 func _trigger_interaction() -> void:
-	_play_anim("interact", 0.12, 1.0)
+	_travel_to("interact")
 
-	# 1. First priority: Raycast facing direction
 	if interact_raycast and interact_raycast.is_colliding():
 		var col = interact_raycast.get_collider()
 		if col and col.has_method("interact"):
@@ -395,7 +687,6 @@ func _trigger_interaction() -> void:
 			interaction_requested.emit(col.name)
 			return
 
-	# 2. Second priority: Proximity Area
 	if interact_detector:
 		var overlapping_areas = interact_detector.get_overlapping_areas()
 		for area in overlapping_areas:
@@ -409,6 +700,37 @@ func _trigger_interaction() -> void:
 				interacted_with.emit(area.get_parent().name)
 				interaction_requested.emit(area.get_parent().name)
 				return
+
+func get_nearby_interactable_prompt() -> String:
+	if interact_raycast and interact_raycast.is_colliding():
+		var col = interact_raycast.get_collider()
+		if col and (col.has_method("interact") or (col.get_parent() and col.get_parent().has_method("interact"))):
+			var t_name = col.name if col.has_method("interact") else col.get_parent().name
+			return _format_prompt(t_name)
+	if interact_detector:
+		var overlapping_areas = interact_detector.get_overlapping_areas()
+		for area in overlapping_areas:
+			if is_instance_valid(area):
+				if area.has_method("interact"):
+					return _format_prompt(area.name)
+				elif area.get_parent() and is_instance_valid(area.get_parent()) and area.get_parent().has_method("interact"):
+					return _format_prompt(area.get_parent().name)
+	return ""
+
+func _format_prompt(raw_name: String) -> String:
+	var n = raw_name.to_lower()
+	if "devi" in n or "tara" in n or "oracle" in n:
+		return "[ E ] Commune with Devi Tara"
+	elif "shard" in n or "astra" in n:
+		return "[ E ] Purify Solar Astra Shard"
+	elif "shrine" in n or "altar" in n or "peetham" in n:
+		return "[ E ] Attune Checkpoint Altar"
+	elif "portal" in n or "gate" in n:
+		return "[ E ] Ascend through Cosmic Gateway"
+	elif "chest" in n or "relic" in n:
+		return "[ E ] Open Sacred Reliquary"
+	else:
+		return "[ E ] Interact"
 
 func _on_melee_hitbox_area_entered(area: Area3D) -> void:
 	var target = area.get_parent() if area.get_parent() else area
@@ -434,6 +756,11 @@ func _handle_melee_hit(target: Node3D) -> void:
 	elif combo_index == 3:
 		dmg = int(attack_damage_base * 2.4)
 		poise_dmg = 75.0
+		if camera_arm and camera_arm.has_method("add_trauma"):
+			camera_arm.add_trauma(0.35)
+
+	# Trigger crunchy hit-stop freeze frame
+	_trigger_hit_stop(0.06)
 
 	var p_pos_melee = global_position if is_inside_tree() else position
 	var attack_spec = CombatMath.AttackSpec.new("veer", dmg, poise_dmg, p_pos_melee)
@@ -443,6 +770,32 @@ func _handle_melee_hit(target: Node3D) -> void:
 	elif target.has_method("take_damage"):
 		target.take_damage(dmg)
 		attack_hit.emit(target, dmg, false)
+
+func _trigger_hit_stop(duration: float = 0.06) -> void:
+	hit_stop_timer = duration
+
+func _setup_slash_arc() -> void:
+	if not visual_root or slash_arc:
+		return
+	slash_arc = MeshInstance3D.new()
+	slash_arc.name = "SlashArcEffect"
+	var torus = TorusMesh.new()
+	torus.inner_radius = 0.95
+	torus.outer_radius = 1.35
+	torus.rings = 16
+	torus.ring_segments = 16
+	slash_arc.mesh = torus
+	var mat = StandardMaterial3D.new()
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.albedo_color = Color(1.0, 0.75, 0.2, 0.6)
+	mat.emission_enabled = true
+	mat.emission = Color(1.0, 0.55, 0.1)
+	mat.emission_energy_multiplier = 4.0
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	slash_arc.material_override = mat
+	slash_arc.transform = Transform3D(Basis().scaled(Vector3(1.0, 0.08, 1.0)), Vector3(0, 1.1, -0.6))
+	slash_arc.visible = false
+	visual_root.add_child(slash_arc)
 
 func take_damage_spec(attack_spec: CombatMath.AttackSpec) -> CombatMath.CombatHitResult:
 	var p_pos = global_position if is_inside_tree() else position
@@ -454,22 +807,30 @@ func take_damage_spec(attack_spec: CombatMath.AttackSpec) -> CombatMath.CombatHi
 	var result = CombatMath.resolve_attack(attack_spec, def_spec)
 
 	if result.was_parried:
-		_play_anim("parry", 0.06, 1.3)
+		_travel_to("parry")
+		AudioManager3D.play("parry_clink", 1.2)
+		if camera_arm and camera_arm.has_method("add_trauma"):
+			camera_arm.add_trauma(0.22)
+		_trigger_hit_stop(0.08)
 	elif result.was_blocked:
-		_play_anim("block", 0.08, 1.0)
+		_travel_to("block")
 		health = max(0, health - result.damage_dealt)
 		health_changed.emit(health, max_health)
+		AudioManager3D.play("hit_impact", 1.1)
 	else:
 		health = max(0, health - result.damage_dealt)
 		health_changed.emit(health, max_health)
-		_play_anim("hit_reaction", 0.06, 1.2)
+		_travel_to("hit_reaction")
+		if camera_arm and camera_arm.has_method("add_trauma"):
+			var trauma_amount = 0.55 if result.damage_dealt >= 30 else 0.25
+			camera_arm.add_trauma(trauma_amount)
 
 	return result
 
 func take_damage(amount: int) -> void:
 	health = max(0, health - amount)
 	health_changed.emit(health, max_health)
-	_play_anim("hit_reaction", 0.06, 1.2)
+	_travel_to("hit_reaction")
 
 func add_shard(amount: int = 1) -> void:
 	shards_collected += amount
@@ -477,14 +838,27 @@ func add_shard(amount: int = 1) -> void:
 
 ## Synchronize 3D locomotion animation with actual displacement speed to prevent sliding
 func _update_locomotion_animation(delta: float) -> void:
-	if not anim_player:
-		return
+	var horiz_vel = Vector3(velocity.x, 0.0, velocity.z)
+	var horiz_speed = horiz_vel.length()
 
-	var horiz_speed = Vector2(velocity.x, velocity.z).length()
+	# Compute local character-relative velocity for 2D blend space
+	var local_x = 0.0
+	var local_z = 0.0
+	if visual_root and horiz_speed > 0.05:
+		var forward_dir = -visual_root.transform.basis.z.normalized()
+		var right_dir = visual_root.transform.basis.x.normalized()
+		local_z = horiz_vel.dot(forward_dir)
+		local_x = horiz_vel.dot(right_dir)
+	elif horiz_speed > 0.05:
+		local_z = horiz_speed
+
+	# Update 2D Locomotion Blend Space parameter
+	if anim_tree and anim_tree.active:
+		anim_tree.set("parameters/Locomotion/blend_position", Vector2(local_x, local_z))
 
 	# Priority 1: Dash (Dodge)
 	if is_dashing:
-		_play_anim("dodge", 0.08, 1.2)
+		_travel_to("dodge")
 		locomotion_state_changed.emit("Dodge", dash_speed)
 		return
 
@@ -495,53 +869,60 @@ func _update_locomotion_animation(delta: float) -> void:
 			atk_anim = "attack_light_2"
 		elif combo_index == 3:
 			atk_anim = "attack_heavy_finisher"
-		_play_anim(atk_anim, 0.08, 1.0)
+		_travel_to(atk_anim)
 		locomotion_state_changed.emit("Attack" + str(combo_index), horiz_speed)
 		return
 
 	# Priority 3: Guard Block
 	if is_guarding:
-		_play_anim("block", 0.15, 1.0)
+		_travel_to("block")
 		locomotion_state_changed.emit("Block", horiz_speed)
 		return
 
 	# Priority 4: Airborne (Jump, Fall & Gliding)
 	if not is_on_floor():
 		if is_gliding:
-			_play_anim("jump_fall", 0.15, 0.8)
+			_travel_to("fall")
 			locomotion_state_changed.emit("Glide", horiz_speed)
 		elif velocity.y > 0.5:
-			_play_anim("jump", 0.15, 1.0)
+			_travel_to("jump")
 			locomotion_state_changed.emit("Jump", velocity.y)
 		else:
-			_play_anim("fall", 0.18, 1.0)
+			_travel_to("fall")
 			locomotion_state_changed.emit("Fall", velocity.y)
 		return
 
 	# Priority 5: Landing Impact Recovery
 	if landing_timer > 0.0 and horiz_speed < 1.0:
-		_play_anim("landing", 0.1, 1.2)
+		_travel_to("landing")
 		locomotion_state_changed.emit("Land", horiz_speed)
 		return
 
-	# Priority 6: Ground Locomotion with Gait Speed Matching
+	# Priority 6: Ground Locomotion via BlendSpace2D
+	_travel_to("Locomotion")
+
 	if horiz_speed < 0.2:
-		_play_anim("idle", 0.25, 1.0)
 		locomotion_state_changed.emit("Idle", 0.0)
 	elif horiz_speed <= 5.0:
-		var speed_scale = clamp(horiz_speed / walk_speed, 0.7, 1.5)
-		_play_anim("walk", 0.15, speed_scale)
 		locomotion_state_changed.emit("Walk", horiz_speed)
 	elif horiz_speed <= 8.5:
-		var speed_scale = clamp(horiz_speed / jog_speed, 0.7, 1.4)
-		_play_anim("run", 0.15, speed_scale)
 		locomotion_state_changed.emit("Run", horiz_speed)
 	else:
-		var speed_scale = clamp(horiz_speed / sprint_speed, 0.8, 1.5)
-		_play_anim("sprint", 0.12, speed_scale)
 		locomotion_state_changed.emit("Sprint", horiz_speed)
 
-func _play_anim(anim_name: String, blend_time: float, speed_scale: float) -> void:
+## Travel to target state via AnimationTree state machine or fallback to AnimationPlayer
+func _travel_to(state_name: String) -> void:
+	if current_state != state_name:
+		current_state = state_name
+		animation_state_entered.emit(state_name)
+
+	if anim_playback:
+		anim_playback.travel(state_name)
+	elif anim_player:
+		_play_anim(state_name, 0.14, 1.0)
+
+## Fallback animation playback directly on AnimationPlayer
+func _play_anim(anim_name: String, blend_time: float = 0.14, speed_scale: float = 1.0) -> void:
 	if not anim_player:
 		return
 
@@ -584,4 +965,13 @@ func _find_animation_player(node: Node) -> AnimationPlayer:
 		var ap = _find_animation_player(child)
 		if ap:
 			return ap
+	return null
+
+func _find_skeleton(node: Node) -> Skeleton3D:
+	if node is Skeleton3D:
+		return node
+	for child in node.get_children():
+		var s = _find_skeleton(child)
+		if s:
+			return s
 	return null

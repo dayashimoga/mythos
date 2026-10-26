@@ -25,8 +25,26 @@ var state_timer: float = 0.0
 @onready var visual_mesh: Node3D = $VisualMesh
 @onready var strike_hitbox: Area3D = $StrikeHitbox
 
+var anim_player: AnimationPlayer = null
+
 signal constrictor_defeated(constrictor: CharacterBody3D)
 signal strike_connected(target: Node3D, damage: int)
+
+func _find_anim_player(node: Node) -> AnimationPlayer:
+	if node is AnimationPlayer:
+		return node
+	for child in node.get_children():
+		var found = _find_anim_player(child)
+		if found:
+			return found
+	return null
+
+func _play_anim(anim_name: String, blend_time: float = 0.15) -> void:
+	if not anim_player:
+		anim_player = _find_anim_player(self)
+	if anim_player and anim_player.has_animation(anim_name):
+		if anim_player.current_animation != anim_name:
+			anim_player.play(anim_name, blend_time)
 
 func _init() -> void:
 	add_to_group("enemies")
@@ -36,6 +54,9 @@ func _init() -> void:
 
 func _ready() -> void:
 	current_health = max_health
+	anim_player = _find_anim_player(self)
+	if anim_player:
+		_play_anim("idle")
 	if strike_hitbox:
 		strike_hitbox.monitoring = false
 		strike_hitbox.body_entered.connect(_on_strike_hitbox_body_entered)
@@ -76,6 +97,7 @@ func _safe_look_at(target_pos: Vector3) -> void:
 			look_at(look_target, Vector3.UP)
 
 func _process_stalk(delta: float) -> void:
+	_play_anim("stalk")
 	state_timer += delta
 	if not target_player or not is_instance_valid(target_player):
 		velocity = velocity.move_toward(Vector3.ZERO, 10.0 * delta)
@@ -104,6 +126,7 @@ func _process_stalk(delta: float) -> void:
 		velocity = dir * 12.0
 
 func _process_leap(delta: float) -> void:
+	_play_anim("leap_strike")
 	state_timer += delta
 	velocity = velocity.move_toward(Vector3.ZERO, 14.0 * delta)
 
@@ -117,6 +140,7 @@ func _process_leap(delta: float) -> void:
 		state_timer = 0.0
 
 func _process_twin_slash(delta: float) -> void:
+	_play_anim("telegraph")
 	state_timer += delta
 	velocity = Vector3.ZERO
 
@@ -177,6 +201,7 @@ func take_damage(amount: int) -> void:
 			strike_hitbox.monitoring = false
 
 func _process_stagger(delta: float) -> void:
+	_play_anim("stagger")
 	state_timer += delta
 	velocity = velocity.move_toward(Vector3.ZERO, 15.0 * delta)
 	if state_timer >= 1.4:
@@ -186,6 +211,7 @@ func _process_stagger(delta: float) -> void:
 func _die() -> void:
 	current_state = State.DEFEATED
 	velocity = Vector3.ZERO
+	_play_anim("defeat")
 	if strike_hitbox:
 		strike_hitbox.monitoring = false
 	constrictor_defeated.emit(self)

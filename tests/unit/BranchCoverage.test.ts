@@ -198,24 +198,27 @@ describe('Targeted Branch Coverage', () => {
         id: 'node1',
         speaker: 'Veer',
         speakerRole: 'Solar Guardian',
+        portraitColor: '#FF9933',
         text: 'First line of dialogue that will be typed character by character across multiple words to test line wrap.',
-        voiceCue: 'cue_veer_01',
+        voiceCue: 'guardian_firm',
         choices: [
-          { text: 'Choice A', targetNodeId: 'node2', condition: () => true },
-          { text: 'Choice B', targetNodeId: 'node3', condition: () => false },
+          { id: 'c1', text: 'Choice A', targetNodeId: 'node2' },
+          { id: 'c2', text: 'Choice B', targetNodeId: 'node3' },
         ],
       },
       {
         id: 'node2',
         speaker: 'Tara',
+        speakerRole: 'Devi',
+        portraitColor: '#00FFFF',
         text: 'Second line.',
       },
     ]);
 
     let voiceCuePlayed = '';
-    dt.onPlayVoiceCue = (cue: string) => { voiceCuePlayed = cue; };
+    dt.onPlayVoiceCue = (cue?: string) => { voiceCuePlayed = cue || ''; };
     expect(dt.start('node1')).toBe(true);
-    expect(voiceCuePlayed).toBe('cue_veer_01');
+    expect(voiceCuePlayed).toBe('guardian_firm');
 
     // Advance while typing (completes line)
     expect(dt.advance()).toBe(true);

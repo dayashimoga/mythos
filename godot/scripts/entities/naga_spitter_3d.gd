@@ -26,8 +26,26 @@ var strafe_angle: float = 0.0
 @onready var visual_mesh: Node3D = $VisualMesh
 @onready var venom_light: OmniLight3D = $VenomLight
 
+var anim_player: AnimationPlayer = null
+
 signal spitter_defeated(spitter: CharacterBody3D)
 signal venom_spit(origin: Vector3, direction: Vector3)
+
+func _find_anim_player(node: Node) -> AnimationPlayer:
+	if node is AnimationPlayer:
+		return node
+	for child in node.get_children():
+		var found = _find_anim_player(child)
+		if found:
+			return found
+	return null
+
+func _play_anim(anim_name: String, blend_time: float = 0.15) -> void:
+	if not anim_player:
+		anim_player = _find_anim_player(self)
+	if anim_player and anim_player.has_animation(anim_name):
+		if anim_player.current_animation != anim_name:
+			anim_player.play(anim_name, blend_time)
 
 func _init() -> void:
 	add_to_group("enemies")
@@ -37,6 +55,9 @@ func _init() -> void:
 
 func _ready() -> void:
 	current_health = max_health
+	anim_player = _find_anim_player(self)
+	if anim_player:
+		_play_anim("idle")
 	if venom_light:
 		venom_light.visible = false
 
@@ -76,6 +97,7 @@ func _safe_look_at(target_pos: Vector3) -> void:
 			look_at(look_target, Vector3.UP)
 
 func _process_slither(delta: float) -> void:
+	_play_anim("slither")
 	state_timer += delta
 	if not target_player or not is_instance_valid(target_player):
 		velocity = velocity.move_toward(Vector3.ZERO, 10.0 * delta)
@@ -110,6 +132,7 @@ func _process_slither(delta: float) -> void:
 			venom_light.visible = true
 
 func _process_telegraph(delta: float) -> void:
+	_play_anim("telegraph_coil")
 	state_timer += delta
 	if target_player and is_instance_valid(target_player):
 		_safe_look_at(_get_entity_pos(target_player))
@@ -123,6 +146,7 @@ func _process_telegraph(delta: float) -> void:
 		state_timer = 0.0
 
 func _process_spit(delta: float) -> void:
+	_play_anim("spit_venom")
 	state_timer += delta
 	if state_timer <= delta:
 		# Fire venom spit
@@ -148,6 +172,7 @@ func _process_spit(delta: float) -> void:
 		state_timer = 0.0
 
 func _process_stagger(delta: float) -> void:
+	_play_anim("stagger")
 	state_timer += delta
 	velocity = velocity.move_toward(Vector3.ZERO, 15.0 * delta)
 	if state_timer >= 1.2:
@@ -190,6 +215,7 @@ func take_damage(amount: int) -> void:
 func _die() -> void:
 	current_state = State.DEFEATED
 	velocity = Vector3.ZERO
+	_play_anim("defeat")
 	spitter_defeated.emit(self)
 	if is_inside_tree():
 		var tween = create_tween()

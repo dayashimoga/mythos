@@ -1,6 +1,7 @@
-[gd_scene load_steps=5 format=3 uid="uid://venom_river_scene"]
+[gd_scene load_steps=6 format=3 uid="uid://venom_river_scene"]
 
 [ext_resource type="Script" path="res://scripts/interactables/venom_river_3d.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://assets/environment/patala_venom_river_basin.glb" id="2_basin_mesh"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_river"]
 size = Vector3(40, 1.5, 14)
@@ -26,12 +27,15 @@ script = ExtResource("1_script")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
 shape = SubResource("BoxShape3D_river")
 
+[node name="VenomRiverBasin" parent="." instance=ExtResource("2_basin_mesh")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+
 [node name="MeshInstance3D" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.2, 0)
 mesh = SubResource("BoxMesh_river")
 
 [node name="VenomLight" type="OmniLight3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
-light_color = Color(0.1, 0.9, 0.25, 1)
-light_energy = 1.6
-omni_range = 14.0
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, 0)
+light_color = Color(0.1, 0.95, 0.35, 1)
+light_energy = 2.4
+omni_range = 16.0

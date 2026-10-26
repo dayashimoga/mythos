@@ -114,3 +114,35 @@ export interface NarrativeSaveState {
   checksum: string;
 }
 ```
+
+---
+
+## 6. Stage Q6 Seven-Realm 3D Cinematic Campaign Integration
+
+### 6.1 Seven-Realm Campaign Progression Graph
+```mermaid
+graph TD
+    B[Chapter I: Bhumi Valley - Cleansing of the Mortal Realm] --> A[Chapter II: Antariksha - Liberation of the Aerial Vault]
+    A --> P[Chapter III: Patala - Cleansing of the Serpent Vaults]
+    P --> S[Chapter IV: Svar - Illumination of the Solar Citadels]
+    S --> M[Chapter V: Maharloka - Wisdom of the Astral Libraries]
+    M --> T[Chapter VI: Tapoloka - Purification of Agni's Forge]
+    T --> SAT[Chapter VII: Satyaloka - Supreme Moksha Resolution]
+```
+
+### 6.2 Narrative Objectives & Progression Matrix
+| Chapter | Canonical Mission ID | Initial NPC Commune | Environmental Challenge | Boss Encounter | Consecration Milestone | Post-Chapter Unlocks |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **I: Bhumi** | `cleansing_of_bhumi` | Devi Tara (Dandaka Grove) | 3 Astra Shards / Dispel Tamas Barrier | General Kalanemi (2-Phase) | Consecrate Sun Altar | Shards: 5, Antariksha Sky Portal |
+| **II: Antariksha** | `liberation_of_antariksha` | Devi Tara (Sky Sanctuary) | Harmonize 2 Vayu Wind Turbines | Cyclone Titan Matarishvan | Consecrate High Gale Peetham | Shards: 8, Patala Descent Portal |
+| **III: Patala** | `cleansing_of_patala` | Devi Tara (Cavern Entrance) | 3 Naga Guardians / Fungi Springboards | Shesha's Tormented Echo | Consecrate Vasuki Peetham | Shards: 12, Svar Ascension Portal |
+| **IV: Svar** | `ascension_to_svar` | Devi Tara (Citadel Gates) | Align 2 Surya Optical Prisms | Sun Titan Avatara (Supernova) | Consecrate Surya Mahapeetham | Shards: 16, Maharloka Ascent Portal |
+| **V: Maharloka** | `wisdom_of_maharloka` | Devi Tara (Archive Terrace) | Commune 2 Scripture Pedestals | Sage Brihaspati's Astral Avatar | Attune Mahar Mandala | Shards: 20, Tapoloka Forge Portal |
+| **VI: Tapoloka** | `purification_of_tapoloka` | Devi Tara (Caldera Threshold) | Attune 2 Primordial Anvils | Fire Titan Agni Rudra | Ignite Tapo Peetham | Shards: 24, Satyaloka Lotus Portal |
+| **VII: Satyaloka**| `ascension_to_satyaloka`| Devi Tara (Lotus Boundary) | Align 2 Cosmic Dharmachakras | Creator Titan Brahma Avatara | Attune Supreme Moksha Peetham | Shards: 28, All 7 Realms Unlocked |
+
+### 6.3 3D Cinematic Choreography & Subtitle Standards
+- **Framing & Aspect Ratio:** 2.39:1 anamorphic cinema bars animated smoothly via cubic tweens ($0.6\text{s}$ open, $0.5\text{s}$ close).
+- **Camera Choreography:** Hermite spline position interpolation with distinct start, end, and look-at target vectors.
+- **Typographic Subtitles:** Clean sans-serif lower thirds with high-contrast semi-transparent backdrop, speaker name, and speaker role badge (`DEVI TARA — Celestial Oracle of Tapas`, `VEER — Solar Guardian`).
+- **Skip Safety (`ui_cancel` / `ui_accept` / ESC / Space):** Instantly terminates camera movement, smoothly slides cinema bars off-screen, restores default gameplay camera, and reliably executes the completion callback without race conditions or corrupted mission flags.

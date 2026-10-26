@@ -10,6 +10,7 @@ const BossSuryaAvataraScript = preload("res://scripts/entities/boss_surya_avatar
 const SolarLightBridgeScript = preload("res://scripts/interactables/solar_light_bridge_3d.gd")
 const SuryaPrismScript = preload("res://scripts/interactables/surya_prism_3d.gd")
 const SuryaMahapeethamScript = preload("res://scripts/interactables/surya_mahapeetham_3d.gd")
+const CinematicDirectorScript = preload("res://scripts/cinematics/cinematic_director_3d.gd")
 
 @onready var player: CharacterBody3D = $Player3D
 @onready var hud: HUD3D = $HUD3D if has_node("HUD3D") else null
@@ -25,9 +26,13 @@ const TARGET_PRISMS: int = 2
 var last_checkpoint_pos: Vector3 = Vector3(0, 1.5, 0)
 var level_start_time: float = 0.0
 var is_realm_cleansed: bool = false
+var cinematic_director: Node = null
+var _boss_intro_played: bool = false
 
 func _ready() -> void:
 	level_start_time = Time.get_ticks_msec() / 1000.0
+	AudioManager3D.set_ambience("svar")
+	_setup_cinematic_director()
 	quest_mgr = QuestManagerScript.new()
 	dialogue_runner = DialogueRunnerScript.new()
 
@@ -40,10 +45,15 @@ func _ready() -> void:
 		player.interaction_requested.connect(_on_dialogue_requested)
 
 	if hud:
+		hud.set_quest_manager(quest_mgr, "Svar")
+		hud.update_weapon("Surya-Mitra Spear")
 		hud.next_realm_scene_path = "res://scenes/levels/MaharlokaSanctuary3D.tscn"
 		hud.retry_requested.connect(_on_retry_requested)
 		_refresh_objective_display()
 		hud.show_banner("✦ REALM OF SVAR: THE CELESTIAL SOLAR CITADEL ✦\nChannel the radiant solar prisms of Savitr.", 5.0)
+
+	if cinematic_director:
+		cinematic_director.play_realm_intro("svar")
 
 	if tara_npc:
 		tara_npc.dialogue_requested.connect(func(): _on_dialogue_requested("tara_svar"))
@@ -59,6 +69,14 @@ func _ready() -> void:
 
 	if mahapeetham_altar:
 		mahapeetham_altar.mahapeetham_consecrated.connect(_on_mahapeetham_consecrated)
+
+func _setup_cinematic_director() -> void:
+	if has_node("CinematicDirector3D"):
+		cinematic_director = $CinematicDirector3D
+	else:
+		cinematic_director = CinematicDirectorScript.new()
+		cinematic_director.name = "CinematicDirector3D"
+		add_child(cinematic_director)
 
 func _physics_process(_delta: float) -> void:
 	# Void Fall Safeguard
@@ -107,6 +125,11 @@ func _on_prism_harmonized(_prism_id: String) -> void:
 		_refresh_objective_display()
 
 func _on_boss_health_changed(curr: int, max_hp: int) -> void:
+	if not _boss_intro_played and boss_surya:
+		_boss_intro_played = true
+		if cinematic_director:
+			cinematic_director.play_boss_intro("surya", "Surya Avatara", "Radiant Sun Titan", boss_surya.global_position)
+
 	if hud:
 		hud.show_boss_bar("Surya Avatara — Radiant Sun Titan", curr, max_hp)
 
@@ -143,6 +166,9 @@ func _on_mahapeetham_consecrated(_altar: Area3D = null) -> void:
 	SaveSystem.save_game(save_state)
 
 	_spawn_maharloka_portal()
+
+	if cinematic_director and mahapeetham_altar:
+		cinematic_director.play_consecration_victory("Svar", mahapeetham_altar.global_position)
 
 	if hud:
 		_refresh_objective_display()
@@ -221,6 +247,9 @@ func _on_dialogue_requested(dialogue_id: String) -> void:
 	if dialogue_id == "tara_intro":
 		start_node = "tara_intro"
 
+	if tara_npc and tara_npc.has_method("play_talk"):
+		tara_npc.play_talk()
+
 	if dialogue_runner.start(start_node):
 		_display_active_dialogue_node()
 
@@ -228,6 +257,8 @@ func _display_active_dialogue_node() -> void:
 	if not dialogue_runner or not dialogue_runner.is_active:
 		if hud:
 			hud.hide_dialogue()
+		if tara_npc and tara_npc.has_method("play_idle"):
+			tara_npc.play_idle()
 		return
 
 	var node = dialogue_runner.nodes.get(dialogue_runner.current_node_id, null)
@@ -237,6 +268,8 @@ func _display_active_dialogue_node() -> void:
 				_display_active_dialogue_node()
 			else:
 				hud.hide_dialogue()
+				if tara_npc and tara_npc.has_method("play_bless"):
+					tara_npc.play_bless()
 				if quest_mgr:
 					quest_mgr.update_objective_progress("ascension_to_svar", "commune_tara_solar", 1)
 					_refresh_objective_display()

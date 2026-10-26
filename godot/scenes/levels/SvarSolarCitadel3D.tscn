@@ -1,4 +1,4 @@
-[gd_scene load_steps=18 format=3 uid="uid://svar_solar_citadel_scene"]
+[gd_scene load_steps=23 format=3 uid="uid://svar_solar_citadel_scene"]
 
 [ext_resource type="Script" path="res://scripts/levels/svar_solar_citadel_3d.gd" id="1_realm_script"]
 [ext_resource type="PackedScene" uid="uid://b7vyu9s2km13a" path="res://scenes/player/Player3D.tscn" id="2_player"]
@@ -11,12 +11,19 @@
 [ext_resource type="PackedScene" uid="uid://surya_prism_scene" path="res://scenes/interactables/SuryaPrism3D.tscn" id="9_prism"]
 [ext_resource type="PackedScene" uid="uid://surya_mahapeetham_scene" path="res://scenes/interactables/SuryaMahapeetham3D.tscn" id="10_mahapeetham"]
 [ext_resource type="PackedScene" path="res://assets/environment/celestial_sun_shikhara.glb" id="11_shikhara"]
+[ext_resource type="PackedScene" path="res://assets/environment/svar_entry_bastion.glb" id="12_entry_bastion"]
+[ext_resource type="PackedScene" path="res://assets/environment/svar_mid_bastion.glb" id="13_mid_bastion"]
+[ext_resource type="PackedScene" path="res://assets/environment/svar_apex_citadel.glb" id="14_apex_citadel"]
+[ext_resource type="PackedScene" path="res://assets/environment/svar_sanctum_bastion.glb" id="15_sanctum_bastion"]
+[ext_resource type="PackedScene" path="res://assets/environment/solar_brazier_pillar.glb" id="16_brazier"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_svar"]
-sky_top_color = Color(0.92, 0.72, 0.28, 1)
-sky_horizon_color = Color(1.0, 0.9, 0.65, 1)
-ground_bottom_color = Color(0.35, 0.22, 0.1, 1)
-ground_horizon_color = Color(0.85, 0.7, 0.45, 1)
+sky_top_color = Color(0.95, 0.76, 0.32, 1)
+sky_horizon_color = Color(1.0, 0.92, 0.72, 1)
+ground_bottom_color = Color(0.4, 0.28, 0.12, 1)
+ground_horizon_color = Color(0.9, 0.78, 0.5, 1)
+sun_angle_max = 45.0
+sun_curve = 0.08
 
 [sub_resource type="Sky" id="Sky_svar"]
 sky_material = SubResource("ProceduralSkyMaterial_svar")
@@ -25,48 +32,27 @@ sky_material = SubResource("ProceduralSkyMaterial_svar")
 background_mode = 2
 sky = SubResource("Sky_svar")
 ambient_light_source = 3
-ambient_light_color = Color(1.0, 0.92, 0.75, 1)
-ambient_light_energy = 0.95
+ambient_light_color = Color(1.0, 0.94, 0.8, 1)
+ambient_light_energy = 1.15
 tonemap_mode = 2
 glow_enabled = true
-glow_intensity = 0.7
-glow_bloom = 0.25
+glow_intensity = 0.8
+glow_bloom = 0.3
 fog_enabled = true
-fog_light_color = Color(1.0, 0.92, 0.7, 1)
-fog_density = 0.0012
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_gold_marble"]
-albedo_color = Color(0.95, 0.92, 0.85, 1)
-metallic = 0.2
-roughness = 0.35
-
-[sub_resource type="BoxMesh" id="BoxMesh_bastion_entry"]
-material = SubResource("StandardMaterial3D_gold_marble")
-size = Vector3(22, 2, 20)
+fog_light_color = Color(1.0, 0.94, 0.75, 1)
+fog_density = 0.001
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_bastion_entry"]
-size = Vector3(22, 2, 20)
-
-[sub_resource type="BoxMesh" id="BoxMesh_bastion_mid"]
-material = SubResource("StandardMaterial3D_gold_marble")
-size = Vector3(28, 2, 24)
+size = Vector3(24, 2, 22)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_bastion_mid"]
-size = Vector3(28, 2, 24)
-
-[sub_resource type="BoxMesh" id="BoxMesh_bastion_boss"]
-material = SubResource("StandardMaterial3D_gold_marble")
-size = Vector3(36, 2, 36)
+size = Vector3(30, 2, 26)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_bastion_boss"]
-size = Vector3(36, 2, 36)
-
-[sub_resource type="BoxMesh" id="BoxMesh_bastion_sanctum"]
-material = SubResource("StandardMaterial3D_gold_marble")
-size = Vector3(20, 2, 18)
+size = Vector3(38, 2.4, 38)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_bastion_sanctum"]
-size = Vector3(20, 2, 18)
+size = Vector3(22, 2, 20)
 
 [node name="SvarSolarCitadel3D" type="Node3D"]
 script = ExtResource("1_realm_script")
@@ -77,7 +63,7 @@ environment = SubResource("Environment_svar")
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
 transform = Transform3D(0.866, -0.354, 0.354, 0, 0.707, 0.707, -0.5, -0.612, 0.612, 0, 50, 0)
 light_color = Color(1.0, 0.96, 0.88, 1)
-light_energy = 1.6
+light_energy = 1.8
 shadow_enabled = true
 
 [node name="Player3D" parent="." instance=ExtResource("2_player")]
@@ -93,11 +79,16 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 collision_layer = 1
 collision_mask = 0
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="EntryBastion"]
-mesh = SubResource("BoxMesh_bastion_entry")
+[node name="EntryBastionModel" parent="EntryBastion" instance=ExtResource("12_entry_bastion")]
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="EntryBastion"]
 shape = SubResource("BoxShape3D_bastion_entry")
+
+[node name="BrazierEntryLeft" parent="EntryBastion" instance=ExtResource("16_brazier")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 1.0, -8)
+
+[node name="BrazierEntryRight" parent="EntryBastion" instance=ExtResource("16_brazier")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 1.0, -8)
 
 [node name="SolarLightBridge1" parent="." instance=ExtResource("8_light_bridge")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -22)
@@ -107,11 +98,16 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -46)
 collision_layer = 1
 collision_mask = 0
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="MidBastion"]
-mesh = SubResource("BoxMesh_bastion_mid")
+[node name="MidBastionModel" parent="MidBastion" instance=ExtResource("13_mid_bastion")]
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="MidBastion"]
 shape = SubResource("BoxShape3D_bastion_mid")
+
+[node name="BrazierMidLeft" parent="MidBastion" instance=ExtResource("16_brazier")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -13, 1.0, 0)
+
+[node name="BrazierMidRight" parent="MidBastion" instance=ExtResource("16_brazier")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 1.0, 0)
 
 [node name="SuryaPrism1" parent="." instance=ExtResource("9_prism")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 1.0, -44)
@@ -140,8 +136,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.0, -94)
 collision_layer = 1
 collision_mask = 0
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="ApexCitadel"]
-mesh = SubResource("BoxMesh_bastion_boss")
+[node name="ApexCitadelModel" parent="ApexCitadel" instance=ExtResource("14_apex_citadel")]
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="ApexCitadel"]
 shape = SubResource("BoxShape3D_bastion_boss")
@@ -154,8 +149,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6.0, -118)
 collision_layer = 1
 collision_mask = 0
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="SanctumBastion"]
-mesh = SubResource("BoxMesh_bastion_sanctum")
+[node name="SanctumBastionModel" parent="SanctumBastion" instance=ExtResource("15_sanctum_bastion")]
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="SanctumBastion"]
 shape = SubResource("BoxShape3D_bastion_sanctum")

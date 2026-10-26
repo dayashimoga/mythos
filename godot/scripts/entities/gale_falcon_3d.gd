@@ -30,7 +30,25 @@ var anchor_origin: Vector3 = Vector3.ZERO
 @onready var talon_hitbox: Area3D = $TalonHitbox
 @onready var telegraph_light: OmniLight3D = $TelegraphLight
 
+var anim_player: AnimationPlayer = null
+
 signal falcon_defeated(falcon: CharacterBody3D)
+
+func _find_anim_player(node: Node) -> AnimationPlayer:
+	if node is AnimationPlayer:
+		return node
+	for child in node.get_children():
+		var found = _find_anim_player(child)
+		if found:
+			return found
+	return null
+
+func _play_anim(anim_name: String, blend_time: float = 0.15) -> void:
+	if not anim_player:
+		anim_player = _find_anim_player(self)
+	if anim_player and anim_player.has_animation(anim_name):
+		if anim_player.current_animation != anim_name:
+			anim_player.play(anim_name, blend_time)
 
 func _init() -> void:
 	add_to_group("enemies")
@@ -41,6 +59,8 @@ func _init() -> void:
 func _ready() -> void:
 	anchor_origin = global_position
 	current_health = max_health
+	anim_player = _find_anim_player(self)
+	_play_anim("idle")
 	if talon_hitbox:
 		talon_hitbox.monitoring = false
 		talon_hitbox.body_entered.connect(_on_talon_hit_body)
@@ -72,6 +92,7 @@ func _physics_process(delta: float) -> void:
 			_process_staggered(delta)
 
 func _process_circling(delta: float) -> void:
+	_play_anim("idle")
 	circle_angle += 1.8 * delta
 	var radius = 7.0
 	var offset = Vector3(cos(circle_angle) * radius, flight_altitude + sin(circle_angle * 2.0) * 1.5, sin(circle_angle) * radius)
@@ -91,6 +112,7 @@ func _start_telegraph() -> void:
 	current_state = State.TELEGRAPH
 	state_timer = 0.0
 	dive_target = target_player.global_position + Vector3(0, 0.5, 0) if target_player else anchor_origin
+	_play_anim("telegraph")
 	if telegraph_light:
 		telegraph_light.visible = true
 		telegraph_light.light_energy = 4.0
@@ -109,6 +131,7 @@ func _process_telegraph(delta: float) -> void:
 func _start_dive() -> void:
 	current_state = State.DIVE_ATTACK
 	state_timer = 0.0
+	_play_anim("attack")
 	if telegraph_light:
 		telegraph_light.visible = false
 	if talon_hitbox:
@@ -126,6 +149,7 @@ func _process_dive(delta: float) -> void:
 func _start_recovery() -> void:
 	current_state = State.RECOVERY
 	state_timer = 0.0
+	_play_anim("walk")
 	if talon_hitbox:
 		talon_hitbox.monitoring = false
 
@@ -166,6 +190,7 @@ func take_damage(amount: int, poise_dmg: float = 15.0) -> void:
 		if broken and current_state != State.STAGGERED:
 			current_state = State.STAGGERED
 			state_timer = 0.0
+			_play_anim("stagger")
 			if talon_hitbox:
 				talon_hitbox.monitoring = false
 
@@ -183,6 +208,7 @@ func _on_talon_hit_body(body: Node3D) -> void:
 
 func _die() -> void:
 	current_state = State.DEFEATED
+	_play_anim("death")
 	if talon_hitbox:
 		talon_hitbox.monitoring = false
 	falcon_defeated.emit(self)

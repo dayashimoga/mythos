@@ -21,12 +21,29 @@ var poise: RefCounted = null
 var target_player: Node3D = null
 var state_timer: float = 0.0
 var strafe_angle: float = 0.0
+var anim_player: AnimationPlayer = null
 
 @onready var visual_mesh: Node3D = $VisualMesh
 @onready var sunflare_light: OmniLight3D = $SunflareLight
 
 signal gryphon_defeated(gryphon: CharacterBody3D)
 signal sunflare_screech(origin: Vector3, direction: Vector3)
+
+func _find_anim_player(node: Node) -> AnimationPlayer:
+	if node is AnimationPlayer:
+		return node
+	for child in node.get_children():
+		var found = _find_anim_player(child)
+		if found:
+			return found
+	return null
+
+func _play_anim(anim_name: String, blend_time: float = 0.15) -> void:
+	if not anim_player:
+		anim_player = _find_anim_player(self)
+	if anim_player and anim_player.has_animation(anim_name):
+		if anim_player.current_animation != anim_name:
+			anim_player.play(anim_name, blend_time)
 
 func _init() -> void:
 	add_to_group("enemies")
@@ -36,6 +53,8 @@ func _init() -> void:
 
 func _ready() -> void:
 	current_health = max_health
+	anim_player = _find_anim_player(self)
+	_play_anim("idle")
 	if sunflare_light:
 		sunflare_light.visible = false
 
@@ -78,6 +97,7 @@ func _process_hover(delta: float) -> void:
 	state_timer += delta
 	if not target_player or not is_instance_valid(target_player):
 		velocity = velocity.move_toward(Vector3.ZERO, 10.0 * delta)
+		_play_anim("idle")
 		return
 
 	var my_pos = _get_entity_pos(self)
@@ -86,6 +106,7 @@ func _process_hover(delta: float) -> void:
 
 	if dist > perception_radius:
 		velocity = velocity.move_toward(Vector3.ZERO, 8.0 * delta)
+		_play_anim("idle")
 		return
 
 	_safe_look_at(player_pos)
@@ -95,16 +116,19 @@ func _process_hover(delta: float) -> void:
 	var move_vec = perp * sin(strafe_angle) + to_player * 0.4
 
 	velocity = move_vec.normalized() * 5.0
+	_play_anim("fly_locomotion")
 
 	if state_timer >= 2.0:
 		current_state = State.SUNFLARE_SCREECH_TELEGRAPH
 		state_timer = 0.0
 		velocity = Vector3.ZERO
+		_play_anim("telegraph_screech")
 		if sunflare_light:
 			sunflare_light.visible = true
 
 func _process_telegraph(delta: float) -> void:
 	state_timer += delta
+	_play_anim("telegraph_screech")
 	if target_player and is_instance_valid(target_player):
 		_safe_look_at(_get_entity_pos(target_player))
 
@@ -114,6 +138,7 @@ func _process_telegraph(delta: float) -> void:
 	if state_timer >= 0.7:
 		current_state = State.DIVE_POUNCE
 		state_timer = 0.0
+		_play_anim("dive_strike", 0.05)
 		var my_pos = _get_entity_pos(self)
 		var player_pos = _get_entity_pos(target_player) if target_player else my_pos + Vector3.FORWARD
 		var dir = (player_pos - my_pos).normalized() if my_pos.distance_to(player_pos) > 0.001 else Vector3.FORWARD
@@ -143,6 +168,7 @@ func _process_dive_pounce(delta: float) -> void:
 func _process_stagger(delta: float) -> void:
 	state_timer += delta
 	velocity = velocity.move_toward(Vector3.ZERO, 15.0 * delta)
+	_play_anim("stagger")
 	if state_timer >= 1.3:
 		current_state = State.AERIAL_HOVER
 		state_timer = 0.0
@@ -167,6 +193,9 @@ func take_damage_spec(attack_spec: CombatMath.AttackSpec) -> CombatMath.CombatHi
 	elif poise_broken or res.is_critical:
 		current_state = State.STAGGERED
 		state_timer = 0.0
+		_play_anim("stagger")
+		if sunflare_light:
+			sunflare_light.visible = false
 
 	return res
 
@@ -179,12 +208,19 @@ func take_damage(amount: int) -> void:
 	else:
 		current_state = State.STAGGERED
 		state_timer = 0.0
+		_play_anim("stagger")
+		if sunflare_light:
+			sunflare_light.visible = false
 
 func _die() -> void:
 	current_state = State.DEFEATED
 	velocity = Vector3.ZERO
+	_play_anim("death", 0.1)
+	if sunflare_light:
+		sunflare_light.visible = false
 	gryphon_defeated.emit(self)
 	if is_inside_tree():
 		var tween = create_tween()
+		tween.tween_interval(0.6)
 		tween.tween_property(self, "scale", Vector3.ZERO, 0.4)
 		tween.tween_callback(queue_free)

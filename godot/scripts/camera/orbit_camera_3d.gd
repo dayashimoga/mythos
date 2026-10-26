@@ -21,6 +21,8 @@ signal target_unlocked()
 @export var min_pitch_deg: float = -70.0
 @export var max_pitch_deg: float = 25.0
 
+const PauseMenuScript = preload("res://scripts/ui/pause_menu_3d.gd")
+
 @export_group("Zoom & Framing")
 @export var min_zoom: float = 2.0
 @export var max_zoom: float = 8.0
@@ -44,6 +46,14 @@ var target_node: Node3D = null
 # Combat Target Lock State
 var locked_target: Node3D = null
 var max_lock_distance: float = 24.0
+
+# Camera Trauma / Impact Screen Shake
+var trauma: float = 0.0
+var trauma_decay: float = 2.2
+var trauma_time: float = 0.0
+
+func add_trauma(amount: float) -> void:
+	trauma = clamp(trauma + amount, 0.0, 1.0)
 
 @onready var camera_node: Camera3D = $Camera3D
 
@@ -174,10 +184,12 @@ func get_locked_target() -> Node3D:
 	return locked_target if is_locked_on() else null
 
 func orbit(dx: float, dy: float) -> void:
+	var sens_mult: float = PauseMenuScript.camera_sensitivity
+	var y_dir: float = -1.0 if PauseMenuScript.invert_camera_y else 1.0
 	# Yaw (horizontal orbit)
-	rotation.y -= dx * mouse_sensitivity
+	rotation.y -= dx * mouse_sensitivity * sens_mult
 	# Pitch (vertical tilt)
-	rotation.x -= dy * mouse_sensitivity
+	rotation.x -= dy * mouse_sensitivity * sens_mult * y_dir
 	rotation.x = clamp(rotation.x, deg_to_rad(min_pitch_deg), deg_to_rad(max_pitch_deg))
 
 func _process(delta: float) -> void:
@@ -233,3 +245,16 @@ func _process(delta: float) -> void:
 		if Input.is_key_pressed(KEY_DOWN):
 			rotation.x -= key_turn_speed * 0.8 * delta
 			rotation.x = clamp(rotation.x, deg_to_rad(min_pitch_deg), deg_to_rad(max_pitch_deg))
+
+	# 7. Apply Trauma Screen Shake (respecting accessibility settings)
+	if camera_node:
+		if trauma > 0.0:
+			trauma_time += delta * 36.0
+			var shake_mult: float = PauseMenuScript.screen_shake_multiplier if not PauseMenuScript.reduced_motion else 0.0
+			var shake = trauma * trauma * shake_mult
+			camera_node.rotation.z = sin(trauma_time * 1.3) * deg_to_rad(3.5) * shake
+			camera_node.rotation.x = cos(trauma_time * 1.7) * deg_to_rad(2.5) * shake
+			camera_node.rotation.y = sin(trauma_time * 1.9) * deg_to_rad(2.5) * shake
+			trauma = max(0.0, trauma - trauma_decay * delta)
+		else:
+			camera_node.rotation = camera_node.rotation.lerp(Vector3.ZERO, 15.0 * delta)

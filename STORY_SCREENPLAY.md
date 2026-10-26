@@ -114,12 +114,236 @@ To the Seven Realms. For the light of Rta!
 
 ---
 
-## 4. Traceability Matrix: Narrative to Technical Engine Implementation
+## 4. Complete Seven-Chapter Campaign Screenplay (Chapters I – VII)
 
-| Screenplay Element | Engine Component | Technical Implementation |
-| :--- | :--- | :--- |
-| **Pulsing Agni Gauntlet** | `Player.ts` / `ParticleSystem.ts` | Continuous radial particle emitter with sinusoidal luminescence shader / alpha modulation. |
-| **Tara's Astral Guidance** | `DialogueBox.ts` / `StoryScene.ts` | Typed typewriter dialogue subsystem with portrait rendering, skip support, and audio chime triggers. |
-| **Astra Shard Levitation & Collection** | `AstraShard.ts` / `CollisionSystem.ts` | Sinusoidal floating offset (`Math.sin(time * 3)`), spatial magnetic pull when distance $< 120\text{px}$, pickup sound emission. |
-| **Sentinel Corruption & Defeat** | `EnemySentinel.ts` / `Projectile.ts` | Bounding box AABB collision, health reduction on hit, death particle explosion, score increment. |
-| **Surya Altar Rekindling** | `Altar.ts` / `GameScene.ts` | Multi-stage state machine (Inactive -> Resonating -> Active), triggering dynamic mandala bloom, screen shake, and victory transition. |
+### CHAPTER I: BHUMI — THE DAWNING FLARE OF DANDAKA
+**Setting:** EXT. DANDAKA VALLEY & THE SUNKEN SANCTUM OF SURYA-KUND — DAWN  
+Towering sal and banyan trees frame a mist-veiled valley. High on a mountain ridge stands the Ruined Watchtower where Corrupted General Kalanemi commands the Tamas horde.
+
+#### Scene 1.1 — The Grove Meeting
+Veer traverses the flagstone path into the heart of Dandaka Grove. Devi Tara's radiant celestial form hovers gracefully above a carved lotus dais, her peacock-teal silk sari and gold lotus zari glistening in the morning light.
+```
+DEVI TARA
+Veer... you have reached Dandaka Grove. Look to the mountain ridge ahead—Corrupted Asura General Kalanemi has seized the high Watchtower.
+
+VEER
+His presence chokes the ley lines. How do we break the Tamas seal encircling the fortress?
+
+DEVI TARA
+Recover the 3 Primal Astra Shards across the valley. Their solar harmonic frequency will dissolve Kalanemi's ward and awaken your blade's full fury. Slay the General, then consecrate the Sun Altar!
+
+VEER
+By the light of Surya and the cosmic harmony of Rta, Kalanemi shall be cleansed. The flame shall burn bright!
+```
+
+#### Scene 1.2 — The Watchtower Breach & Titan Cleansing
+Veer gathers the 3 Shards. A wave of solar resonance shatters the towering purple Tamas Barrier. Veer charges up the stepped path to the Watchtower summit.
+General Kalanemi descends with an earth-shattering crash, dual void cleavers blazing with dark runes.
+```
+KALANEMI
+Mortal whelp! The Solar Anchor is shattered. The darkness of Tamas is the only true mercy!
+
+VEER
+Dharma is not extinguished so easily, General. Face the morning light!
+```
+Veer parries the cleaves, breaks Kalanemi's poise, and delivers the Agni-Finisher. Kalanemi's corrupt armor dissolves into golden ash.
+Veer consecrates the Sun Altar of Surya-Kund. A vertical sky beam ignites, manifesting the Sky Ascent Portal to Antariksha.
+
+---
+
+### CHAPTER II: ANTARIKSHA — THE AERIAL VAULT OF VAYU
+**Setting:** EXT. THE FLOATING CITADELS OF VAYU — STRATOSPHERE  
+Colossal floating islands drift amidst roaring celestial gales. Thermal vents hiss buoyant updrafts into the azure sky. Far in the distance stands the Cyclone Spire.
+
+#### Scene 2.1 — The Sky Sanctuary Arrival
+Veer lands upon the Sky Sanctuary island. Devi Tara's astral projection materializes from swirling storm feathers.
+```
+DEVI TARA
+Veer... you stand within Antariksha, the Aerial Vault of Vayu. The gale winds howl in agony—Matarishvan, ancient lord of storms, has been ensnared by the Void.
+
+VEER
+The sky chasms are vast. How do I cross between these suspended citadels?
+
+DEVI TARA
+Hold Jump in mid-air to spread your Prana Glider upon the wind currents, and press Grapple to tether to golden celestial rings. Harmonize the two Vayu Wind Turbines, then ascend to the Cyclone Pinnacle to purify Matarishvan!
+
+VEER
+The winds of Dharma shall guide my flight. I will calm the storm and free Matarishvan!
+```
+
+#### Scene 2.2 — The Pacification of Matarishvan
+Veer glides between floating sanctuaries, hooks grapple anchors, and activates the twin Vayu Turbines. Reaching the Cyclone Pinnacle, Matarishvan—a 3.4m quad-winged storm titan—roars from a vortex of hurricane lightning.
+Veer dodges the diving talons, weaves through gale blades, and strikes the tempest core. Matarishvan calms into a serene celestial wind spirit.
+Veer consecrates the High Gale Peetham. An abyssal portal opens downward into the subterranean deep: the gateway to Patala.
+
+---
+
+### CHAPTER III: PATALA — THE SUBTERRANEAN SERPENT VAULTS
+**Setting:** INT. THE BASALT CAVERNS OF VASUKI — DEEP UNDERWORLD  
+Colossal basalt stalactites hang over boiling emerald rivers of toxic venom. Luminescent turquoise mushrooms pulse with subterranean prana.
+
+#### Scene 3.1 — The Subterranean Descent
+Veer descends into the entrance cavern. Devi Tara appears, her radiant halo illuminating the dark obsidian walls.
+```
+DEVI TARA
+Veer... we have pierced the crust of the cosmos and entered Patala, the subterranean serpent vaults of King Vasuki.
+
+VEER
+The air is heavy with venomous vapors. Emerald rivers of poison carve through the basalt foundations.
+
+DEVI TARA
+Tread not upon the venom currents! Use the glowing bioluminescent mushroom caps to launch across the abyssal fissures. Shesha's Tormented Echo guards the subterranean vault—awaken the sacred Nagamani Peetham to cleanse the underworld!
+
+VEER
+No shadow is too deep for the solar flame. I shall cleanse Patala!
+```
+
+#### Scene 3.2 — Cleansing Shesha's Tormented Echo
+Veer bounces across venom rivers on giant mushroom springboards, defeats the patrolling Naga Guardians, and enters the monumental serpent chamber.
+Shesha's Tormented Echo rises—a 4.2m serpent king with 7 flaring cobra hoods and an incandescent Nagamani crest gem.
+Veer leaps over venom barrages, parries sweeping tail strikes, and breaks the serpent's grief-stricken torment.
+Veer consecrates the Vasuki Peetham. A vertical golden beam pierces through the cavern ceiling: the Ascension Portal to Svar.
+
+---
+
+### CHAPTER IV: SVAR (SVARGA) — THE CELESTIAL SOLAR CITADELS
+**Setting:** EXT. THE GOLDEN CITADELS OF SAVITR — SOLAR ZENITH  
+Gleaming white marble citadels trimmed in 24k gold float above a sea of golden clouds. Translucent crystal light bridges connect the high bastions.
+
+#### Scene 4.1 — The Citadel Threshold
+Veer emerges onto the Entry Bastion. Devi Tara stands beside the golden balustrades, her eyes reflecting the piercing solar dawn.
+```
+DEVI TARA
+Veer... we have ascended beyond the realm of storm and stone into Svarloka, the celestial sun citadels of Savitr.
+
+VEER
+The golden radiance is immense... yet the celestial light bridges between the sky bastions have broken down.
+
+DEVI TARA
+Align the sacred Surya Prisms atop the marble pillars to channel the solar rays and reactivate the light bridges. At the apex stands the corrupted Sun Titan Avatara—purify him and consecrate the Grand Solar Mahapeetham!
+
+VEER
+By the light of Surya and the truth of Rta, I shall reignite the solar citadel!
+```
+
+#### Scene 4.2 — Confronting the Sun Titan Avatara
+Veer rotates the optical Surya Prisms, manifesting humming golden light bridges. He crosses into the Apex Colosseum where Boss Surya Avatara descends, wielding dual colossal Sun-Gada hammers across four muscular arms.
+During Phase 2 Supernova ignition, the arena erupts in blinding radial heat. Veer parries the heavy strikes, breaks the solar armor, and frees the titan's divine spirit.
+Veer consecrates the Surya Mahapeetham. The ascent portal opens to the cosmic realm of the sages: Maharloka.
+
+---
+
+### CHAPTER V: MAHARLOKA — THE COSMIC ASTRAL LIBRARIES
+**Setting:** EXT./INT. THE SEAT OF THE RISHIS — DEEP INDIGO COSMOS  
+Towering archive shelves reaching into the stars hold billions of glowing parchment manuscripts. Constellation pavers glow beneath translucent floors.
+
+#### Scene 5.1 — The Terrace of the Sages
+Veer arrives at the archive steps. Devi Tara hovers beside a glowing Sanskrit manuscript pedestal.
+```
+DEVI TARA
+Veer... we have crossed into Maharloka, the realm of the great Rishis and cosmic astral libraries where all sacred knowledge is inscribed.
+
+VEER
+The silence is profound, yet the air vibrates with Vedic hymns. Towering bookstacks reach into the deep indigo cosmos.
+
+DEVI TARA
+Step upon the Astral Levitation Glyphs to soar to the elevated archives. Commune with the ancient Scripture Pedestals to harmonize the archives. In the Grand Observatory awaits Brihaspati's Astral Avatar—prove your spiritual strength and attune the Sage Core at the Mahar Mandala!
+
+VEER
+With reverence and unwavering mind, I shall seek the wisdom of Maharloka!
+```
+
+#### Scene 5.2 — Harmonizing Brihaspati's Avatar
+Veer rides the Levitation Glyphs across soaring archive tiers, interacts with the ancient Vedic Scripture Pedestals, and enters the Observatory.
+Sage Brihaspati tests Veer with celestial astral bolts and cosmic knowledge glyphs. Veer withstands the trials and earns the Sage's cosmic blessing.
+Veer consecrates the Mahar Mandala. The gateway ignites into the primordial volcanic forge of Tapoloka.
+
+---
+
+### CHAPTER VI: TAPOLOKA — AGNI'S PRIMORDIAL FORGE
+**Setting:** EXT. THE VOLCANIC CRUCIBLE OF AGNI — SEETHING CALDERAS  
+Rivers of incandescent molten gold flow between obsidian crags. Primordial anvils glow with thermal pressure while geysers blast superheated steam.
+
+#### Scene 6.1 — The Caldera Threshold
+Veer steps onto the volcanic terrace. Devi Tara appears with a protective aura of cooling cyan mist.
+```
+DEVI TARA
+Veer... we have ascended to Tapoloka, the realm of the Ascetic Flame where all divine weapons and cosmic elements are forged in the primordial fires of Agni.
+
+VEER
+The thermal pressure is immense. Rivers of liquid gold and molten magma boil across the volcanic obsidian crags.
+
+DEVI TARA
+Ride the eruption surges of the Magma Pressure Geysers to leap across the caldera chasms! Attune the two Primordial Anvil Forges to rekindle the cosmic breath of Agni. At the heart of the caldera waits Agni Rudra, Fire Titan of Tapas—purify his wrath and ignite the Sacred Tapas Peetham!
+
+VEER
+My spirit has been tempered through five realms. The fire shall not consume me—it shall forge my purpose!
+```
+
+#### Scene 6.2 — The Crucible of Agni Rudra
+Veer rides magma geyser eruptions, attunes the dual Primordial Anvils, and confronts Agni Rudra at the caldera heart.
+In an arena of erupting fire pillars, Veer dodges swirling flame vortexes and quenches the titan's rage with disciplined martial mastery.
+Veer consecrates the Tapo Peetham. The primordial flame concentrates into a transcendent crystalline lotus beam pointing to the highest plane: Satyaloka.
+
+---
+
+### CHAPTER VII: SATYALOKA — THE COSMIC DHARMA APEX & MOKSHA RESOLUTION
+**Setting:** EXT. THE BOUNDARY OF REALITY — THE TRANSCENDENT APEX  
+A boundless sea of pure iridescent light. Colossal golden lotus petals unfold across the horizon. At the center stands the monumental Dharmachakra—The Wheel of Eternal Cosmic Law.
+
+#### Scene 7.1 — The Boundary of Creation
+Veer arrives at the apex. Devi Tara stands fully manifest in divine luminescence, her guidance reaching its culmination.
+```
+DEVI TARA
+Veer... look upon the Lotus of Infinite Reality. You have ascended to Satyaloka—the Highest Apex of Creation and the Abode of Brahman. Here, the boundaries of time and karma dissolve into pure unmanifested light.
+
+VEER
+The Cosmic Wheel has halted its revolution. The Dharmachakra is fractured, and the cosmic fabric trembles. What stands before the core of creation?
+
+DEVI TARA
+Brahma Avatara, the Four-Headed Creator Titan, has been caught in the shadow of cosmic dissolution—Mahapralaya! Align the two Cosmic Dharmachakra Resonators across the void to materialize the Transcendent Light Bridges. Defeat the Creator's shadow, free the cosmos from dissolution, and attune the Moksha Mahapeetham to complete your journey!
+
+VEER
+From the dust of Bhumi to the apex of Satyaloka, all my trials lead to this moment. In the name of Rta, Dharma, and all living souls—I shall turn the Wheel of Truth!
+```
+
+#### Scene 7.2 — The Final Liberation of Brahma Avatara
+Veer aligns the two Cosmic Resonators, stepping onto transcendent bridges of pure starlight.
+Brahma Avatara rises—a four-faced monumental deity caught in the turbulent void of Mahapralaya.
+In a climactic confrontation spanning the cosmic boundary, Veer parries reality-bending waves of creation and dissolution.
+With a final, harmonious strike of the purified Agni-Core, the dark Mahapralaya shroud shatters. The four faces of Brahma gaze upon Veer with benevolent grace, bestowing the ultimate cosmic blessing.
+
+#### Scene 7.3 — Grand Climax & Moksha Resolution
+Veer ascends the golden steps of the Supreme Moksha Mahapeetham. Devi Tara stands by his side as he places all 28 reunited Astra Shards into the central mandala.
+The colossal Dharmachakra begins its eternal rotation, casting waves of pure golden and cyan luminescence across all Seven Spheres:
+- In Bhumi, the Dandaka Grove flourishes with sacred blossoms.
+- In Antariksha, the wind currents sing peaceful ragas.
+- In Patala, the venom rivers transmute into sparkling clear waters of amrita.
+- In Svar, the golden citadels radiate uncorrupted warmth.
+- In Maharloka, the sacred scriptures illuminate the minds of sages.
+- In Tapoloka, the primordial forge burns with creative harmony.
+- In Satyaloka, the Cosmic Lotus blooms for all eternity.
+
+```
+DEVI TARA
+Veer... look upon the Seven Spheres. The Wheel of Dharma turns once more, radiant and eternal.
+
+VEER
+From Bhumi's soil to Satyaloka's zenith, all souls are liberated. The light of Rta endures!
+```
+The camera pulls back across the blooming cosmic lotus, framing Veer and Devi Tara standing as eternal guardians of the restored universe as the Sanskrit mantra *"Om Shanti Shanti Shanti"* echoes through the cosmos.
+
+---
+
+## 5. Traceability Matrix: Seven-Realm Narrative to Godot 3D Engine Implementation
+
+| Realm & Chapter | Level Script & Scene | Primary Boss & NPC | Core Narrative Prop / Mechanic | Cinematic Sequence | Save & Shard State |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **I: Bhumi** | `BhumiValley3D.tscn` / `bhumi_valley_3d.gd` | Boss Kalanemi / Devi Tara | Sun Altar (`SunShrine3D`), Tamas Barrier, 5 Shards | `bhumi_intro`, `kalanemi_boss_intro`, `Bhumi_consecration` | `currentRealm = "Antariksha"`, shards: 5 |
+| **II: Antariksha** | `AntarikshaSkyRealm3D.tscn` / `antariksha_sky_realm_3d.gd` | Boss Matarishvan / Devi Tara | High Gale Peetham, 2 Vayu Turbines, Glider, Grapple | `antariksha_intro`, `matarishvan_boss_intro`, `Antariksha_consecration` | `currentRealm = "Dyaus"`, shards: 8 |
+| **III: Patala** | `PatalaUnderworld3D.tscn` / `patala_underworld_3d.gd` | Boss Shesha Echo / Devi Tara | Vasuki Peetham, Venom River, Bouncy Fungi, 3 Naga Guardians | `patala_intro`, `shesha_boss_intro`, `Patala_consecration` | `currentRealm = "Patala"`, shards: 12 |
+| **IV: Svar** | `SvarSolarCitadel3D.tscn` / `svar_solar_citadel_3d.gd` | Boss Surya Avatara / Devi Tara | Surya Mahapeetham, 2 Surya Prisms, Solar Light Bridges | `svar_intro`, `surya_boss_intro`, `Svar_consecration` | `currentRealm = "Svar"`, shards: 16 |
+| **V: Maharloka** | `MaharlokaSanctuary3D.tscn` / `maharloka_sanctuary_3d.gd` | Boss Brihaspati / Devi Tara | Mahar Mandala, 2 Scripture Pedestals, Levitation Glyphs | `maharloka_intro`, `brihaspati_boss_intro`, `Maharloka_consecration` | `currentRealm = "Maharloka"`, shards: 20 |
+| **VI: Tapoloka** | `TapolokaForge3D.tscn` / `tapoloka_forge_3d.gd` | Boss Agni Rudra / Devi Tara | Tapo Peetham, 2 Anvil Forges, Magma Pressure Geysers | `tapoloka_intro`, `agni_boss_intro`, `Tapoloka_consecration` | `currentRealm = "Tapoloka"`, shards: 24 |
+| **VII: Satyaloka**| `SatyalokaApex3D.tscn` / `satyaloka_apex_3d.gd` | Boss Brahma Avatara / Devi Tara | Moksha Mahapeetham, 2 Dharmachakras, Cosmic Light Bridges | `satyaloka_intro`, `brahma_boss_intro`, `satyaloka_campaign_resolution` | `currentRealm = "Satyaloka"`, shards: 28, all 7 realms unlocked |
+

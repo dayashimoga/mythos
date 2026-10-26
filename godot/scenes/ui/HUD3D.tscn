@@ -1,6 +1,7 @@
-[gd_scene load_steps=11 format=3 uid="uid://c6hu83mdu3e1a"]
+[gd_scene load_steps=16 format=3 uid="uid://c6hu83mdu3e1a"]
 
 [ext_resource type="Script" path="res://scripts/ui/hud_3d.gd" id="1_hud3d"]
+[ext_resource type="PackedScene" path="res://scenes/ui/PauseMenu3D.tscn" id="2_pause_menu"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hp_bg"]
 bg_color = Color(0.08, 0.1, 0.16, 0.85)
@@ -11,6 +12,56 @@ corner_radius_bottom_left = 6
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hp_fill"]
 bg_color = Color(0.85, 0.2, 0.2, 0.95)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_prana_fill"]
+bg_color = Color(0.12, 0.72, 0.95, 0.95)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_badge"]
+bg_color = Color(0.06, 0.09, 0.15, 0.88)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.95, 0.8, 0.3, 0.85)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_compass"]
+bg_color = Color(0.06, 0.09, 0.15, 0.85)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.35, 0.75, 0.95, 0.8)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_context"]
+bg_color = Color(0.05, 0.07, 0.13, 0.92)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(1, 0.82, 0.3, 0.9)
+corner_radius_top_left = 16
+corner_radius_top_right = 16
+corner_radius_bottom_right = 16
+corner_radius_bottom_left = 16
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_subtitle"]
+bg_color = Color(0.04, 0.05, 0.08, 0.82)
 corner_radius_top_left = 6
 corner_radius_top_right = 6
 corner_radius_bottom_right = 6
@@ -88,21 +139,25 @@ theme_override_constants/margin_bottom = 16
 [node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_constants/separation = 10
+theme_override_constants/separation = 8
 
 [node name="TopBar" type="HBoxContainer" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
-theme_override_constants/separation = 16
+theme_override_constants/separation = 14
 
-[node name="HealthBar" type="ProgressBar" parent="MarginContainer/VBoxContainer/TopBar"]
-custom_minimum_size = Vector2(220, 22)
+[node name="VBoxVitals" type="VBoxContainer" parent="MarginContainer/VBoxContainer/TopBar"]
+layout_mode = 2
+theme_override_constants/separation = 3
+
+[node name="HealthBar" type="ProgressBar" parent="MarginContainer/VBoxContainer/TopBar/VBoxVitals"]
+custom_minimum_size = Vector2(210, 18)
 layout_mode = 2
 theme_override_styles/background = SubResource("StyleBoxFlat_hp_bg")
 theme_override_styles/fill = SubResource("StyleBoxFlat_hp_fill")
 value = 100.0
 show_percentage = false
 
-[node name="Label" type="Label" parent="MarginContainer/VBoxContainer/TopBar/HealthBar"]
+[node name="HealthLabel" type="Label" parent="MarginContainer/VBoxContainer/TopBar/VBoxVitals/HealthBar"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -110,39 +165,134 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_font_sizes/font_size = 12
+theme_override_font_sizes/font_size = 11
 text = "HP: 100 / 100"
 horizontal_alignment = 1
 vertical_alignment = 1
 
+[node name="EnergyBar" type="ProgressBar" parent="MarginContainer/VBoxContainer/TopBar/VBoxVitals"]
+custom_minimum_size = Vector2(210, 14)
+layout_mode = 2
+theme_override_styles/background = SubResource("StyleBoxFlat_hp_bg")
+theme_override_styles/fill = SubResource("StyleBoxFlat_prana_fill")
+value = 100.0
+show_percentage = false
+
+[node name="EnergyLabel" type="Label" parent="MarginContainer/VBoxContainer/TopBar/VBoxVitals/EnergyBar"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 10
+text = "PRANA: 100 / 100"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="WeaponPanel" type="PanelContainer" parent="MarginContainer/VBoxContainer/TopBar"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_badge")
+
+[node name="Margin" type="MarginContainer" parent="MarginContainer/VBoxContainer/TopBar/WeaponPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 4
+
+[node name="WeaponBadgeLabel" type="Label" parent="MarginContainer/VBoxContainer/TopBar/WeaponPanel/Margin"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.88, 0.35, 1)
+theme_override_font_sizes/font_size = 12
+text = "⚔ SURYA-KRIPANA"
+
 [node name="ShardsPanel" type="PanelContainer" parent="MarginContainer/VBoxContainer/TopBar"]
 layout_mode = 2
 
-[node name="ShardsLabel" type="Label" parent="MarginContainer/VBoxContainer/TopBar/ShardsPanel"]
+[node name="Margin" type="MarginContainer" parent="MarginContainer/VBoxContainer/TopBar/ShardsPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 6
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_right = 6
+theme_override_constants/margin_bottom = 4
+
+[node name="ShardsLabel" type="Label" parent="MarginContainer/VBoxContainer/TopBar/ShardsPanel/Margin"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.2, 0.9, 1, 1)
-theme_override_font_sizes/font_size = 13
+theme_override_font_sizes/font_size = 12
 text = "✦ ASTRA SHARDS: 0 / 3"
+
+[node name="CompassPanel" type="PanelContainer" parent="MarginContainer/VBoxContainer/TopBar"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_compass")
+
+[node name="Margin" type="MarginContainer" parent="MarginContainer/VBoxContainer/TopBar/CompassPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 4
+
+[node name="CompassLabel" type="Label" parent="MarginContainer/VBoxContainer/TopBar/CompassPanel/Margin"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.5, 0.88, 1, 1)
+theme_override_font_sizes/font_size = 12
+text = "🧭 N 000°"
 
 [node name="Spacer" type="Control" parent="MarginContainer/VBoxContainer/TopBar"]
 layout_mode = 2
 size_flags_horizontal = 3
 
-[node name="BtnToggleTouch" type="Button" parent="MarginContainer/VBoxContainer/TopBar"]
+[node name="BtnMenu" type="Button" parent="MarginContainer/VBoxContainer/TopBar"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 12
-text = "[ Touch Controls ]"
+text = "[ESC] Menu"
 
-[node name="BtnStudio" type="Button" parent="MarginContainer/VBoxContainer/TopBar"]
+[node name="BtnDevToggle" type="Button" parent="MarginContainer/VBoxContainer/TopBar"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 12
-text = "[F1] 3D Character Studio"
+text = "[F1] Dev ▾"
+
+[node name="DevDrawer" type="PanelContainer" parent="MarginContainer/VBoxContainer"]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 8
+
+[node name="Margin" type="MarginContainer" parent="MarginContainer/VBoxContainer/DevDrawer"]
+layout_mode = 2
+theme_override_constants/margin_left = 6
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_right = 6
+theme_override_constants/margin_bottom = 4
+
+[node name="HBox" type="HBoxContainer" parent="MarginContainer/VBoxContainer/DevDrawer/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="BtnStudio" type="Button" parent="MarginContainer/VBoxContainer/DevDrawer/Margin/HBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+text = "3D Character Studio"
+
+[node name="BtnToggleTouch" type="Button" parent="MarginContainer/VBoxContainer/DevDrawer/Margin/HBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+text = "[ Touch Controls ]"
 
 [node name="ObjectivePanel" type="PanelContainer" parent="MarginContainer/VBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 0
 
-[node name="ObjectiveLabel" type="Label" parent="MarginContainer/VBoxContainer/ObjectivePanel"]
+[node name="Margin" type="MarginContainer" parent="MarginContainer/VBoxContainer/ObjectivePanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 4
+
+[node name="ObjectiveLabel" type="Label" parent="MarginContainer/VBoxContainer/ObjectivePanel/Margin"]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.85, 0.3, 1)
 theme_override_font_sizes/font_size = 13
@@ -198,7 +348,69 @@ text = "[W/A/S/D / L-Stick] Move  |  [Shift] Sprint
 [Space / A Button] Jump   |  [F / B] Dash
 [LMB / X Button] Surya Combo Slash
 [Q / LB] Guard  |  [Tab / R3] Lock-On
-[E / Y Button] Interact / Dialogue"
+[E / Y Button] Interact / Dialogue
+[ESC / Start] Pause Menu / Codex"
+
+[node name="ContextPromptPanel" type="PanelContainer" parent="."]
+visible = false
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -180.0
+offset_top = -110.0
+offset_right = 180.0
+offset_bottom = -72.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_context")
+
+[node name="Margin" type="MarginContainer" parent="ContextPromptPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 14
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 14
+theme_override_constants/margin_bottom = 6
+
+[node name="ContextPromptLabel" type="Label" parent="ContextPromptPanel/Margin"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.95, 0.6, 1)
+theme_override_font_sizes/font_size = 13
+text = "[ E ] Commune with Devi Tara"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="SubtitlePanel" type="PanelContainer" parent="."]
+visible = false
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -320.0
+offset_top = -58.0
+offset_right = 320.0
+offset_bottom = -22.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_subtitle")
+
+[node name="Margin" type="MarginContainer" parent="SubtitlePanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 4
+
+[node name="SubtitleLabel" type="Label" parent="SubtitlePanel/Margin"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.95, 1, 1)
+theme_override_font_sizes/font_size = 12
+text = "Devi Tara: \"Arise, Child of the Sun.\""
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 2
 
 [node name="BossPanel" type="PanelContainer" parent="."]
 visible = false
@@ -230,7 +442,7 @@ theme_override_styles/fill = SubResource("StyleBoxFlat_boss_hp_fill")
 value = 350.0
 show_percentage = false
 
-[node name="Label" type="Label" parent="BossPanel/VBox/BossHealthBar"]
+[node name="BossHealthLabel" type="Label" parent="BossPanel/VBox/BossHealthBar"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -455,3 +667,6 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 13
 theme_override_styles/normal = SubResource("StyleBoxFlat_touch_btn")
 text = "Interact"
+
+[node name="PauseMenu" parent="." instance=ExtResource("2_pause_menu")]
+visible = false

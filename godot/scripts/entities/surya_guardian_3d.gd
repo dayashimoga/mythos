@@ -22,6 +22,7 @@ var current_state: State = State.GUARD_PATROL
 var poise: RefCounted = null
 var target_player: Node3D = null
 var state_timer: float = 0.0
+var anim_player: AnimationPlayer = null
 
 @onready var visual_mesh: Node3D = $VisualMesh
 @onready var thrust_hitbox: Area3D = $ThrustHitbox
@@ -29,6 +30,22 @@ var state_timer: float = 0.0
 
 signal guardian_defeated(guardian: CharacterBody3D)
 signal spear_hit(target: Node3D, damage: int)
+
+func _find_anim_player(node: Node) -> AnimationPlayer:
+	if node is AnimationPlayer:
+		return node
+	for child in node.get_children():
+		var found = _find_anim_player(child)
+		if found:
+			return found
+	return null
+
+func _play_anim(anim_name: String, blend_time: float = 0.15) -> void:
+	if not anim_player:
+		anim_player = _find_anim_player(self)
+	if anim_player and anim_player.has_animation(anim_name):
+		if anim_player.current_animation != anim_name:
+			anim_player.play(anim_name, blend_time)
 
 func _init() -> void:
 	add_to_group("enemies")
@@ -38,6 +55,8 @@ func _init() -> void:
 
 func _ready() -> void:
 	current_health = max_health
+	anim_player = _find_anim_player(self)
+	_play_anim("idle")
 	if thrust_hitbox:
 		thrust_hitbox.monitoring = false
 		thrust_hitbox.body_entered.connect(_on_thrust_hitbox_body_entered)
@@ -83,6 +102,7 @@ func _process_patrol(delta: float) -> void:
 	state_timer += delta
 	if not target_player or not is_instance_valid(target_player):
 		velocity = velocity.move_toward(Vector3.ZERO, 10.0 * delta)
+		_play_anim("idle")
 		return
 
 	var my_pos = _get_entity_pos(self)
@@ -91,6 +111,7 @@ func _process_patrol(delta: float) -> void:
 
 	if dist > perception_radius:
 		velocity = velocity.move_toward(Vector3.ZERO, 8.0 * delta)
+		_play_anim("idle")
 		return
 
 	_safe_look_at(player_pos)
@@ -98,13 +119,16 @@ func _process_patrol(delta: float) -> void:
 
 	if dist > attack_reach + 1.0:
 		velocity = dir * 4.8
+		_play_anim("walk")
 	else:
 		velocity = Vector3.ZERO
 		current_state = State.SPEAR_CHARGE_TELEGRAPH
 		state_timer = 0.0
+		_play_anim("telegraph")
 
 func _process_telegraph(delta: float) -> void:
 	state_timer += delta
+	_play_anim("telegraph")
 	if target_player and is_instance_valid(target_player):
 		_safe_look_at(_get_entity_pos(target_player))
 
@@ -114,6 +138,7 @@ func _process_telegraph(delta: float) -> void:
 	if state_timer >= 0.65:
 		current_state = State.SPEAR_THRUST
 		state_timer = 0.0
+		_play_anim("thrust_attack", 0.05)
 		var my_pos = _get_entity_pos(self)
 		var player_pos = _get_entity_pos(target_player) if target_player else my_pos + Vector3.FORWARD
 		var dir = (player_pos - my_pos).normalized() if my_pos.distance_to(player_pos) > 0.001 else Vector3.FORWARD
@@ -131,10 +156,12 @@ func _process_thrust(delta: float) -> void:
 			thrust_hitbox.monitoring = false
 		current_state = State.SHIELD_BLOCK
 		state_timer = 0.0
+		_play_anim("shield_block")
 
 func _process_block(delta: float) -> void:
 	state_timer += delta
 	velocity = Vector3.ZERO
+	_play_anim("shield_block")
 	if target_player and is_instance_valid(target_player):
 		_safe_look_at(_get_entity_pos(target_player))
 
@@ -145,6 +172,7 @@ func _process_block(delta: float) -> void:
 func _process_stagger(delta: float) -> void:
 	state_timer += delta
 	velocity = velocity.move_toward(Vector3.ZERO, 15.0 * delta)
+	_play_anim("idle")
 	if state_timer >= 1.4:
 		current_state = State.GUARD_PATROL
 		state_timer = 0.0
@@ -203,10 +231,12 @@ func take_damage(amount: int) -> void:
 func _die() -> void:
 	current_state = State.DEFEATED
 	velocity = Vector3.ZERO
+	_play_anim("death", 0.1)
 	if thrust_hitbox:
 		thrust_hitbox.monitoring = false
 	guardian_defeated.emit(self)
 	if is_inside_tree():
 		var tween = create_tween()
+		tween.tween_interval(0.6)
 		tween.tween_property(self, "scale", Vector3.ZERO, 0.4)
 		tween.tween_callback(queue_free)

@@ -1,0 +1,265 @@
+[gd_scene load_steps=6 format=3 uid="uid://c7pausemenu3d"]
+
+[ext_resource type="Script" path="res://scripts/ui/pause_menu_3d.gd" id="1_pause"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_modal"]
+bg_color = Color(0.05, 0.07, 0.12, 0.94)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.95, 0.82, 0.35, 0.88)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+shadow_color = Color(0, 0, 0, 0.6)
+shadow_size = 18
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_tab_selected"]
+bg_color = Color(0.12, 0.16, 0.25, 1)
+border_width_top = 2
+border_color = Color(0.95, 0.82, 0.35, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_tab_unselected"]
+bg_color = Color(0.06, 0.08, 0.14, 0.8)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_card"]
+bg_color = Color(0.08, 0.1, 0.16, 0.75)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.2, 0.85, 1, 0.4)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[node name="PauseMenu3D" type="Control"]
+process_mode = 3
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_pause")
+
+[node name="DarkBackdrop" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.02, 0.03, 0.05, 0.85)
+
+[node name="Panel" type="PanelContainer" parent="."]
+custom_minimum_size = Vector2(860, 560)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -430.0
+offset_top = -280.0
+offset_right = 430.0
+offset_bottom = 280.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_modal")
+
+[node name="Margin" type="MarginContainer" parent="Panel"]
+layout_mode = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 18
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 18
+
+[node name="VBox" type="VBoxContainer" parent="Panel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="TopHBox" type="HBoxContainer" parent="Panel/Margin/VBox"]
+layout_mode = 2
+
+[node name="TitleLabel" type="Label" parent="Panel/Margin/VBox/TopHBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.98, 0.85, 0.4, 1)
+theme_override_font_sizes/font_size = 18
+text = "✦ MYTHOS: SANCTUM ARCHIVES & CONTROLS ✦"
+
+[node name="Spacer" type="Control" parent="Panel/Margin/VBox/TopHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="BtnRestart" type="Button" parent="Panel/Margin/VBox/TopHBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "[R] Respawn Checkpoint"
+
+[node name="BtnResume" type="Button" parent="Panel/Margin/VBox/TopHBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.2, 0.95, 0.8, 1)
+theme_override_font_sizes/font_size = 13
+text = "[ESC] Resume Journey"
+
+[node name="TabContainer" type="TabContainer" parent="Panel/Margin/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_styles/tab_selected = SubResource("StyleBoxFlat_tab_selected")
+theme_override_styles/tab_unselected = SubResource("StyleBoxFlat_tab_unselected")
+
+[node name="Quest Journal" type="MarginContainer" parent="Panel/Margin/VBox/TabContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
+
+[node name="JournalTextLabel" type="RichTextLabel" parent="Panel/Margin/VBox/TabContainer/Quest Journal"]
+layout_mode = 2
+bbcode_enabled = true
+text = "[b][color=#FFD166]QUEST JOURNAL[/color][/b]
+Loading campaign objectives..."
+
+[node name="Realm Map" type="MarginContainer" parent="Panel/Margin/VBox/TabContainer"]
+visible = false
+layout_mode = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
+
+[node name="Scroll" type="ScrollContainer" parent="Panel/Margin/VBox/TabContainer/Realm Map"]
+layout_mode = 2
+
+[node name="MapGridContainer" type="GridContainer" parent="Panel/Margin/VBox/TabContainer/Realm Map/Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/h_separation = 16
+theme_override_constants/v_separation = 12
+columns = 2
+
+[node name="Settings & Accessibility" type="MarginContainer" parent="Panel/Margin/VBox/TabContainer"]
+visible = false
+layout_mode = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 16
+
+[node name="Grid" type="GridContainer" parent="Panel/Margin/VBox/TabContainer/Settings & Accessibility"]
+layout_mode = 2
+theme_override_constants/h_separation = 24
+theme_override_constants/v_separation = 14
+columns = 2
+
+[node name="LabelMaster" type="Label" parent="Panel/Margin/VBox/TabContainer/Settings & Accessibility/Grid"]
+layout_mode = 2
+text = "Master Volume"
+
+[node name="SliderMaster" type="HSlider" parent="Panel/Margin/VBox/TabContainer/Settings & Accessibility/Grid"]
+custom_minimum_size = Vector2(240, 20)
+layout_mode = 2
+max_value = 1.0
+step = 0.05
+value = 1.0
+
+[node name="LabelSFX" type="Label" parent="Panel/Margin/VBox/TabContainer/Settings & Accessibility/Grid"]
+layout_mode = 2
+text = "Sound Effects (SFX)"
+
+[node name="SliderSFX" type="HSlider" parent="Panel/Margin/VBox/TabContainer/Settings & Accessibility/Grid"]
+custom_minimum_size = Vector2(240, 20)
+layout_mode = 2
+max_value = 1.0
+step = 0.05
+value = 1.0
+
+[node name="LabelAmbience" type="Label" parent="Panel/Margin/VBox/TabContainer/Settings & Accessibility/Grid"]
+layout_mode = 2
+text = "Atmospheric Ambience"
+
+[node name="SliderAmbience" type="HSlider" parent="Panel/Margin/VBox/TabContainer/Settings & Accessibility/Grid"]
+custom_minimum_size = Vector2(240, 20)
+layout_mode = 2
+max_value = 1.0
+step = 0.05
+value = 0.7
+
+[node name="LabelSens" type="Label" parent="Panel/Margin/VBox/TabContainer/Settings & Accessibility/Grid"]
+layout_mode = 2
+text = "Camera Sensitivity"
+
+[node name="SliderCamSens" type="HSlider" parent="Panel/Margin/VBox/TabContainer/Settings & Accessibility/Grid"]
+custom_minimum_size = Vector2(240, 20)
+layout_mode = 2
+min_value = 0.5
+max_value = 2.5
+step = 0.1
+value = 1.0
+
+[node name="LabelInvert" type="Label" parent="Panel/Margin/VBox/TabContainer/Settings & Accessibility/Grid"]
+layout_mode = 2
+text = "Invert Pitch (Y-Axis)"
+
+[node name="CheckInvertY" type="CheckBox" parent="Panel/Margin/VBox/TabContainer/Settings & Accessibility/Grid"]
+layout_mode = 2
+text = "Inverted"
+
+[node name="LabelShake" type="Label" parent="Panel/Margin/VBox/TabContainer/Settings & Accessibility/Grid"]
+layout_mode = 2
+text = "Screen Shake Limit"
+
+[node name="SliderShake" type="HSlider" parent="Panel/Margin/VBox/TabContainer/Settings & Accessibility/Grid"]
+custom_minimum_size = Vector2(240, 20)
+layout_mode = 2
+max_value = 1.0
+step = 0.1
+value = 1.0
+
+[node name="LabelMotion" type="Label" parent="Panel/Margin/VBox/TabContainer/Settings & Accessibility/Grid"]
+layout_mode = 2
+text = "Reduced Motion"
+
+[node name="CheckReducedMotion" type="CheckBox" parent="Panel/Margin/VBox/TabContainer/Settings & Accessibility/Grid"]
+layout_mode = 2
+text = "Enable Reduced Motion"
+
+[node name="LabelSubs" type="Label" parent="Panel/Margin/VBox/TabContainer/Settings & Accessibility/Grid"]
+layout_mode = 2
+text = "Subtitles & Speaker Badges"
+
+[node name="CheckSubtitles" type="CheckBox" parent="Panel/Margin/VBox/TabContainer/Settings & Accessibility/Grid"]
+layout_mode = 2
+button_pressed = true
+text = "Enabled"
+
+[node name="Sacred Codex" type="MarginContainer" parent="Panel/Margin/VBox/TabContainer"]
+visible = false
+layout_mode = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
+
+[node name="HBox" type="HBoxContainer" parent="Panel/Margin/VBox/TabContainer/Sacred Codex"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="CodexItemList" type="ItemList" parent="Panel/Margin/VBox/TabContainer/Sacred Codex/HBox"]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+
+[node name="CodexTextLabel" type="RichTextLabel" parent="Panel/Margin/VBox/TabContainer/Sacred Codex/HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+bbcode_enabled = true
+text = "[color=#FFD166]Select a Codex entry to read mythological lore...[/color]"

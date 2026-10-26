@@ -1,4 +1,4 @@
-[gd_scene load_steps=18 format=3 uid="uid://patala_underworld_scene"]
+[gd_scene load_steps=22 format=3 uid="uid://patala_underworld_scene"]
 
 [ext_resource type="Script" path="res://scripts/levels/patala_underworld_3d.gd" id="1_realm_script"]
 [ext_resource type="PackedScene" uid="uid://b7vyu9s2km13a" path="res://scenes/player/Player3D.tscn" id="2_player"]
@@ -11,52 +11,38 @@
 [ext_resource type="PackedScene" uid="uid://bouncy_fungus_scene" path="res://scenes/interactables/BouncyFungus3D.tscn" id="9_bouncy_fungus"]
 [ext_resource type="PackedScene" uid="uid://vasuki_peetham_scene" path="res://scenes/interactables/VasukiPeetham3D.tscn" id="10_vasuki_peetham"]
 [ext_resource type="PackedScene" path="res://assets/environment/patala_stalagmite_cluster.glb" id="11_stalagmite"]
+[ext_resource type="PackedScene" path="res://assets/environment/patala_entrance_chamber.glb" id="12_entrance_mesh"]
+[ext_resource type="PackedScene" path="res://assets/environment/patala_mid_chamber.glb" id="13_mid_mesh"]
+[ext_resource type="PackedScene" path="res://assets/environment/patala_boss_arena.glb" id="14_boss_mesh"]
+[ext_resource type="PackedScene" path="res://assets/environment/patala_sanctum_chamber.glb" id="15_sanctum_mesh"]
+[ext_resource type="PackedScene" path="res://assets/environment/patala_stalactite_cluster.glb" id="16_stalactite"]
+[ext_resource type="PackedScene" path="res://assets/environment/patala_serpent_archway.glb" id="17_serpent_arch"]
 
 [sub_resource type="Environment" id="Environment_patala"]
 background_mode = 1
 background_color = Color(0.02, 0.04, 0.03, 1)
 ambient_light_source = 2
-ambient_light_color = Color(0.08, 0.16, 0.12, 1)
-ambient_light_energy = 0.9
+ambient_light_color = Color(0.07, 0.17, 0.13, 1)
+ambient_light_energy = 0.95
 tonemap_mode = 2
 glow_enabled = true
-glow_intensity = 0.8
+glow_intensity = 0.85
 glow_bloom = 0.25
 fog_enabled = true
-fog_light_color = Color(0.04, 0.14, 0.08, 1)
+fog_light_color = Color(0.03, 0.15, 0.09, 1)
 fog_density = 0.012
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_basalt"]
-albedo_color = Color(0.12, 0.14, 0.16, 1)
-roughness = 0.85
-
-[sub_resource type="BoxMesh" id="BoxMesh_floor_entry"]
-material = SubResource("StandardMaterial3D_basalt")
-size = Vector3(24, 2, 20)
-
 [sub_resource type="BoxShape3D" id="BoxShape3D_floor_entry"]
-size = Vector3(24, 2, 20)
-
-[sub_resource type="BoxMesh" id="BoxMesh_floor_mid"]
-material = SubResource("StandardMaterial3D_basalt")
-size = Vector3(28, 2, 22)
+size = Vector3(24, 2.4, 20)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_floor_mid"]
-size = Vector3(28, 2, 22)
-
-[sub_resource type="BoxMesh" id="BoxMesh_floor_boss"]
-material = SubResource("StandardMaterial3D_basalt")
-size = Vector3(36, 2, 34)
+size = Vector3(28, 2.4, 22)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_floor_boss"]
-size = Vector3(36, 2, 34)
-
-[sub_resource type="BoxMesh" id="BoxMesh_floor_sanctum"]
-material = SubResource("StandardMaterial3D_basalt")
-size = Vector3(18, 2, 16)
+size = Vector3(36, 2.8, 34)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_floor_sanctum"]
-size = Vector3(18, 2, 16)
+size = Vector3(18, 2.2, 16)
 
 [node name="PatalaUnderworld3D" type="Node3D"]
 script = ExtResource("1_realm_script")
@@ -66,8 +52,8 @@ environment = SubResource("Environment_patala")
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
 transform = Transform3D(0.866, -0.354, 0.354, 0, 0.707, 0.707, -0.5, -0.612, 0.612, 0, 30, 0)
-light_color = Color(0.4, 0.8, 0.6, 1)
-light_energy = 0.4
+light_color = Color(0.35, 0.85, 0.65, 1)
+light_energy = 0.45
 shadow_enabled = true
 
 [node name="Player3D" parent="." instance=ExtResource("2_player")]
@@ -83,11 +69,13 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 collision_layer = 1
 collision_mask = 0
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="EntranceFloor"]
-mesh = SubResource("BoxMesh_floor_entry")
+[node name="EntranceMesh" parent="EntranceFloor" instance=ExtResource("12_entrance_mesh")]
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="EntranceFloor"]
 shape = SubResource("BoxShape3D_floor_entry")
+
+[node name="EntranceSerpentArch" parent="." instance=ExtResource("17_serpent_arch")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.2, -9.5)
 
 [node name="VenomRiver3D" parent="." instance=ExtResource("8_venom_river")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -3.5, -18)
@@ -100,8 +88,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -36)
 collision_layer = 1
 collision_mask = 0
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="MidChamberFloor"]
-mesh = SubResource("BoxMesh_floor_mid")
+[node name="MidMesh" parent="MidChamberFloor" instance=ExtResource("13_mid_mesh")]
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="MidChamberFloor"]
 shape = SubResource("BoxShape3D_floor_mid")
@@ -110,21 +97,23 @@ shape = SubResource("BoxShape3D_floor_mid")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.0, -46)
 
 [node name="NagaSpitter1" parent="." instance=ExtResource("5_spitter")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 1.0, -32)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 1.0, -32)
 
 [node name="NagaSpitter2" parent="." instance=ExtResource("5_spitter")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 1.0, -32)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 1.0, -32)
 
 [node name="NagaConstrictor1" parent="." instance=ExtResource("6_constrictor")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.0, -38)
+
+[node name="MidArchway" parent="." instance=ExtResource("17_serpent_arch")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.2, -45)
 
 [node name="BossArenaFloor" type="StaticBody3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4, -68)
 collision_layer = 1
 collision_mask = 0
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="BossArenaFloor"]
-mesh = SubResource("BoxMesh_floor_boss")
+[node name="BossMesh" parent="BossArenaFloor" instance=ExtResource("14_boss_mesh")]
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="BossArenaFloor"]
 shape = SubResource("BoxShape3D_floor_boss")
@@ -137,8 +126,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 7, -92)
 collision_layer = 1
 collision_mask = 0
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="SanctumFloor"]
-mesh = SubResource("BoxMesh_floor_sanctum")
+[node name="SanctumMesh" parent="SanctumFloor" instance=ExtResource("15_sanctum_mesh")]
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="SanctumFloor"]
 shape = SubResource("BoxShape3D_floor_sanctum")
@@ -147,25 +135,40 @@ shape = SubResource("BoxShape3D_floor_sanctum")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 8.0, -92)
 
 [node name="StalagmiteCluster1" parent="." instance=ExtResource("11_stalagmite")]
-transform = Transform3D(1.4, 0, 0, 0, 1.4, 0, 0, 0, 1.4, -8, 1.0, -6)
+transform = Transform3D(1.4, 0, 0, 0, 1.4, 0, 0, 0, 1.4, -9, 1.0, -6)
 
 [node name="StalagmiteCluster2" parent="." instance=ExtResource("11_stalagmite")]
-transform = Transform3D(1.4, 0, 0, 0, 1.4, 0, 0, 0, 1.4, 8, 1.0, -6)
+transform = Transform3D(1.4, 0, 0, 0, 1.4, 0, 0, 0, 1.4, 9, 1.0, -6)
 
 [node name="StalagmiteCluster3" parent="." instance=ExtResource("11_stalagmite")]
-transform = Transform3D(2.0, 0, 0, 0, 2.0, 0, 0, 0, 2.0, -14, 5.0, -68)
+transform = Transform3D(2.0, 0, 0, 0, 2.0, 0, 0, 0, 2.0, -15, 5.0, -68)
 
 [node name="StalagmiteCluster4" parent="." instance=ExtResource("11_stalagmite")]
-transform = Transform3D(2.0, 0, 0, 0, 2.0, 0, 0, 0, 2.0, 14, 5.0, -68)
+transform = Transform3D(2.0, 0, 0, 0, 2.0, 0, 0, 0, 2.0, 15, 5.0, -68)
+
+[node name="StalactiteCluster1" parent="." instance=ExtResource("16_stalactite")]
+transform = Transform3D(1.8, 0, 0, 0, 1.8, 0, 0, 0, 1.8, -7, 14.0, -36)
+
+[node name="StalactiteCluster2" parent="." instance=ExtResource("16_stalactite")]
+transform = Transform3D(1.8, 0, 0, 0, 1.8, 0, 0, 0, 1.8, 7, 14.0, -36)
+
+[node name="StalactiteCluster3" parent="." instance=ExtResource("16_stalactite")]
+transform = Transform3D(2.2, 0, 0, 0, 2.2, 0, 0, 0, 2.2, 0, 18.0, -68)
 
 [node name="CavernLight1" type="OmniLight3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6, -35)
 light_color = Color(0.1, 0.95, 0.6, 1)
-light_energy = 2.0
-omni_range = 24.0
+light_energy = 2.5
+omni_range = 28.0
 
 [node name="CavernLight2" type="OmniLight3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 10, -70)
 light_color = Color(0.1, 0.85, 0.8, 1)
-light_energy = 2.5
-omni_range = 30.0
+light_energy = 3.0
+omni_range = 34.0
+
+[node name="SanctumLight" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 12, -92)
+light_color = Color(0.15, 0.95, 0.7, 1)
+light_energy = 3.5
+omni_range = 24.0

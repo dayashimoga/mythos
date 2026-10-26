@@ -155,3 +155,74 @@ A critical finding of the Stage Q0 audit is the forensic classification of non-p
 - **All Bosses (7 entities):** Kalanemi, Matarishvan, Shesha Echo, Surya Avatara, Sage Brihaspati, Agni Rudra, Brahma Avatara are **procedural primitive hierarchical assemblies**.
 - **Certification Gate:** In accordance with Stage Q0 audit guidelines, these primitive assets are strictly certified as *Functional Gameplay Prototypes* and remain explicitly **INCOMPLETE** pending Stage Q1 high-fidelity modeling and texturing.
 
+---
+
+## 9. Stage Q1 Production-Grade 3D Veer Character Reconstruction Specification
+
+### 9.1 Character Art Direction & Design Pillars
+The Stage Q1 reconstruction replaces the legacy procedural mannequin with an authentic, anatomically believable Vedic warrior hero adhering to the following design specifications:
+- **Heroic Stature:** 1.85m height, athletic warrior build with broad heroic shoulders and dynamic V-taper.
+- **Anatomical Topology:** Full organic quad topology derived from the official Blender Studio CC0 production mesh (`GEO-body_male_realistic`), featuring articulated neck, jawline, ears, nose, lips, eye sockets, individually modeled 5 fingers per hand (including knuckle creases and fingernail beds), and 5 toes per foot.
+- **Crown & Coiffure (*Shikha*):** High warrior topknot bun on the skull crown bound by a polished 24k gold *keshbandha* ring, flanked by flowing dark warrior locks framing the temples and nape of neck.
+- **Sacred Facial Adornments:** 3D sculpted three-stripe sandalwood *Tripundra* across the brow with a sacred crimson *Kumkum* bindu at the third-eye center, complemented by luminous amber *Surya Netra* eyes.
+- **Vedic Garments (*Dhoti & Kashta*):** Rich saffron orange silk *dhoti* pleated around the hips and thighs tapering to mid-calf, anchored by a central folded *kashta* panel with golden *zari* brocade embroidery along the hem.
+- **Girdle (*Kamarband*):** Wide 24k gold waist girdle featuring an embossed 12-petal Surya lotus medallion buckle and dangling hip sash tassels.
+- **Adornments & Armor (*Kavacha & Pada-rakshaka*):**
+  - Upper chest: 12-pointed golden Surya medallion pendant on twin gold chains.
+  - Biceps: Golden *bajuband* armlets with solar crests.
+  - Forearms: Ergonomic antique bronze *kavacha* bracers with beveled flanges and relief flame motifs.
+  - Shins: Antique bronze *pada-rakshaka* greaves guarding anterior shins from ankle to knee with flared knee guards, paired with warrior *paduka* sandals.
+- **Celestial Sash (*Uttariya*):** Draped celestial azure silk stole draped over the left shoulder, sweeping diagonally across the torso and trailing in dynamic ribbon tails.
+- **Celestial Weapon (*Surya-Kripana*):** Curved single-edged Damascus sunsteel scimitar featuring an 8-pointed golden sunburst quillon guard disc, wire-wrapped hilt, faceted teardrop ruby pommel, and fuller channel with radiant solar rune emissions.
+
+### 9.2 Technical Mesh & Geometry Metrics
+| Metric | Specification | Actual Delivery |
+| :--- | :--- | :--- |
+| **Source Editable File** | Blender 4.2 LTS (`.blend`) | `godot/assets/characters/veer/veer_production.blend` |
+| **Binary Game Asset** | glTF 2.0 Binary (`.glb`) | `godot/assets/characters/veer/veer.glb` (2.78 MB) |
+| **Unified Source Vertices** | > 10,000 quad-based | 13,690 vertices across 8 tailored components |
+| **Engine Compiled Vertices** | Complete multi-surface split | 22,147 vertices, 26,594 triangles |
+| **PBR Material Slots** | Exactly 7 standard slots | `Mat_Veer_Skin`, `Mat_Veer_Cuirass`, `Mat_Veer_Gold`, `Mat_Veer_Dhoti`, `Mat_Veer_Sash`, `Mat_Veer_Khadga`, `Mat_Veer_Hair` |
+| **UV Layout** | Non-overlapping Smart UVs | 100% unwrapped to `UVMap` across all components |
+
+### 9.3 PBR Material & Texture Pipeline
+High-resolution 1024×1024 PBR textures generated via Pillow and NumPy:
+- `skin_albedo.png`, `skin_normal.png`, `skin_mr.png`: Warm bronze tone, dermal pore noise, roughness 0.52.
+- `armor_albedo.png`, `armor_normal.png`, `armor_mr.png`: Antique bronze, flame reliefs, metallic 0.85, roughness 0.35.
+- `gold_albedo.png`, `gold_normal.png`, `gold_mr.png`: 24k polished gold, lotus motifs, metallic 0.95, roughness 0.20.
+- `dhoti_albedo.png`, `dhoti_normal.png`, `dhoti_mr.png`: Saffron orange silk with golden zari brocade, roughness 0.65.
+- `sash_albedo.png`, `sash_normal.png`, `sash_mr.png`, `sash_emissive.png`: Celestial azure silk with cyan rune bloom.
+- `khadga_albedo.png`, `khadga_normal.png`, `khadga_mr.png`, `khadga_emissive.png`: Damascus wave steel, fuller rune emissive, metallic 0.98.
+- `hair_albedo.png`, `hair_normal.png`, `hair_mr.png`: Lustrous black warrior locks with anisotropic highlights.
+
+### 9.4 24-Bone Skeleton3D & Animation Rigging
+- **Hierarchy:** `root` -> `pelvis` -> `spine_01` -> `chest` -> `neck` -> `head` -> `topknot`; `chest` -> `shoulder_l/r` -> `arm_l/r` -> `forearm_l/r` -> `hand_l/r` -> `socket_right_hand`; `pelvis` -> `thigh_l/r` -> `shin_l/r` -> `foot_l/r`; `pelvis` -> `sash_01` -> `sash_02`.
+- **Skinning:** 3D heat diffusion weights computed on unified mesh in Rest Pose. Surya-Kripana locked rigidly to `socket_right_hand` (1.0) and `hand_r` (0.4) to eliminate weapon flexing.
+- **Authored Animations (22 tracks in AnimationPlayer):** `idle` (2.4s), `walk` (1.0s), `run` (0.75s), `jog` (0.75s), `sprint` (0.55s), `turn` (0.6s), `jump` (0.75s), `jump_start` (0.3s), `fall` (0.6s), `jump_fall` (0.6s), `landing` (0.4s), `jump_land` (0.4s), `dodge` (0.65s), `block` (0.5s), `parry` (0.45s), `attack_light_1` (0.6s), `attack_light_2` (0.6s), `attack_heavy_finisher` (1.0s), `combo` (1.0s), `hit_reaction` (0.5s), `interact` (1.0s), `victory` (2.0s), `defeat` (1.8s).
+
+---
+
+## 10. Stage Q5-C Realm of Svar (Svarga) — Solar Citadels of Savitr Art Specification
+
+### 10.1 Environmental Architecture & Visual Identity
+The Celestial Solar Citadel of Svar is envisioned as a luminous floating acropolis high above the mortal sphere, bathed in perpetual solar radiance (*Tejas*):
+- **Celestial White Marble & 24k Gold Filigree:** Monumental terraced bastions (`svar_entry_bastion.glb`, `svar_mid_bastion.glb`, `svar_apex_citadel.glb`, `svar_sanctum_bastion.glb`) constructed from polished crystalline white marble inlaid with intricate 24k gold sunburst mandalas and geometric balustrades.
+- **Pulsing Solar Light Bridges:** Dynamic traversal pathways (`solar_light_bridge.glb`) composed of translucent amber crystal tiles that materialize beneath the player with glowing solar treads.
+- **Surya Prisms & Light Rays:** Optical puzzle conduits (`solar_prism_pillar.glb`) featuring hovering faceted octahedral prisms that rotate to focus golden laser beams and complete circuit mechanisms.
+- **Surya Mahapeetham Altar:** Consecration pedestal (`surya_mahapeetham_pedestal.glb`) featuring a 12-petaled solar lotus dais with a hovering blinding Savitr solar core and concentric rotating gold rings.
+- **Atmospheric Palette:** Warm amber and golden yellow volumetric daylight, sun shafts, gold particle motes, and distant golden mountain citadels against an azure sky.
+
+### 10.2 Combat Actors & Rigging
+1. **Boss Surya Avatara (`boss_surya_avatara.glb`):**
+   - Monumental 3.8m Solar Deity with 4 muscular arms, radiant spiked solar halo crown, gold cuirass, and dual monumental Sun-Gada war hammers.
+   - 26-bone hierarchical skeleton with upper and lower dual arm chains (`arm_u_l/r`, `arm_l_l/r`).
+   - 10 authored skeletal actions: `boss_idle`, `boss_walk`, `boss_cleave_telegraph`, `boss_cleave_attack`, `boss_solar_flare_channel`, `boss_supernova_leap`, `boss_supernova_impact`, `boss_charge`, `boss_roar_enrage`, `boss_defeat`.
+2. **Surya Guardian (`surya_guardian.glb`):**
+   - 2.1m solar phalanx sentinel armored in gold and white sunsteel, wielding an ornamental Sun-Spear and a massive Radiant Tower Shield with sunburst crest.
+   - 22-bone skeleton rig with 6 authored actions: `idle`, `walk`, `telegraph`, `thrust_attack`, `shield_block`, `death`.
+3. **Solar Gryphon (`solar_gryphon.glb`):**
+   - 2.6m wingspan celestial raptor beast with shimmering golden plumage, eagle head with crown crest, feline hindquarters, and curved beak.
+   - 20-bone skeleton with multi-segment wing articulators and 6 authored actions: `idle`, `fly_locomotion`, `telegraph_screech`, `dive_strike`, `stagger`, `death`.
+
+
+

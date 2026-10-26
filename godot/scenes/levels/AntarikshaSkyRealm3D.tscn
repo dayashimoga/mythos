@@ -1,4 +1,4 @@
-[gd_scene load_steps=18 format=3 uid="uid://antariksha_sky_realm_scene"]
+[gd_scene load_steps=26 format=3 uid="uid://antariksha_sky_realm_scene"]
 
 [ext_resource type="Script" path="res://scripts/levels/antariksha_sky_realm_3d.gd" id="1_realm_script"]
 [ext_resource type="PackedScene" uid="uid://b7vyu9s2km13a" path="res://scenes/player/Player3D.tscn" id="2_player"]
@@ -12,13 +12,19 @@
 [ext_resource type="PackedScene" uid="uid://thermal_vent_scene" path="res://scenes/interactables/ThermalVent3D.tscn" id="10_vent"]
 [ext_resource type="PackedScene" path="res://scenes/interactables/SunShrine3D.tscn" id="11_shrine"]
 [ext_resource type="PackedScene" path="res://scenes/interactables/ResonanceCheckpoint3D.tscn" id="12_cp"]
-[ext_resource type="PackedScene" path="res://assets/environment/floating_island_base.glb" id="13_island"]
+[ext_resource type="PackedScene" path="res://assets/environment/sky_sanctuary_island.glb" id="13_island1"]
+[ext_resource type="PackedScene" path="res://assets/environment/vayu_windmill_island.glb" id="14_island2"]
+[ext_resource type="PackedScene" path="res://assets/environment/cyclone_spire_island.glb" id="15_island3"]
+[ext_resource type="PackedScene" path="res://assets/environment/high_gale_pinnacle_island.glb" id="16_island4"]
+[ext_resource type="PackedScene" path="res://assets/environment/sky_temple_pavilion.glb" id="17_pavilion"]
+[ext_resource type="PackedScene" path="res://assets/environment/floating_prana_crystal.glb" id="18_crystal"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_sky"]
-sky_top_color = Color(0.18, 0.45, 0.85, 1)
-sky_horizon_color = Color(0.65, 0.78, 0.95, 1)
-ground_bottom_color = Color(0.08, 0.12, 0.22, 1)
-ground_horizon_color = Color(0.55, 0.68, 0.85, 1)
+sky_top_color = Color(0.12, 0.42, 0.88, 1)
+sky_horizon_color = Color(0.72, 0.85, 0.98, 1)
+ground_bottom_color = Color(0.06, 0.1, 0.2, 1)
+ground_horizon_color = Color(0.6, 0.75, 0.9, 1)
+sun_angle_max = 35.0
 
 [sub_resource type="Sky" id="Sky_env"]
 sky_material = SubResource("ProceduralSkyMaterial_sky")
@@ -27,18 +33,32 @@ sky_material = SubResource("ProceduralSkyMaterial_sky")
 background_mode = 2
 sky = SubResource("Sky_env")
 ambient_light_source = 3
-ambient_light_color = Color(0.65, 0.8, 1, 1)
-ambient_light_energy = 0.8
+ambient_light_color = Color(0.7, 0.85, 1, 1)
+ambient_light_energy = 0.9
 tonemap_mode = 2
 glow_enabled = true
-glow_intensity = 0.6
-glow_bloom = 0.2
+glow_intensity = 0.65
+glow_bloom = 0.25
 fog_enabled = true
-fog_light_color = Color(0.65, 0.8, 0.95, 1)
-fog_density = 0.0018
+fog_light_color = Color(0.65, 0.82, 0.95, 1)
+fog_density = 0.0016
+fog_sky_affect = 0.5
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_island_col"]
-size = Vector3(20, 2.5, 20)
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_island1"]
+height = 14.0
+radius = 16.0
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_island2"]
+height = 12.0
+radius = 14.0
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_island3"]
+height = 15.0
+radius = 13.0
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_island4"]
+height = 18.0
+radius = 21.0
 
 [node name="AntarikshaSkyRealm3D" type="Node3D"]
 script = ExtResource("1_realm_script")
@@ -47,9 +67,9 @@ script = ExtResource("1_realm_script")
 environment = SubResource("Environment_antariksha")
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
-transform = Transform3D(0.866, -0.354, 0.354, 0, 0.707, 0.707, -0.5, -0.612, 0.612, 0, 80, 0)
-light_color = Color(1, 0.95, 0.85, 1)
-light_energy = 1.3
+transform = Transform3D(0.866, -0.354, 0.354, 0, 0.707, 0.707, -0.5, -0.612, 0.612, 0, 95, 0)
+light_color = Color(1, 0.96, 0.88, 1)
+light_energy = 1.45
 shadow_enabled = true
 
 [node name="Player3D" parent="." instance=ExtResource("2_player")]
@@ -58,37 +78,45 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 42.5, 0)
 [node name="HUD3D" parent="." instance=ExtResource("3_hud")]
 
 [node name="DeviTaraSky3D" parent="." instance=ExtResource("4_tara")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 41.5, -5.5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 40.5, -5.5)
+
+[node name="TaraPavilion" parent="." instance=ExtResource("17_pavilion")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 40.0, -5.5)
 
 [node name="CheckpointGateway" parent="." instance=ExtResource("12_cp")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 41.5, 5.0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 40.5, 5.0)
 
 [node name="Sector1_Island" type="StaticBody3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 40, 0)
 collision_layer = 1
 collision_mask = 0
 
-[node name="Model" parent="Sector1_Island" instance=ExtResource("13_island")]
+[node name="Model" parent="Sector1_Island" instance=ExtResource("13_island1")]
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Sector1_Island"]
-shape = SubResource("BoxShape3D_island_col")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -6.5, 0)
+shape = SubResource("CylinderShape3D_island1")
+
+[node name="CrystalCluster1" parent="Sector1_Island" instance=ExtResource("18_crystal")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 0.2, 5)
 
 [node name="Sector2_Island" type="StaticBody3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 45, 38, -50)
 collision_layer = 1
 collision_mask = 0
 
-[node name="Model" parent="Sector2_Island" instance=ExtResource("13_island")]
+[node name="Model" parent="Sector2_Island" instance=ExtResource("14_island2")]
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Sector2_Island"]
-shape = SubResource("BoxShape3D_island_col")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -5.5, 0)
+shape = SubResource("CylinderShape3D_island2")
 
 [node name="VayuTurbine1" parent="Sector2_Island" instance=ExtResource("8_turbine")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 turbine_id = "turbine_windmills"
 
 [node name="ThermalVent1" parent="Sector2_Island" instance=ExtResource("10_vent")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 1.25, -6)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0.1, -6)
 
 [node name="GaleFalcon1" parent="." instance=ExtResource("5_falcon")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 45, 46, -50)
@@ -98,34 +126,44 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -50, 48, -75)
 collision_layer = 1
 collision_mask = 0
 
-[node name="Model" parent="Sector3_Island" instance=ExtResource("13_island")]
+[node name="Model" parent="Sector3_Island" instance=ExtResource("15_island3")]
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Sector3_Island"]
-shape = SubResource("BoxShape3D_island_col")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -7.0, 0)
+shape = SubResource("CylinderShape3D_island3")
 
 [node name="VayuTurbine2" parent="Sector3_Island" instance=ExtResource("8_turbine")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
 turbine_id = "turbine_spire"
+
+[node name="CrystalCluster2" parent="Sector3_Island" instance=ExtResource("18_crystal")]
+transform = Transform3D(1.2, 0, 0, 0, 1.2, 0, 0, 0, 1.2, -9, 0.3, 4)
 
 [node name="WindArcher1" parent="." instance=ExtResource("6_archer")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -50, 50, -75)
 
 [node name="Sector4_Pinnacle" type="StaticBody3D" parent="."]
-transform = Transform3D(1.5, 0, 0, 0, 1, 0, 0, 0, 1.5, 0, 58, -140)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 58, -140)
 collision_layer = 1
 collision_mask = 0
 
-[node name="Model" parent="Sector4_Pinnacle" instance=ExtResource("13_island")]
+[node name="Model" parent="Sector4_Pinnacle" instance=ExtResource("16_island4")]
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Sector4_Pinnacle"]
-transform = Transform3D(1.5, 0, 0, 0, 1, 0, 0, 0, 1.5, 0, 0, 0)
-shape = SubResource("BoxShape3D_island_col")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -8.5, 0)
+shape = SubResource("CylinderShape3D_island4")
 
 [node name="BossMatarishvan3D" parent="." instance=ExtResource("7_boss")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 62, -145)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 61, -145)
 
 [node name="HighGalePeetham3D" parent="." instance=ExtResource("11_shrine")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 59.5, -135)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 58.2, -135)
+
+[node name="CrystalCluster3" parent="Sector4_Pinnacle" instance=ExtResource("18_crystal")]
+transform = Transform3D(1.4, 0, 0, 0, 1.4, 0, 0, 0, 1.4, 16, 0.4, -6)
+
+[node name="CrystalCluster4" parent="Sector4_Pinnacle" instance=ExtResource("18_crystal")]
+transform = Transform3D(1.4, 0, 0, 0, 1.4, 0, 0, 0, 1.4, -16, 0.4, -6)
 
 [node name="GrappleAnchor1" parent="." instance=ExtResource("9_anchor")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22, 45, -25)

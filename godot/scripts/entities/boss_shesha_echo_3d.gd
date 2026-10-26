@@ -37,10 +37,28 @@ var arena_center: Vector3 = Vector3.ZERO
 @onready var quake_hitbox: Area3D = $QuakeHitbox
 @onready var nagamani_light: OmniLight3D = $NagamaniLight
 
+var anim_player: AnimationPlayer = null
+
 signal boss_health_changed(current: int, max_hp: int)
 signal boss_phase_changed(phase: int)
 signal boss_defeated()
 signal quake_triggered(epicenter: Vector3)
+
+func _find_anim_player(node: Node) -> AnimationPlayer:
+	if node is AnimationPlayer:
+		return node
+	for child in node.get_children():
+		var found = _find_anim_player(child)
+		if found:
+			return found
+	return null
+
+func _play_anim(anim_name: String, blend_time: float = 0.15) -> void:
+	if not anim_player:
+		anim_player = _find_anim_player(self)
+	if anim_player and anim_player.has_animation(anim_name):
+		if anim_player.current_animation != anim_name:
+			anim_player.play(anim_name, blend_time)
 
 func _init() -> void:
 	add_to_group("bosses")
@@ -52,6 +70,9 @@ func _init() -> void:
 func _ready() -> void:
 	arena_center = global_position
 	current_health = max_health
+	anim_player = _find_anim_player(self)
+	if anim_player:
+		_play_anim("boss_idle")
 	if sweep_hitbox:
 		sweep_hitbox.monitoring = false
 		sweep_hitbox.body_entered.connect(_on_sweep_hit_body)
@@ -106,6 +127,7 @@ func _safe_look_at(target_pos: Vector3) -> void:
 			look_at(look_target, Vector3.UP)
 
 func _process_idle(delta: float) -> void:
+	_play_anim("boss_idle")
 	state_timer += delta
 	if target_player and is_instance_valid(target_player):
 		var dist = _get_entity_pos(self).distance_to(_get_entity_pos(target_player))
@@ -114,6 +136,7 @@ func _process_idle(delta: float) -> void:
 			state_timer = 0.0
 
 func _process_coil_slither(delta: float) -> void:
+	_play_anim("boss_slither")
 	state_timer += delta
 	if not target_player or not is_instance_valid(target_player):
 		return
@@ -142,6 +165,7 @@ func _process_coil_slither(delta: float) -> void:
 			current_state = State.TRIPLE_VENOM_BARRAGE
 
 func _process_tail_telegraph(delta: float) -> void:
+	_play_anim("boss_tail_sweep_telegraph")
 	state_timer += delta
 	if target_player and is_instance_valid(target_player):
 		_safe_look_at(_get_entity_pos(target_player))
@@ -157,6 +181,7 @@ func _process_tail_telegraph(delta: float) -> void:
 			sweep_hitbox.monitoring = true
 
 func _process_tail_execute(delta: float) -> void:
+	_play_anim("boss_tail_sweep_execute")
 	state_timer += delta
 	# Rotate rapidly around Y to simulate massive 360-degree tail sweep
 	rotation.y += delta * 12.0
@@ -169,6 +194,7 @@ func _process_tail_execute(delta: float) -> void:
 		state_timer = 0.0
 
 func _process_venom_barrage(delta: float) -> void:
+	_play_anim("boss_venom_barrage")
 	state_timer += delta
 	velocity = Vector3.ZERO
 
@@ -198,6 +224,7 @@ func _fire_venom_orb(_angle_offset: float) -> void:
 			target_player.take_damage(dmg)
 
 func _process_quake_slam(delta: float) -> void:
+	_play_anim("boss_quake_slam")
 	state_timer += delta
 	velocity = Vector3.ZERO
 
@@ -210,6 +237,8 @@ func _process_quake_slam(delta: float) -> void:
 		if quake_hitbox:
 			quake_hitbox.monitoring = true
 		quake_triggered.emit(global_position)
+		if target_player and target_player.has_method("apply_camera_trauma"):
+			target_player.apply_camera_trauma(0.65)
 	elif state_timer >= 0.95:
 		if quake_hitbox:
 			quake_hitbox.monitoring = false
@@ -218,17 +247,22 @@ func _process_quake_slam(delta: float) -> void:
 		state_timer = 0.0
 
 func _process_enrage_roar(delta: float) -> void:
+	_play_anim("boss_roar_enrage")
 	state_timer += delta
 	velocity = Vector3.ZERO
 	if nagamani_light:
 		nagamani_light.light_color = Color(0.9, 0.1, 0.4, 1.0)
 		nagamani_light.light_energy = 6.0
 
+	if state_timer <= delta and target_player and target_player.has_method("apply_camera_trauma"):
+		target_player.apply_camera_trauma(0.50)
+
 	if state_timer >= 2.0:
 		current_state = State.COIL_SLITHER
 		state_timer = 0.0
 
 func _process_stagger(delta: float) -> void:
+	_play_anim("boss_stagger")
 	state_timer += delta
 	velocity = velocity.move_toward(Vector3.ZERO, 15.0 * delta)
 	if state_timer >= 2.2:
@@ -312,6 +346,7 @@ func _die() -> void:
 	current_state = State.DEFEATED
 	current_health = 0
 	velocity = Vector3.ZERO
+	_play_anim("boss_defeat")
 	if sweep_hitbox:
 		sweep_hitbox.monitoring = false
 	if quake_hitbox:

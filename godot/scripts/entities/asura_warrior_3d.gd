@@ -40,6 +40,9 @@ var gravity: float = 22.0
 @onready var collision_shape: CollisionShape3D = $CollisionShape3D if has_node("CollisionShape3D") else null
 
 var _target_player: CharacterBody3D = null
+var anim_player: AnimationPlayer = null
+var current_anim: String = ""
+var strafe_direction: float = 1.0
 
 func _init() -> void:
 	add_to_group("targetable")
@@ -56,7 +59,20 @@ func _ready() -> void:
 		strike_area.body_entered.connect(_on_strike_body_entered)
 		strike_area.monitoring = false
 
+	strafe_direction = 1.0 if randf() < 0.5 else -1.0
+	anim_player = find_child("AnimationPlayer", true, false)
+	_play_anim("idle")
 	_update_status_display()
+
+func _play_anim(anim_name: String, blend_time: float = 0.15) -> void:
+	if not anim_player or current_anim == anim_name:
+		return
+	if anim_player.has_animation(anim_name):
+		anim_player.play(anim_name, blend_time)
+		current_anim = anim_name
+	elif anim_player.has_animation(anim_name + "_AsuraWarriorRig"):
+		anim_player.play(anim_name + "_AsuraWarriorRig", blend_time)
+		current_anim = anim_name
 
 func _physics_process(delta: float) -> void:
 	if current_state == State.DEFEATED:
@@ -91,17 +107,14 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 
 func _find_player() -> void:
-	var players = get_tree().get_nodes_in_group("player")
+	var players = get_tree().get_nodes_in_group("player") if is_inside_tree() else []
 	if players.size() > 0:
 		_target_player = players[0] as CharacterBody3D
 
 func _process_idle(delta: float) -> void:
 	velocity.x = move_toward(velocity.x, 0.0, 10.0 * delta)
 	velocity.z = move_toward(velocity.z, 0.0, 10.0 * delta)
-
-	# Idle breathing
-	if visual:
-		visual.position.y = sin(Time.get_ticks_msec() * 0.003) * 0.04
+	_play_anim("idle")
 
 	if _target_player and is_instance_valid(_target_player):
 		var dist = global_position.distance_to(_target_player.global_position)
@@ -112,6 +125,7 @@ func _process_idle(delta: float) -> void:
 func _process_chase(delta: float) -> void:
 	if not _target_player or not is_instance_valid(_target_player):
 		current_state = State.IDLE
+		_play_anim("idle")
 		return
 
 	var to_player = _target_player.global_position - global_position
@@ -120,6 +134,7 @@ func _process_chase(delta: float) -> void:
 
 	if dist > perception_radius * 1.5:
 		current_state = State.IDLE
+		_play_anim("idle")
 		_update_status_display()
 		return
 
@@ -130,21 +145,31 @@ func _process_chase(delta: float) -> void:
 
 	if dist <= attack_range and attack_cooldown <= 0.0:
 		_start_telegraph()
-	else:
-		# Pursue
+	elif attack_cooldown > 0.0 and dist <= 4.2:
+		# Tactical lateral strafing/circling around player while on cooldown
 		var dir = to_player.normalized()
-		velocity.x = dir.x * move_speed
-		velocity.z = dir.z * move_speed
+		var tangent = Vector3(-dir.z, 0.0, dir.x) * strafe_direction
+		velocity.x = tangent.x * (move_speed * 0.75)
+		velocity.z = tangent.z * (move_speed * 0.75)
+		_play_anim("walk")
+	else:
+		# Pursue (run if far, walk if closing in)
+		var dir = to_player.normalized()
+		var spd = move_speed * 1.35 if dist > 6.0 else move_speed
+		velocity.x = dir.x * spd
+		velocity.z = dir.z * spd
+		_play_anim("run" if dist > 6.0 else "walk")
 
 func _start_telegraph() -> void:
 	current_state = State.TELEGRAPH
-	state_timer = 0.75 # Telegraph window
+	state_timer = 0.75 # Telegraph anticipation window
 	velocity.x = 0.0
 	velocity.z = 0.0
+	_play_anim("telegraph", 0.1)
 
 	if eye_light:
 		eye_light.light_color = Color(1.0, 0.1, 0.1)
-		eye_light.light_energy = 3.0
+		eye_light.light_energy = 3.5
 	AudioManager3D.play_3d("boss_roar", global_position, 1.3)
 
 	if status_label:
@@ -153,26 +178,20 @@ func _start_telegraph() -> void:
 
 func _process_telegraph(delta: float) -> void:
 	state_timer -= delta
-	if visual:
-		# Lean back in anticipation
-		visual.rotation.x = sin(state_timer * 15.0) * 0.1
-
 	if state_timer <= 0.0:
 		_execute_attack()
 
 func _execute_attack() -> void:
 	current_state = State.ATTACK
-	state_timer = 0.35
+	state_timer = 0.40
 	attack_cooldown = attack_cooldown_duration
+	_play_anim("attack", 0.08)
 
-	# Forward lunge
+	# Forward explosive lunge
 	if visual:
 		var fwd = -visual.global_transform.basis.z
-		velocity.x = fwd.x * 6.0
-		velocity.z = fwd.z * 6.0
-
-	if strike_area:
-		strike_area.monitoring = true
+		velocity.x = fwd.x * 6.5
+		velocity.z = fwd.z * 6.5
 
 	if status_label:
 		status_label.text = "⚔ SLASHING! ⚔"
@@ -183,17 +202,20 @@ func _process_attack(delta: float) -> void:
 	velocity.x = move_toward(velocity.x, 0.0, 15.0 * delta)
 	velocity.z = move_toward(velocity.z, 0.0, 15.0 * delta)
 
+	# Accurate active strike frame synchronization
+	if strike_area:
+		strike_area.monitoring = (state_timer <= 0.32 and state_timer >= 0.10)
+
 	if state_timer <= 0.0:
 		if strike_area:
 			strike_area.monitoring = false
-		if visual:
-			visual.rotation.x = 0.0
 		current_state = State.CHASE
 		_update_status_display()
 
 func _process_staggered(delta: float) -> void:
 	velocity.x = move_toward(velocity.x, 0.0, 12.0 * delta)
 	velocity.z = move_toward(velocity.z, 0.0, 12.0 * delta)
+	_play_anim("stagger", 0.1)
 
 	if poise and poise.is_staggered:
 		poise.stagger_timer -= delta
@@ -245,6 +267,7 @@ func take_damage_spec(attack_spec: CombatMath.AttackSpec) -> CombatMath.CombatHi
 	# Check for Poise Break
 	if result.triggered_stagger:
 		current_state = State.STAGGERED
+		_play_anim("stagger", 0.08)
 		if strike_area:
 			strike_area.monitoring = false
 		staggered.emit()
@@ -258,6 +281,7 @@ func take_damage_spec(attack_spec: CombatMath.AttackSpec) -> CombatMath.CombatHi
 
 func _die() -> void:
 	current_state = State.DEFEATED
+	_play_anim("death", 0.1)
 	if strike_area:
 		strike_area.monitoring = false
 	if collision_shape:
@@ -270,13 +294,13 @@ func _die() -> void:
 
 	warrior_defeated.emit(self)
 
-	# Death dissolve tween
+	# Death dissolve sequence
 	if is_inside_tree():
 		var tween = create_tween()
 		if tween:
+			tween.tween_interval(1.1) # Allow death animation to finish
 			if visual:
-				tween.tween_property(visual, "scale", Vector3(0.05, 0.05, 0.05), 0.6)
-				tween.parallel().tween_property(visual, "rotation:y", visual.rotation.y + 4.0, 0.6)
+				tween.tween_property(visual, "scale", Vector3(0.05, 0.05, 0.05), 0.5)
 			tween.tween_callback(func(): queue_free())
 	else:
 		queue_free()

@@ -165,3 +165,28 @@ Replaces all developer "Stage" buttons with canonical, prestigious options:
 - [x] **Subtitle Scale**: Configurable across `Normal (14px)`, `Large (18px)`, and `Extra Large (22px)`.
 - [x] **Colorblind Compensation**: Profiles for `Protanopia`, `Deuteranopia`, and `Tritanopia`.
 - [x] **Touch Controls**: Auto-enabled on mobile/tablet viewports ($< 640\text{px}$) with safe area clamping.
+
+---
+
+### 7. Stage Q7 — 3D Production Interface, Audiovisual & Accessibility Implementation
+
+#### 7.1 Modern In-Engine Pause Menu (`PauseMenu3D`)
+- **Node Architecture**: `godot/scripts/ui/pause_menu_3d.gd` running in `process_mode = PROCESS_MODE_ALWAYS` so animations and inputs operate smoothly while the scene tree is paused (`get_tree().paused = true`).
+- **Four Integrated Tabs**:
+  1. **Quest Journal**: Real-time synchronization with active `QuestManager`, displaying chapter titles, lore briefs, and objective completion checkboxes (`[✓]` / `[○]`).
+  2. **Seven-Realm Fast-Travel Map**: Dynamic 2-column grid displaying all 7 cosmic realms (Bhumi, Antariksha, Patala, Svar, Maharloka, Tapoloka, Satyaloka), indicating current active location, unlocked realms with instant transition callbacks, and locked realms with padlock indicators.
+  3. **Settings & Accessibility**: Live sliders for Master, SFX, and Ambience volumes; Camera Sensitivity ($0.5\times$ to $2.5\times$); Invert Pitch (Y-axis); Screen Shake limiter ($0.0\times$ to $1.0\times$); Reduced Motion toggle; and Subtitle toggle.
+  4. **Sacred Vedic Codex**: Interactive annals viewer documenting Veer, Devi Tara, The Seven Lokas of Mount Meru, The Primal Astras, and Asura Titans of Tamas.
+
+#### 7.2 Immersive 3D HUD Suite (`HUD3D`)
+- **Vitality & Prana Indicators**: Compact red health bar (`HP: 100 / 100`) and cyan prana energy bar (`PRANA: 100 / 100`) providing real-time player stamina tracking for sprinting and dashes without obstructing the center camera view.
+- **Weapon Stance Badge**: Elegant gold-bordered badge indicating current equipped divine weapon (e.g. `⚔ SURYA-KRIPANA`, `⚔ VAYU-CHAKRAM`, `⚔ BRAHMASHIRA ASTRA`).
+- **Compass & Waypoint Heading**: Top-bar compass displaying real-time cardinal bearing (`🧭 NW 315°`) and relative arrow indicators (`▲`, `▶`, `▼`, `◀`) with distance readouts toward active objective targets or consecrated altars.
+- **Contextual Interaction Prompt**: High-luminance rounded pill at lower-center displaying nearby world interactions with subtle breathing glow (`[ E ] Commune with Devi Tara`, `[ E ] Purify Solar Astra Shard`).
+- **Collapsible Developer Drawer**: Relocated technical tools into a clean drawer toggleable via `[ F1 ]` / `[ ~ ]`, keeping standard gameplay completely distraction-free.
+
+#### 7.3 Multi-Bus Audio & Environmental Immersion
+- **Volume Bus Architecture**: Centralized volume scalars across `master_volume`, `music_volume`, `sfx_volume`, and `ambience_volume` with smooth logarithmic decibel conversion.
+- **7-Realm Ambient Soundscapes**: Procedural 16-bit 44.1kHz atmospheric audio loops for all 7 Lokas (`ambient_bhumi.wav` through `ambient_satyaloka.wav`), managed via dual-stream player crossfading in `AudioManager3D`.
+- **UI & Gameplay SFX**: Dedicated sound stems for menu clicks, opening modals, closing modals, checkpoint attunements, and quest victories.
+

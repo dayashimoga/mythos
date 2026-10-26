@@ -24,6 +24,7 @@ enum WorldRegion {
 const BhumiTerrainGeneratorScript = preload("res://scripts/levels/bhumi_terrain_generator.gd")
 const AsuraWarriorScript = preload("res://scripts/entities/asura_warrior_3d.gd")
 const BossKalanemiScript = preload("res://scripts/entities/boss_kalanemi_3d.gd")
+const CinematicDirectorScript = preload("res://scripts/cinematics/cinematic_director_3d.gd")
 
 var current_region: WorldRegion = WorldRegion.NONE
 var collected_shards: int = 0
@@ -36,6 +37,8 @@ var last_checkpoint_pos: Vector3 = Vector3(0.0, 1.2, 6.0)
 var level_start_time: float = 0.0
 var is_barrier_dispelled: bool = false
 var is_game_completed: bool = false
+var cinematic_director: Node = null
+var _boss_intro_played: bool = false
 
 @onready var player: PlayerController3D = $Player3D if has_node("Player3D") else null
 @onready var hud: HUD3D = $HUD3D if has_node("HUD3D") else null
@@ -43,6 +46,8 @@ var is_game_completed: bool = false
 @onready var terrain_container: Node3D = $TerrainContainer if has_node("TerrainContainer") else null
 @onready var tamas_barrier: StaticBody3D = $Architecture/TamasBarrier if has_node("Architecture/TamasBarrier") else null
 @onready var boss_kalanemi: CharacterBody3D = $Enemies/BossKalanemi if has_node("Enemies/BossKalanemi") else null
+@onready var tara_npc: Node3D = $NPCs/DeviTara3D if has_node("NPCs/DeviTara3D") else null
+
 
 var _region_names = {
 	WorldRegion.SANCTUM_SURYA_KUND: "Sanctum of Surya-Kund",
@@ -54,7 +59,9 @@ var _region_names = {
 
 func _ready() -> void:
 	level_start_time = Time.get_ticks_msec() / 1000.0
+	AudioManager3D.set_ambience("bhumi")
 
+	_setup_cinematic_director()
 	_setup_terrain_mesh()
 	_setup_water_plane()
 	_setup_systems_and_quest()
@@ -63,9 +70,22 @@ func _ready() -> void:
 	_wire_player_and_hud()
 
 	if hud:
+		hud.set_quest_manager(quest_mgr, "Bhumi")
+		hud.update_weapon("Surya-Kripana")
 		hud.update_shards(collected_shards, TARGET_SHARDS)
 		_refresh_objective_display()
 		hud.show_banner("WELCOME TO THE REALM OF BHUMI\nAct I: Cleansing of the Bhumi Valley", 4.5)
+
+	if cinematic_director:
+		cinematic_director.play_realm_intro("bhumi")
+
+func _setup_cinematic_director() -> void:
+	if has_node("CinematicDirector3D"):
+		cinematic_director = $CinematicDirector3D
+	else:
+		cinematic_director = CinematicDirectorScript.new()
+		cinematic_director.name = "CinematicDirector3D"
+		add_child(cinematic_director)
 
 func _physics_process(_delta: float) -> void:
 	if not player:
@@ -82,6 +102,10 @@ func _update_world_region(pos: Vector3) -> void:
 			var reg_name: String = _region_names[current_region]
 			if hud:
 				hud.show_banner("ENTERING REGION:\n" + reg_name.to_upper(), 3.0)
+		if current_region == WorldRegion.RUINS_WATCHTOWER and not _boss_intro_played and boss_kalanemi:
+			_boss_intro_played = true
+			if cinematic_director:
+				cinematic_director.play_boss_intro("kalanemi", "General Kalanemi", "Corrupted Asura General", boss_kalanemi.global_position)
 
 func _evaluate_region_at(x: float, z: float, y: float) -> WorldRegion:
 	# 1. Ruined Watchtower (High mountain fortress at x: [42, 70], z: [-60, -30], y >= 10.5)
@@ -293,6 +317,9 @@ func _on_altar_consecrated() -> void:
 
 	_spawn_antariksha_portal()
 
+	if cinematic_director and sun_altar:
+		cinematic_director.play_consecration_victory("Bhumi", sun_altar.global_position)
+
 	if hud:
 		_refresh_objective_display()
 		hud.show_banner("☀️ SURYA PEETHAM CONSECRATED!\nThe Sky Portal to Antariksha is Open. [Press E or Walk Into Beam to Ascend]", 6.0)
@@ -306,6 +333,10 @@ func _on_dialogue_requested(dialogue_id: String) -> void:
 	if dialogue_id == "tara_intro":
 		start_node = "tara_intro"
 
+	for tara in get_tree().get_nodes_in_group("npcs"):
+		if tara.has_method("play_talk"):
+			tara.play_talk()
+
 	if dialogue_runner.start(start_node):
 		_display_active_dialogue_node()
 
@@ -313,6 +344,9 @@ func _display_active_dialogue_node() -> void:
 	if not dialogue_runner or not dialogue_runner.is_active:
 		if hud:
 			hud.hide_dialogue()
+		for tara in get_tree().get_nodes_in_group("npcs"):
+			if tara.has_method("play_idle"):
+				tara.play_idle()
 		return
 
 	var node = dialogue_runner.nodes.get(dialogue_runner.current_node_id, null)
@@ -322,6 +356,9 @@ func _display_active_dialogue_node() -> void:
 				_display_active_dialogue_node()
 			else:
 				hud.hide_dialogue()
+				for tara in get_tree().get_nodes_in_group("npcs"):
+					if tara.has_method("play_bless"):
+						tara.play_bless()
 				# Mark objective completed
 				if quest_mgr:
 					quest_mgr.update_objective_progress("cleansing_of_bhumi", "commune_tara", 1)

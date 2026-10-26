@@ -27,7 +27,25 @@ var strafe_dir: float = 1.0
 @onready var bow_light: OmniLight3D = $BowLight
 @onready var arrow_spawn_point: Marker3D = $ArrowSpawnPoint
 
+var anim_player: AnimationPlayer = null
+
 signal archer_defeated(archer: CharacterBody3D)
+
+func _find_anim_player(node: Node) -> AnimationPlayer:
+	if node is AnimationPlayer:
+		return node
+	for child in node.get_children():
+		var found = _find_anim_player(child)
+		if found:
+			return found
+	return null
+
+func _play_anim(anim_name: String, blend_time: float = 0.15) -> void:
+	if not anim_player:
+		anim_player = _find_anim_player(self)
+	if anim_player and anim_player.has_animation(anim_name):
+		if anim_player.current_animation != anim_name:
+			anim_player.play(anim_name, blend_time)
 
 func _init() -> void:
 	add_to_group("enemies")
@@ -37,6 +55,8 @@ func _init() -> void:
 
 func _ready() -> void:
 	current_health = max_health
+	anim_player = _find_anim_player(self)
+	_play_anim("idle")
 	if bow_light:
 		bow_light.visible = false
 
@@ -65,6 +85,7 @@ func _physics_process(delta: float) -> void:
 func _process_hover_strafe(delta: float) -> void:
 	state_timer += delta
 	if not target_player:
+		_play_anim("idle")
 		return
 
 	var to_player = target_player.global_position - global_position
@@ -79,18 +100,21 @@ func _process_hover_strafe(delta: float) -> void:
 		var forward_vec = transform.basis.z * -clamp(dist_diff * 0.5, -1.0, 1.0)
 
 		velocity = (side_vec * 3.5 + forward_vec * 4.0)
+		_play_anim("walk")
 		move_and_slide()
 
 		if state_timer >= 2.2:
 			_start_draw()
 	else:
 		velocity = velocity.lerp(Vector3.ZERO, 4.0 * delta)
+		_play_anim("idle")
 		move_and_slide()
 
 func _start_draw() -> void:
 	current_state = State.TELEGRAPH_DRAW
 	state_timer = 0.0
 	velocity = Vector3.ZERO
+	_play_anim("telegraph")
 	if bow_light:
 		bow_light.visible = true
 		bow_light.light_energy = 3.5
@@ -106,6 +130,7 @@ func _process_telegraph(delta: float) -> void:
 func _fire_arrow() -> void:
 	current_state = State.FIRE_GALE_BURST
 	state_timer = 0.0
+	_play_anim("attack")
 	if bow_light:
 		bow_light.visible = false
 
@@ -149,6 +174,7 @@ func take_damage(amount: int, poise_dmg: float = 20.0) -> void:
 		if broken and current_state != State.STAGGERED:
 			current_state = State.STAGGERED
 			state_timer = 0.0
+			_play_anim("stagger")
 			if bow_light:
 				bow_light.visible = false
 
@@ -162,6 +188,7 @@ func take_damage(amount: int, poise_dmg: float = 20.0) -> void:
 
 func _die() -> void:
 	current_state = State.DEFEATED
+	_play_anim("death")
 	if bow_light:
 		bow_light.visible = false
 	archer_defeated.emit(self)

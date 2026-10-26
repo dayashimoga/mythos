@@ -48,3 +48,6 @@ tools/
 __pycache__/
 *.pyc
 *.pyo
+
+# Blender Backups
+*.blend1

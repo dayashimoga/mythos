@@ -32,6 +32,15 @@ func _init() -> void:
 	var test_tapoloka_realm = load("res://tests/integration/test_tapoloka_realm_3d.gd")
 	var test_satyaloka_realm = load("res://tests/integration/test_satyaloka_realm_3d.gd")
 	var test_seven_realms_e2e = load("res://tests/integration/test_seven_realms_e2e_3d.gd")
+	var test_locomotion_anim_tree = load("res://tests/unit/test_locomotion_animation_tree.gd")
+	var test_bhumi_remaster = load("res://tests/unit/test_bhumi_remaster.gd")
+	var test_combat_encounter = load("res://tests/unit/test_combat_encounter.gd")
+	var test_antariksha_remaster = load("res://tests/unit/test_antariksha_remaster.gd")
+	var test_patala_remaster = load("res://tests/unit/test_patala_remaster.gd")
+	var test_narrative_cinematics = load("res://tests/unit/test_narrative_and_cinematics.gd")
+	var test_svar_remaster = load("res://tests/unit/test_svar_remaster.gd")
+	var test_game_presentation_ui = load("res://tests/unit/test_game_presentation_and_ui.gd")
+	var test_prod_hardening = load("res://tests/unit/test_production_hardening_and_certification.gd")
 
 	var suites = [
 		{"name": "Combat Mathematics (Domain)", "runner": test_combat_math},
@@ -39,6 +48,7 @@ func _init() -> void:
 		{"name": "Save State & Tamper Verification (Domain)", "runner": test_save_system},
 		{"name": "Dialogue Runner (Domain)", "runner": test_dialogue_runner},
 		{"name": "Veer 3D Skinned Model & Rigging (Model/Anim)", "runner": test_veer_model},
+		{"name": "Stage Q2: Realistic 3D Locomotion & AnimationTree (State/Kinematics)", "runner": test_locomotion_anim_tree},
 		{"name": "3D Character Studio (Viewer/Inspection)", "runner": test_character_studio},
 		{"name": "3D Physics, Camera & Traversal (Integration)", "runner": test_traversal_3d},
 		{"name": "3D Landscape & World Architecture (Stage D)", "runner": test_bhumi_world},
@@ -49,7 +59,15 @@ func _init() -> void:
 		{"name": "Chapter V — Realm of Maharloka & Astral Libraries (Stage J)", "runner": test_maharloka_realm},
 		{"name": "Chapter VI — Realm of Janaloka / Tapoloka & Agni's Primordial Forge (Stage K)", "runner": test_tapoloka_realm},
 		{"name": "Chapter VII — Realm of Satyaloka / Brahmaloka & Cosmic Dharma (Stage L)", "runner": test_satyaloka_realm},
-		{"name": "Suite 16: Complete Seven-Realm Rendered Scene Lifecycle & E2E Progression (Stage Q0)", "runner": test_seven_realms_e2e}
+		{"name": "Suite 16: Complete Seven-Realm Rendered Scene Lifecycle & E2E Progression (Stage Q0)", "runner": test_seven_realms_e2e},
+		{"name": "Suite 18: Bhumi 3D Environment, Sanctum Architecture & Landscape Remaster (Stage Q3)", "runner": test_bhumi_remaster},
+		{"name": "Suite 19: Polished 3D Combat, Enemy AI & Boss Experience (Stage Q4)", "runner": test_combat_encounter},
+		{"name": "Suite 20: Antariksha Production Remaster & Cosmic Realm Verification (Stage Q5-A)", "runner": test_antariksha_remaster},
+		{"name": "Suite 21: Patala Production Remaster & Cosmic Realm Verification (Stage Q5-B)", "runner": test_patala_remaster},
+		{"name": "Suite 22: Seven-Realm Narrative, Animated NPCs & Cinematic Director (Stage Q6)", "runner": test_narrative_cinematics},
+		{"name": "Suite 23: Svar Production Remaster & Cosmic Realm Verification (Stage Q5-C)", "runner": test_svar_remaster},
+		{"name": "Suite 24: Game Presentation, Modern UI/UX, Audio & Accessibility (Stage Q7)", "runner": test_game_presentation_ui},
+		{"name": "Suite 25: Production Hardening, Seven-Realm Verification & Release Certification (Stage Q8)", "runner": test_prod_hardening}
 	]
 
 	for suite in suites:

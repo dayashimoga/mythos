@@ -2,6 +2,8 @@
 
 [ext_resource type="Script" path="res://scripts/interactables/thermal_vent_3d.gd" id="1_script"]
 
+[ext_resource type="PackedScene" path="res://assets/environment/thermal_updraft_vent.glb" id="2_vent_model"]
+
 [sub_resource type="CylinderShape3D" id="CylinderShape3D_vent"]
 height = 24.0
 radius = 6.0
@@ -29,6 +31,9 @@ shape = SubResource("CylinderShape3D_vent")
 
 [node name="BaseRing" type="MeshInstance3D" parent="."]
 mesh = SubResource("TorusMesh_base")
+
+[node name="VentBasinModel" parent="." instance=ExtResource("2_vent_model")]
+transform = Transform3D(1.2, 0, 0, 0, 1.2, 0, 0, 0, 1.2, 0, 0, 0)
 
 [node name="VentLight" type="OmniLight3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
