@@ -720,4 +720,6 @@
 ## [2026-10-26] Stage Q8.8 — Dual-Engine Clarification & Distribution Pipeline Separation
 - [x] TASK-3DQ8-RELEASE-CLARIFICATION: Disambiguated legacy 2D Canvas prototype app (`mythos-2d-canvas-windows-x64`) from genuine Godot 4.3 3D production game (`mythos-3d-windows-x64`) across GitHub Actions workflows (`ci.yml` and `godot-ci.yml`). Added 3D launcher button to `index.html` quick navigation bar. Updated `godot/scripts/tools/build_web_pack.gd` to synchronize PCK directly to `builds/windows/mythos_3d.pck` and `builds/linux/mythos_3d.pck`. Corrected `/tools/` ignore in `.gitignore`. (Completed 2026-10-26)
 - [x] TASK-3DQ8-CI-PERF-OPTIMIZATION: Resolved 41-minute Godot CI hang on headless tests by disabling automatic Blender/FBX import in `godot/project.godot`, excluding raw blend files in `export_presets.cfg`, replacing `--editor --quit` with `--import` and `--rendering-driver dummy`, adding `actions/cache@v4` for `.godot/imported`, and enforcing strict step and job timeouts. (Completed 2026-10-26)
+- [x] TASK-3DQ8-CI-DRIVER-FIX: Removed unsupported `--rendering-driver dummy` flag in `.github/workflows/godot-ci.yml` which caused Godot 4.3 `forward_plus` abort on Linux runners. Verified `--headless` runs natively with 166/166 test passes. (Completed 2026-10-26)
+
 

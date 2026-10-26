@@ -35,10 +35,10 @@ jobs:
 
       - name: Import Godot Assets & Generate Project Cache
         run: |
-          timeout 180s godot --headless --rendering-driver dummy --path ./godot --import || echo "Asset import phase settled"
+          timeout 180s godot --headless --path ./godot --import || echo "Asset import phase settled"
 
       - name: Execute Godot Headless Test Runner
-        run: godot --headless --rendering-driver dummy --path ./godot -s res://tests/runner.gd
+        run: godot --headless --path ./godot -s res://tests/runner.gd
 
   godot-multiplatform-export:
     name: Export Build (${{ matrix.platform }})

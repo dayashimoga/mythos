@@ -2198,4 +2198,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Upgraded `.github/workflows/godot-ci.yml` to use `--import` with `--rendering-driver dummy` instead of `--editor --quit`.
   - Integrated `actions/cache@v4` for `godot/.godot/imported` to enable instantaneous asset cache reuse.
   - Enforced a 15-minute job timeout and 180-second step timeout to guarantee pipelines never hang indefinitely.
+- **Godot CI Headless Driver Compatibility**:
+  - Removed unsupported `--rendering-driver dummy` flag from `.github/workflows/godot-ci.yml`. Godot 4 `forward_plus` renderer does not support the dummy driver and aborted on CI runners; native `--headless` automatically manages headless display and dummy audio.
+
 
