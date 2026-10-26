@@ -146,7 +146,7 @@ jobs:
         if: matrix.target == 'windows-x64'
         uses: actions/upload-artifact@v4
         with:
-          name: native-app-windows-x64
+          name: mythos-2d-canvas-windows-x64
           path: |
             src-tauri/target/release/mythos-astra.exe
             src-tauri/target/release/WebView2Loader.dll
@@ -165,7 +165,7 @@ jobs:
         if: matrix.target == 'linux-x64-and-android'
         uses: actions/upload-artifact@v4
         with:
-          name: native-app-linux-x64
+          name: mythos-2d-canvas-linux-x64
           path: src-tauri/target/release/mythos-astra
           if-no-files-found: warn
           retention-days: 14
@@ -174,7 +174,7 @@ jobs:
         if: matrix.target == 'linux-x64-and-android'
         uses: actions/upload-artifact@v4
         with:
-          name: native-app-android-apk
+          name: mythos-2d-canvas-android-apk
           path: android/app/build/outputs/apk/**/*.apk
           if-no-files-found: ignore
           retention-days: 14
@@ -189,7 +189,7 @@ jobs:
         if: matrix.target == 'macos-and-ios'
         uses: actions/upload-artifact@v4
         with:
-          name: native-app-macos
+          name: mythos-2d-canvas-macos
           path: src-tauri/target/release/mythos-astra
           if-no-files-found: ignore
           retention-days: 14

@@ -2174,3 +2174,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     10. `10_final_moksha_consecration_and_epilogue_certification.png`: Final Grand Climax Resolution at Moksha Mahapeetham.
   - Recompiled web export package `public/3d/index.pck` (371,475,168 bytes) via `build_web_pack.gd` and synchronized to `dist/3d/` and `builds/web/`.
   - Verified strict append-only governance via `scripts/verify-append-only.js` with 0 violations.
+
+---
+
+## [1.15.1-3d] - 2026-10-26
+
+### Stage Q8.8: Dual-Engine Clarification & Distribution Pipeline Separation
+
+#### Changed
+- **CI Artifact Disambiguation**:
+  - Renamed `.github/workflows/ci.yml` matrix artifacts from ambiguous `native-app-*` to `mythos-2d-canvas-windows-x64`, `mythos-2d-canvas-linux-x64`, `mythos-2d-canvas-android-apk`, and `mythos-2d-canvas-macos` to clearly identify the 2D Canvas prototype desktop wrapper.
+  - Updated `.github/workflows/godot-ci.yml` matrix exports with explicit, descriptive artifact names: `mythos-3d-windows-x64`, `mythos-3d-linux-x64`, `mythos-3d-web-pwa`, `mythos-3d-macos`, and `mythos-3d-android-apk`.
+- **In-Game 3D Engine Launcher**:
+  - Added direct golden `Launch 3D Game` link button to `index.html` quick navigation bar navigating directly to `./3d/index.html` (Godot 4.3 WebAssembly 3D engine).
+- **Automated Native PCK Synchronization**:
+  - Updated `godot/scripts/tools/build_web_pack.gd` to automatically copy the compiled 371 MB package to `builds/windows/mythos_3d.pck` and `builds/linux/mythos_3d.pck`.
+- **Git Ignore Anchoring**:
+  - Fixed `/tools/` anchor in `.gitignore` to prevent inadvertent exclusion of `godot/scripts/tools/`.
