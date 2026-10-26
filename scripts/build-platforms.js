@@ -166,6 +166,10 @@ export function buildPlatforms() {
     console.log('[Platform Packager] Compiling production frontend bundle first...');
     execSync('npm run build', { stdio: 'inherit' });
   }
+
+  // Ensure dist-tauri is prepared for embedded desktop packaging
+  execSync('node scripts/prepare-tauri-dist.js', { stdio: 'inherit' });
+
   const indexHtml = fs.readFileSync(indexHtmlPath, 'utf8');
 
   const assetsDir = path.resolve(distDir, 'assets');

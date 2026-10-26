@@ -8,6 +8,7 @@ pnpm-debug.log*
 
 # Build Outputs & Bundles
 dist/
+dist-tauri/
 dist-ssr/
 build/
 coverage/

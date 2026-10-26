@@ -135,6 +135,9 @@ jobs:
       - name: Compile web frontend
         run: npm run build
 
+      - name: Prepare Embedded Desktop Frontend
+        run: node scripts/prepare-tauri-dist.js
+
       - name: Build Native Windows Executable
         if: matrix.target == 'windows-x64'
         run: cargo build --manifest-path src-tauri/Cargo.toml --release
@@ -144,7 +147,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: native-app-windows-x64
-          path: src-tauri/target/release/mythos-astra.exe
+          path: |
+            src-tauri/target/release/mythos-astra.exe
+            src-tauri/target/release/WebView2Loader.dll
           if-no-files-found: warn
           retention-days: 14
 
