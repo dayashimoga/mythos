@@ -2201,4 +2201,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Godot CI Headless Driver Compatibility**:
   - Removed unsupported `--rendering-driver dummy` flag from `.github/workflows/godot-ci.yml`. Godot 4 `forward_plus` renderer does not support the dummy driver and aborted on CI runners; native `--headless` automatically manages headless display and dummy audio.
 
+## [1.15.2-3d] - 2026-10-26
+
+### Stage Q8.9: Godot CI Export Templates, Windows rcedit Fix & Podman Local Export
+
+#### Fixed
+- **Godot Export Templates Discovery in CI**:
+  - Resolved `No export template found at the expected path: /github/home/.local/share/godot/export_templates/4.3.stable/` in `.github/workflows/godot-ci.yml`. Added `Setup Godot Export Templates & Config` step that mirrors pre-installed templates and editor settings from `/root/.local/share/godot/` and `/root/.config/godot/` into `~/.local/share/godot/export_templates/` and `~/.config/godot/`.
+- **Windows Desktop rcedit Requirement Elimination**:
+  - Resolved `The rcedit tool must be configured in the Editor Settings (Export > Windows > rcedit)` error. Cleared `application/icon=""`, `application/company_name=""`, `application/product_name=""`, and `application/file_description=""` in `godot/export_presets.cfg` for `Windows Desktop` preset, allowing native PE executable compilation without requiring Wine/rcedit.
+  - Cleared `application/icon=""` in macOS preset and disabled `html/export_icon` in Web preset to remove external tool dependencies.
+- **Android CI Export Mode**:
+  - Configured matrix `export_type` in `.github/workflows/godot-ci.yml` to use `--export-release` for Linux, Windows, Web, macOS, and `--export-debug` for Android to leverage the container's built-in debug keystore without requiring manual release signing secrets.
+- **Dynamic Project Paths in PCK Builder**:
+  - Updated `godot/scripts/tools/build_web_pack.gd` to use `ProjectSettings.globalize_path("res://")` and `ProjectSettings.globalize_path("res://../")` rather than hardcoded Windows drive letters for cross-platform portability.
+
+#### Verified
+- **Local Podman Container Validation**:
+  - Executed Godot 4.3 inside local Podman container (`docker.io/barichello/godot-ci:4.3`).
+  - Successfully exported Windows Desktop native build: `builds/windows/mythos_3d.exe` (84,153,344 bytes) and `builds/windows/mythos_3d.pck` (70,696,752 bytes).
+  - Successfully exported Linux native build: `builds/linux/mythos_3d.x86_64` (66,074,584 bytes) and `builds/linux/mythos_3d.pck` (70,696,784 bytes).
+  - Successfully exported Web build: `builds/web/` (`index.html`, `index.js`, `index.wasm` 35.4 MB, `index.pck` 70.7 MB).
+  - Executed headless test suite in Podman container: 166 of 166 Godot unit tests passing across all 25 test suites with 0 failures.
+
+
 

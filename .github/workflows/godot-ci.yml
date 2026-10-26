@@ -55,25 +55,51 @@ jobs:
             output_dir: builds/linux
             output_file: mythos_3d.x86_64
             artifact_name: mythos-3d-linux-x64
+            export_type: --export-release
           - platform: Windows Desktop
             output_dir: builds/windows
             output_file: mythos_3d.exe
             artifact_name: mythos-3d-windows-x64
+            export_type: --export-release
           - platform: Web
             output_dir: builds/web
             output_file: index.html
             artifact_name: mythos-3d-web-pwa
+            export_type: --export-release
           - platform: macOS
             output_dir: builds/macos
             output_file: mythos_3d.zip
             artifact_name: mythos-3d-macos
+            export_type: --export-release
           - platform: Android
             output_dir: builds/android
             output_file: mythos_3d.apk
             artifact_name: mythos-3d-android-apk
+            export_type: --export-debug
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Setup Godot Export Templates & Config
+        run: |
+          mkdir -v -p ~/.local/share/godot/export_templates
+          mkdir -v -p ~/.local/share/godot/templates
+          mkdir -v -p ~/.config
+          if [ -d /root/.local/share/godot/export_templates ]; then
+            cp -r /root/.local/share/godot/export_templates/* ~/.local/share/godot/export_templates/ 2>/dev/null || true
+          fi
+          if [ -d /root/.local/share/godot/templates ]; then
+            cp -r /root/.local/share/godot/templates/* ~/.local/share/godot/templates/ 2>/dev/null || true
+          fi
+          if [ -d /root/.config/godot ]; then
+            cp -r /root/.config/godot ~/.config/ 2>/dev/null || true
+          fi
+          if [ -d /root/.android ]; then
+            mkdir -v -p ~/.android
+            cp -r /root/.android/* ~/.android/ 2>/dev/null || true
+          fi
+          echo "Installed Godot Export Templates:"
+          ls -la ~/.local/share/godot/export_templates/ || true
 
       - name: Restore Godot Import Cache
         uses: actions/cache@v4
@@ -87,7 +113,8 @@ jobs:
       - name: Export ${{ matrix.platform }}
         run: |
           mkdir -p /tmp/export ${{ matrix.output_dir }}
-          godot --headless --path ./godot --export-release "${{ matrix.platform }}" "/tmp/export/${{ matrix.output_file }}"
+          rm -rf /tmp/export/*
+          godot --headless --path ./godot ${{ matrix.export_type }} "${{ matrix.platform }}" "/tmp/export/${{ matrix.output_file }}"
           cp -r /tmp/export/* "${{ matrix.output_dir }}/"
 
       - name: Upload Export Artifact (${{ matrix.platform }})
