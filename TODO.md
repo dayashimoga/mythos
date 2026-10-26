@@ -810,3 +810,10 @@
 - [x] TASK-3DQ15-AUTOMATED-REGRESSION: Phase Q15.6 Complete Automated Regression. Authored Suite 31 (`godot/tests/unit/test_seven_realms_hardening_q15.gd`, 10 tests passing 100%). Executed full Godot test runner achieving 216/216 passing tests across 31 suites (100% pass rate). Executed Vitest achieving 504/504 passing tests across 58 test files. Verified 0 TypeScript compiler errors (`tsc --noEmit`). (Completed 2026-10-26)
 - [x] TASK-3DQ15-DOCUMENTATION-GOVERNANCE: Phase Q15.7 Final Documentation, Governance & Release Certification. Updated `PERFORMANCE.md`, `TESTING.md`, `RELEASE.md`, `ARCHITECTURE.md`, `REQUIREMENTS.md`, `CODEBASE_GUIDE.md`, and `README.md`. Strictly appended Stage Q15 to `TODO.md` and `CHANGELOG.md` with verified append-only governance. Issued formal unconditional GO release certification. (Completed 2026-10-26)
 
+---
+
+## [2026-10-26] Android CI Export Infrastructure & Texture Compression Hardening
+
+- [x] TASK-3D-CI-ANDROID-FIX: Android CI Export Hardening & VRAM Compression Alignment. Diagnosed preset "Android" configuration failure in GitHub Actions Godot CI (`barichello/godot-ci:4.3`). Root cause identified as Godot 4.3 `EditorExportPlatformAndroid::has_valid_project_configuration()` requiring `ResourceImporterTextureSettings::should_import_etc2_astc()` to be enabled, which failed silently when `rendering/textures/vram_compression/import_etc2_astc=true` was missing from `project.godot`. Enabled `textures/vram_compression/import_etc2_astc=true` in `project.godot`. Added target SDK platform symlinks (`android-33` -> `android-34`) and build-tools symlinks (`33.0.2` -> `34.0.0`) in `.github/workflows/godot-ci.yml`. Configured debug keystore permissions, path replacement, and environment variables (`GODOT_ANDROID_KEYSTORE_DEBUG_PATH`, `GODOT_ANDROID_KEYSTORE_DEBUG_USER`, `GODOT_ANDROID_KEYSTORE_DEBUG_PASSWORD`). Configured numeric versioning (`version/code=1`, `version/name="1.15.0"`) in `export_presets.cfg` and synced `TrainingSentinel3D.tscn` UID. Validated 100% successful Android APK build (`mythos_3d.apk`, 95 MB) locally in container with exit code 0. (Completed 2026-10-26)
+
+

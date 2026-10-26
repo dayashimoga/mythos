@@ -2630,3 +2630,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Governance**:
   - Strict append-only governance verified via `scripts/verify-append-only.js`.
 
+---
+
+## [1.15.1-3d] - 2026-10-26
+
+### Fixed
+- **Godot Android Export Engine Configuration (`godot/project.godot`):**
+  - Added `textures/vram_compression/import_etc2_astc=true` under `[rendering]`. Resolved silent validation rejection in `EditorExportPlatformAndroid::has_valid_project_configuration()` where `ResourceImporterTextureSettings::should_import_etc2_astc()` evaluates to `false` in headless Linux container environments without ETC2/ASTC enabled.
+- **Android Preset Configuration (`godot/export_presets.cfg`):**
+  - Added explicit numeric `version/code=1` and `version/name="1.15.0"` under `[preset.4.options]` to satisfy Android packaging requirements.
+- **Scene UID Alignment (`godot/scenes/entities/TrainingSentinel3D.tscn`):**
+  - Added `uid="uid://c5sentinel3d"` to the scene header, resolving invalid UID external resource fallback warnings during scene load in `BhumiValley3D.tscn`.
+- **CI Export Pipeline (`.github/workflows/godot-ci.yml`):**
+  - Added SDK version symlinks from `platforms/android-33` to `platforms/android-34` and `build-tools/33.0.2` to `build-tools/34.0.0` in the Godot CI container image (`barichello/godot-ci:4.3`).
+  - Added automated keystore permissions and universal path configuration (`/tmp/debug.keystore`, `~/.android/debug.keystore`).
+  - Added environment variable injection (`GODOT_ANDROID_KEYSTORE_DEBUG_PATH`, `GODOT_ANDROID_KEYSTORE_DEBUG_USER`, `GODOT_ANDROID_KEYSTORE_DEBUG_PASSWORD`) into the export step.
+
+### Verified
+- **Android APK Build**:
+  - Validated local container reproduction building `mythos_3d.apk` (95 MB) with clean zipalign and exit code 0.
+- **Test Battery**:
+  - 216 of 216 Godot unit tests passing across all 31 test suites (100% pass rate).
+  - 504 of 504 TypeScript Vitest tests passing across all 58 test files.
+- **Append-Only Compliance**:
+  - Verified via `scripts/verify-append-only.js`.
+
+

@@ -84,7 +84,7 @@ jobs:
         run: |
           mkdir -v -p ~/.local/share/godot/export_templates
           mkdir -v -p ~/.local/share/godot/templates
-          mkdir -v -p ~/.config
+          mkdir -v -p ~/.config ~/.android /tmp/export
           if [ -d /root/.local/share/godot/export_templates ]; then
             cp -r /root/.local/share/godot/export_templates/* ~/.local/share/godot/export_templates/ 2>/dev/null || true
           fi
@@ -94,9 +94,25 @@ jobs:
           if [ -d /root/.config/godot ]; then
             cp -r /root/.config/godot ~/.config/ 2>/dev/null || true
           fi
+          if [ -f /root/debug.keystore ]; then
+            cp /root/debug.keystore /tmp/debug.keystore 2>/dev/null || true
+            cp /root/debug.keystore ~/.android/debug.keystore 2>/dev/null || true
+            chmod 666 /tmp/debug.keystore ~/.android/debug.keystore 2>/dev/null || true
+          fi
           if [ -d /root/.android ]; then
-            mkdir -v -p ~/.android
             cp -r /root/.android/* ~/.android/ 2>/dev/null || true
+          fi
+          if [ -f ~/.config/godot/editor_settings-4.3.tres ]; then
+            sed -i 's|/root/debug.keystore|/tmp/debug.keystore|g' ~/.config/godot/editor_settings-4.3.tres
+          fi
+          if [ -f ~/.config/godot/editor_settings-4.tres ]; then
+            sed -i 's|/root/debug.keystore|/tmp/debug.keystore|g' ~/.config/godot/editor_settings-4.tres
+          fi
+          if [ -d /usr/lib/android-sdk/platforms/android-33 ] && [ ! -d /usr/lib/android-sdk/platforms/android-34 ]; then
+            ln -s /usr/lib/android-sdk/platforms/android-33 /usr/lib/android-sdk/platforms/android-34 2>/dev/null || true
+          fi
+          if [ -d /usr/lib/android-sdk/build-tools/33.0.2 ] && [ ! -d /usr/lib/android-sdk/build-tools/34.0.0 ]; then
+            ln -s /usr/lib/android-sdk/build-tools/33.0.2 /usr/lib/android-sdk/build-tools/34.0.0 2>/dev/null || true
           fi
           echo "Installed Godot Export Templates:"
           ls -la ~/.local/share/godot/export_templates/ || true
@@ -111,6 +127,10 @@ jobs:
             godot-imported-
 
       - name: Export ${{ matrix.platform }}
+        env:
+          GODOT_ANDROID_KEYSTORE_DEBUG_PATH: /tmp/debug.keystore
+          GODOT_ANDROID_KEYSTORE_DEBUG_USER: androiddebugkey
+          GODOT_ANDROID_KEYSTORE_DEBUG_PASSWORD: android
         run: |
           mkdir -p /tmp/export ${{ matrix.output_dir }}
           rm -rf /tmp/export/*
