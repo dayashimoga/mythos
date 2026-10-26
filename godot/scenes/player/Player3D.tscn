@@ -22,8 +22,10 @@ collision_layer = 2
 collision_mask = 1
 floor_stop_on_slope = true
 floor_constant_speed = true
+floor_block_on_wall = true
 floor_max_angle = 0.837758
 floor_snap_length = 0.45
+safe_margin = 0.08
 script = ExtResource("1_player")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
@@ -32,6 +34,7 @@ shape = SubResource("CapsuleShape3D_player")
 
 [node name="CameraArm" type="SpringArm3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 0.965926, 0.258819, 0, -0.258819, 0.965926, 0, 1.45, 0)
+collision_mask = 1
 shape = SubResource("SphereShape3D_camera_avoidance")
 spring_length = 4.5
 margin = 0.25
@@ -40,6 +43,7 @@ script = ExtResource("2_camera")
 [node name="Camera3D" type="Camera3D" parent="CameraArm"]
 current = true
 fov = 72.0
+near = 0.05
 
 [node name="InteractDetector" type="Area3D" parent="."]
 collision_layer = 0

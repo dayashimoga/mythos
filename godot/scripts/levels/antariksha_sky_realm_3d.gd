@@ -8,6 +8,7 @@ const GaleFalconScript = preload("res://scripts/entities/gale_falcon_3d.gd")
 const WindArcherScript = preload("res://scripts/entities/wind_archer_3d.gd")
 const BossMatarishvanScript = preload("res://scripts/entities/boss_matarishvan_3d.gd")
 const CinematicDirectorScript = preload("res://scripts/cinematics/cinematic_director_3d.gd")
+const WorldCollisionBuilderScript = preload("res://scripts/levels/world_collision_builder.gd")
 
 @onready var player: CharacterBody3D = $Player3D
 @onready var hud: HUD3D = $HUD3D if has_node("HUD3D") else null
@@ -30,6 +31,7 @@ func _ready() -> void:
 	level_start_time = Time.get_ticks_msec() / 1000.0
 	AudioManager3D.set_ambience("antariksha")
 	_setup_cinematic_director()
+	WorldCollisionBuilderScript.build_collisions(self)
 	quest_mgr = QuestManagerScript.new()
 	dialogue_runner = DialogueRunnerScript.new()
 
@@ -218,6 +220,10 @@ func _on_player_defeated() -> void:
 		hud.show_defeat_overlay()
 
 func _on_retry_requested() -> void:
+	if boss_matarishvan and boss_matarishvan.has_method("reset_boss"):
+		boss_matarishvan.reset_boss()
+	if hud and hud.has_method("hide_boss_bar"):
+		hud.hide_boss_bar()
 	_respawn_at_checkpoint()
 
 func _respawn_at_checkpoint() -> void:

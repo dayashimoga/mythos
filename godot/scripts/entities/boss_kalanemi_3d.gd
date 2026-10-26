@@ -291,6 +291,30 @@ func _execute_ground_slam_impact() -> void:
 	if ground_slam_indicator:
 		ground_slam_indicator.visible = false
 
+	# Visual expanding shockwave wave ring
+	if is_inside_tree() and get_parent():
+		var wave_mesh = MeshInstance3D.new()
+		wave_mesh.name = "ShockwaveRing"
+		var wave_torus = TorusMesh.new()
+		wave_torus.inner_radius = 0.8
+		wave_torus.outer_radius = 1.0
+		wave_mesh.mesh = wave_torus
+		var wave_mat = StandardMaterial3D.new()
+		wave_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		wave_mat.albedo_color = Color(1.0, 0.2, 0.1, 0.8)
+		wave_mat.emission_enabled = true
+		wave_mat.emission = Color(1.0, 0.35, 0.1)
+		wave_mat.emission_energy_multiplier = 4.0
+		wave_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		wave_mesh.material_override = wave_mat
+		wave_mesh.global_position = Vector3(global_position.x, global_position.y + 0.1, global_position.z)
+		get_parent().add_child(wave_mesh)
+		var wt = create_tween()
+		if wt:
+			wt.tween_property(wave_mesh, "scale", Vector3(6.5, 1.0, 6.5), 0.55)
+			wt.parallel().tween_property(wave_mat, "albedo_color:a", 0.0, 0.55)
+			wt.tween_callback(func(): wave_mesh.queue_free())
+
 	# Area damage check
 	if _target_player and is_instance_valid(_target_player):
 		var d = global_position.distance_to(_target_player.global_position)
@@ -389,7 +413,23 @@ func _on_cleave_body_entered(body: Node3D) -> void:
 	if body is PlayerController3D and body.has_method("take_damage_spec"):
 		var dmg = 32 if current_phase == BossPhase.PHASE_1_NORMAL else 42
 		var atk = CombatMath.AttackSpec.new("boss_kalanemi_cleave", dmg, 38.0, global_position)
-		body.take_damage_spec(atk)
+		var res = body.take_damage_spec(atk)
+		if res and res.was_parried:
+			_on_cleave_parried()
+
+func _on_cleave_parried() -> void:
+	if cleave_area:
+		cleave_area.monitoring = false
+	attack_cooldown = 2.0
+	AudioManager3D.play_3d("hit_impact", global_position, 1.4)
+	if poise:
+		var broke = poise.take_poise_damage(35.0)
+		if broke and current_state != State.ENRAGE_ROAR:
+			current_state = State.STAGGERED
+			_play_anim("boss_stagger", 0.08)
+	if status_label:
+		status_label.text = "✦ GREAT-CLEAVE PARRIED! ✦\n[ +35% CRITICAL DAMAGE ]"
+		status_label.modulate = Color(0.2, 1.0, 0.4)
 
 func take_damage_spec(attack_spec: CombatMath.AttackSpec) -> CombatMath.CombatHitResult:
 	if current_state == State.DEFEATED or current_state == State.ENRAGE_ROAR:
@@ -475,3 +515,34 @@ func _update_status_display() -> void:
 	var phase_str = "PHASE 2 (ENRAGED)" if current_phase == BossPhase.PHASE_2_ENRAGED else "PHASE 1"
 	status_label.text = "KALANEMI — ASURA GENERAL [%s]\nHP: %d / %d  |  Poise: %d" % [phase_str, current_health, max_health, int(poise.current if poise else 0)]
 	status_label.modulate = Color(1.0, 0.25, 0.15)
+
+func reset_boss() -> void:
+	current_health = max_health
+	if poise:
+		poise.current = poise.max_poise
+		poise.is_staggered = false
+	current_phase = BossPhase.PHASE_1_NORMAL
+	current_state = State.DORMANT
+	is_active = false
+	attack_cooldown = 2.0
+	velocity = Vector3.ZERO
+	global_position = Vector3(55.0, 12.2, -45.0)
+	if visual:
+		visual.scale = Vector3.ONE
+	if collision_shape:
+		collision_shape.disabled = false
+	if cleave_area:
+		cleave_area.monitoring = false
+	if ground_slam_indicator:
+		ground_slam_indicator.visible = false
+	if core_light:
+		core_light.light_color = Color(1.0, 0.35, 0.05)
+		core_light.light_energy = 3.0
+	if eye_light:
+		eye_light.light_color = Color(1.0, 0.1, 0.15)
+		eye_light.light_energy = 2.5
+	add_to_group("targetable")
+	_play_anim("boss_idle")
+	_update_status_display()
+	boss_health_changed.emit(current_health, max_health)
+

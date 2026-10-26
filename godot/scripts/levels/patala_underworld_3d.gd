@@ -8,6 +8,7 @@ const NagaSpitterScript = preload("res://scripts/entities/naga_spitter_3d.gd")
 const NagaConstrictorScript = preload("res://scripts/entities/naga_constrictor_3d.gd")
 const BossSheshaEchoScript = preload("res://scripts/entities/boss_shesha_echo_3d.gd")
 const CinematicDirectorScript = preload("res://scripts/cinematics/cinematic_director_3d.gd")
+const WorldCollisionBuilderScript = preload("res://scripts/levels/world_collision_builder.gd")
 
 @onready var player: CharacterBody3D = $Player3D
 @onready var hud: HUD3D = $HUD3D if has_node("HUD3D") else null
@@ -30,6 +31,7 @@ func _ready() -> void:
 	level_start_time = Time.get_ticks_msec() / 1000.0
 	AudioManager3D.set_ambience("patala")
 	_setup_cinematic_director()
+	WorldCollisionBuilderScript.build_collisions(self)
 	quest_mgr = QuestManagerScript.new()
 	dialogue_runner = DialogueRunnerScript.new()
 
@@ -214,6 +216,10 @@ func _on_player_defeated() -> void:
 		hud.show_defeat_overlay()
 
 func _on_retry_requested() -> void:
+	if boss_shesha and boss_shesha.has_method("reset_boss"):
+		boss_shesha.reset_boss()
+	if hud and hud.has_method("hide_boss_bar"):
+		hud.hide_boss_bar()
 	_respawn_at_checkpoint()
 
 func _respawn_at_checkpoint() -> void:

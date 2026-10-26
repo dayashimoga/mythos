@@ -25,6 +25,7 @@ const BhumiTerrainGeneratorScript = preload("res://scripts/levels/bhumi_terrain_
 const AsuraWarriorScript = preload("res://scripts/entities/asura_warrior_3d.gd")
 const BossKalanemiScript = preload("res://scripts/entities/boss_kalanemi_3d.gd")
 const CinematicDirectorScript = preload("res://scripts/cinematics/cinematic_director_3d.gd")
+const WorldCollisionBuilderScript = preload("res://scripts/levels/world_collision_builder.gd")
 
 var current_region: WorldRegion = WorldRegion.NONE
 var collected_shards: int = 0
@@ -39,6 +40,8 @@ var is_barrier_dispelled: bool = false
 var is_game_completed: bool = false
 var cinematic_director: Node = null
 var _boss_intro_played: bool = false
+var _barrier_hint_timer: float = 0.0
+var _altar_hint_timer: float = 0.0
 
 @onready var player: PlayerController3D = $Player3D if has_node("Player3D") else null
 @onready var hud: HUD3D = $HUD3D if has_node("HUD3D") else null
@@ -64,6 +67,7 @@ func _ready() -> void:
 	_setup_cinematic_director()
 	_setup_terrain_mesh()
 	_setup_water_plane()
+	WorldCollisionBuilderScript.build_collisions(self)
 	_setup_systems_and_quest()
 	_wire_interactables()
 	_wire_enemies_and_boss()
@@ -87,12 +91,38 @@ func _setup_cinematic_director() -> void:
 		cinematic_director.name = "CinematicDirector3D"
 		add_child(cinematic_director)
 
-func _physics_process(_delta: float) -> void:
+func _physics_process(delta: float) -> void:
 	if not player:
 		return
 
+	if _barrier_hint_timer > 0.0:
+		_barrier_hint_timer -= delta
+	if _altar_hint_timer > 0.0:
+		_altar_hint_timer -= delta
+
 	_update_world_region(player.global_position)
+	_check_contextual_navigation_hints()
 	_handle_debug_navigation()
+
+func _check_contextual_navigation_hints() -> void:
+	if not player or not hud:
+		return
+
+	var p_pos = player.global_position
+
+	# Barrier guidance hint
+	if tamas_barrier and not is_barrier_dispelled and _barrier_hint_timer <= 0.0:
+		var b_pos = tamas_barrier.global_position if tamas_barrier.is_inside_tree() else tamas_barrier.position
+		if p_pos.distance_to(b_pos) < 9.0:
+			hud.show_banner("⚠️ TAMAS BARRIER BARS THE ASCENT!\nCollect 3 Astra Shards in Dandaka Grove and Kalyani Reservoir.", 4.0)
+			_barrier_hint_timer = 12.0
+
+	# Sun Altar premature approach hint
+	if sun_altar and not is_game_completed and collected_shards < SHARDS_FOR_BARRIER and _altar_hint_timer <= 0.0:
+		var a_pos = sun_altar.global_position if sun_altar.is_inside_tree() else sun_altar.position
+		if p_pos.distance_to(a_pos) < 4.0:
+			hud.show_banner("☀️ The Altar of Surya awaits purification.\nFirst commune with Devi Tara in Dandaka Grove.", 3.5)
+			_altar_hint_timer = 10.0
 
 func _update_world_region(pos: Vector3) -> void:
 	var new_region: WorldRegion = _evaluate_region_at(pos.x, pos.z, pos.y)
@@ -146,16 +176,56 @@ func _refresh_objective_display() -> void:
 	if not mission:
 		return
 
-	var text = ""
+	var active_obj: QuestManager.Objective = null
 	for obj in mission.objectives:
 		if not obj.is_completed:
-			text = "%s (%d / %d)" % [obj.description, obj.current_count, obj.target_count]
+			active_obj = obj
 			break
 
-	if text.is_empty():
-		text = "CONSECRATED: The Realm of Bhumi is Cleansed!"
+	if active_obj:
+		var text = "%s (%d / %d)" % [active_obj.description, active_obj.current_count, active_obj.target_count]
+		hud.update_objective(text)
 
-	hud.update_objective(text)
+		match active_obj.id:
+			"commune_tara":
+				var tara_pos = tara_npc.global_position if (tara_npc and tara_npc.is_inside_tree()) else Vector3(-24.0, 1.2, -13.0)
+				hud.set_waypoint(tara_pos, "Commune with Devi Tara")
+			"reclaim_shards":
+				var nearest_shard_pos = _find_nearest_uncollected_shard_pos()
+				hud.set_waypoint(nearest_shard_pos, "Astra Shard (%d / 3)" % collected_shards)
+			"defeat_kalanemi":
+				var boss_pos = boss_kalanemi.global_position if (boss_kalanemi and boss_kalanemi.is_inside_tree()) else Vector3(55.0, 12.0, -45.0)
+				hud.set_waypoint(boss_pos, "General Kalanemi")
+			"consecrate_altar":
+				var altar_pos = sun_altar.global_position if (sun_altar and sun_altar.is_inside_tree()) else Vector3(0.0, 2.82, -2.0)
+				hud.set_waypoint(altar_pos, "High Sun Altar")
+			_:
+				hud.clear_waypoint()
+	else:
+		var text = "CONSECRATED: The Realm of Bhumi is Cleansed!"
+		hud.update_objective(text)
+		var portal = find_child("AntarikshaSkyPortal", true, false)
+		if portal:
+			hud.set_waypoint(portal.global_position, "Antariksha Portal")
+		elif sun_altar:
+			hud.set_waypoint(sun_altar.global_position, "Antariksha Portal")
+		else:
+			hud.clear_waypoint()
+
+func _find_nearest_uncollected_shard_pos() -> Vector3:
+	var p_pos = player.global_position if player else Vector3.ZERO
+	var min_dist = 99999.0
+	var best_pos = Vector3(-6.0, 1.0, 28.0) # Fallback near Kalyani pool
+
+	var shards = get_tree().get_nodes_in_group("shards") if is_inside_tree() else []
+	for s in shards:
+		if is_instance_valid(s) and s.visible:
+			var s_pos = s.global_position if s.is_inside_tree() else s.position
+			var d = p_pos.distance_to(s_pos)
+			if d < min_dist:
+				min_dist = d
+				best_pos = s_pos
+	return best_pos
 
 func _setup_terrain_mesh() -> void:
 	if not terrain_container:
@@ -265,8 +335,11 @@ func _on_retry_requested() -> void:
 		player.is_dashing = false
 		player.is_attacking = false
 		player.health_changed.emit(100, 100)
+	if boss_kalanemi and boss_kalanemi.has_method("reset_boss"):
+		boss_kalanemi.reset_boss()
 	if hud:
 		hud.update_health(100, 100)
+		hud.hide_boss_bar()
 		hud.show_banner("✦ RESPAWNED AT SACRED CHECKPOINT ✦", 3.0)
 
 func _on_shard_collected() -> void:

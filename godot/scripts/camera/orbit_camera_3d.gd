@@ -71,6 +71,7 @@ func _ready() -> void:
 	shape = sphere_shape
 
 	if camera_node:
+		camera_node.near = 0.05
 		camera_node.fov = standard_fov
 
 	if not target_path.is_empty():
@@ -82,6 +83,14 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_RIGHT:
 			is_orbiting = event.pressed
+		elif event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
+			if not is_inside_tree():
+				pass
+			elif Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
+				# Allow capturing mouse on game viewport click when pause menu is not open
+				var pause_menu = get_tree().root.find_child("PauseMenu", true, false)
+				if not pause_menu or not pause_menu.visible:
+					Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 		elif event.button_index == MOUSE_BUTTON_MIDDLE and event.pressed:
 			toggle_target_lock()
 		elif event.button_index == MOUSE_BUTTON_WHEEL_UP:
@@ -91,11 +100,15 @@ func _unhandled_input(event: InputEvent) -> void:
 			if not is_over_shoulder and not locked_target:
 				target_zoom = min(max_zoom, target_zoom + zoom_speed)
 
-	elif event is InputEventMouseMotion and is_orbiting and not locked_target:
-		orbit(event.relative.x, event.relative.y)
+	elif event is InputEventMouseMotion and not locked_target:
+		if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED or is_orbiting:
+			orbit(event.relative.x, event.relative.y)
 
 	elif event is InputEventKey and event.pressed and not event.echo:
-		if event.keycode == KEY_C:
+		if event.keycode == KEY_ESCAPE:
+			if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
+				Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+		elif event.keycode == KEY_C:
 			toggle_over_the_shoulder()
 		elif event.keycode == KEY_TAB:
 			toggle_target_lock()
@@ -215,22 +228,36 @@ func _process(delta: float) -> void:
 
 				target_zoom = clamp(dist * 0.75 + 1.8, 3.2, 7.0)
 
-	# 2. Gamepad Right Analog Stick Orbit
+	# 2. Gamepad Right Analog Stick Orbit with radial deadzone
 	if not locked_target:
 		var joy_x = Input.get_joy_axis(0, JOY_AXIS_RIGHT_X)
 		var joy_y = Input.get_joy_axis(0, JOY_AXIS_RIGHT_Y)
-		if abs(joy_x) > 0.15 or abs(joy_y) > 0.15:
-			orbit(joy_x * gamepad_sensitivity * 280.0 * delta, joy_y * gamepad_sensitivity * 240.0 * delta)
+		var stick = Vector2(joy_x, joy_y)
+		var deadzone = 0.15
+		if stick.length() > deadzone:
+			var stick_norm = stick.normalized()
+			var stick_mag = (stick.length() - deadzone) / (1.0 - deadzone)
+			var remapped = stick_norm * stick_mag
+			orbit(remapped.x * gamepad_sensitivity * 280.0 * delta, remapped.y * gamepad_sensitivity * 240.0 * delta)
 
-	# 3. Smooth zoom lerp
+	# 3. Adaptive Tight-Space Framing & Distance
+	# If camera is compressed close to player (< 2.2m) by walls or low ceilings, shift arm offset to shoulder view
+	var current_hit_len = get_hit_length()
+	var effective_arm_offset = target_arm_offset
+	if current_hit_len < 2.2 and not is_over_shoulder:
+		var t_tight = clamp((2.2 - current_hit_len) / 1.5, 0.0, 1.0)
+		# Lower arm height and shift right so Veer remains centered and visible
+		effective_arm_offset = standard_arm_offset.lerp(Vector3(0.55, 1.25, 0.0), t_tight)
+
+	# 4. Smooth zoom & arm offset lerp
 	spring_length = lerp(spring_length, target_zoom, zoom_damping * delta)
-
-	# 4. Smooth arm offset lerp
-	position = position.lerp(target_arm_offset, zoom_damping * delta)
+	position = position.lerp(effective_arm_offset, zoom_damping * delta)
 
 	# 5. Smooth FOV transition
 	if camera_node:
 		var dest_fov = over_shoulder_fov if is_over_shoulder else standard_fov
+		if current_hit_len < 2.0:
+			dest_fov = standard_fov + 4.0 # Slightly widen FOV in tight interiors
 		camera_node.fov = lerp(camera_node.fov, dest_fov, 8.0 * delta)
 
 	# 6. Arrow keys orbit fallback

@@ -115,7 +115,16 @@ func _process_hover(delta: float) -> void:
 	var perp = Vector3(-to_player.z, 0, to_player.x)
 	var move_vec = perp * sin(strafe_angle) + to_player * 0.4
 
-	velocity = move_vec.normalized() * 5.0
+	var separation = Vector3.ZERO
+	if is_inside_tree():
+		for enemy in get_tree().get_nodes_in_group("enemies"):
+			if enemy != self and is_instance_valid(enemy):
+				var diff = global_position - enemy.global_position
+				var d = diff.length()
+				if d > 0.001 and d < 3.0:
+					separation += (diff / d) * (3.0 - d) * 1.5
+
+	velocity = move_vec.normalized() * 5.0 + separation
 	_play_anim("fly_locomotion")
 
 	if state_timer >= 2.0:
@@ -155,7 +164,15 @@ func _process_dive_pounce(delta: float) -> void:
 			if dist <= 4.0:
 				var attack_spec = CombatMath.AttackSpec.new("solar_gryphon", pounce_damage, 30.0, _get_entity_pos(self))
 				if target_player.has_method("take_damage_spec"):
-					target_player.take_damage_spec(attack_spec)
+					var res = target_player.take_damage_spec(attack_spec)
+					if res and res.is_parried:
+						current_state = State.STAGGERED
+						state_timer = 0.0
+						_play_anim("stagger")
+						if sunflare_light:
+							sunflare_light.visible = false
+						if poise:
+							poise.take_poise_damage(35.0)
 				elif target_player.has_method("take_damage"):
 					target_player.take_damage(pounce_damage)
 

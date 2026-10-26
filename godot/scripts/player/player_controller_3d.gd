@@ -32,6 +32,8 @@ signal attack_hit(target: Node3D, damage: int, is_crit: bool)
 signal attack_phase_changed(phase: String, combo_index: int)
 signal footstep_contact(foot_index: int, pos: Vector3, surface_type: String)
 signal animation_state_entered(state_name: String)
+signal player_action_performed(action: String)
+
 
 @export_group("Locomotion")
 @export var walk_speed: float = 4.2
@@ -113,6 +115,11 @@ var jump_buffer_timer: float = 0.0
 var previous_yaw: float = 0.0
 var gait_cycle_phase: float = 0.0
 var last_footstep_phase: float = 0.0
+var previous_horiz_speed: float = 0.0
+var stop_transition_timer: float = 0.0
+var slope_alignment_pitch: float = 0.0
+var _last_camera_yaw: float = 0.0
+var _prev_is_guarding: bool = false
 
 # Aerial Glider & Harpoon Grapple (Chapter II: Antariksha)
 var is_gliding: bool = false
@@ -139,6 +146,9 @@ func _ready() -> void:
 	floor_max_angle = deg_to_rad(48.0)
 	floor_stop_on_slope = true
 	floor_constant_speed = true
+	floor_block_on_wall = true
+	safe_margin = 0.08
+	up_direction = Vector3.UP
 
 	anim_player = _find_animation_player(visual_root if visual_root else self)
 	if anim_player:
@@ -154,6 +164,9 @@ func _ready() -> void:
 	if visual_root:
 		previous_yaw = visual_root.rotation.y
 		_setup_slash_arc()
+
+	if camera_arm:
+		_last_camera_yaw = camera_arm.rotation.y
 
 	health_changed.emit(health, max_health)
 	shards_changed.emit(shards_collected)
@@ -224,8 +237,12 @@ func _build_production_animation_tree() -> void:
 		{"name": "turn_left_90", "xfade_in": 0.10, "xfade_out": 0.16, "at_end": true},
 		{"name": "turn_right_90", "xfade_in": 0.10, "xfade_out": 0.16, "at_end": true},
 		{"name": "turn_180", "xfade_in": 0.12, "xfade_out": 0.18, "at_end": true},
+		{"name": "walk_start", "xfade_in": 0.08, "xfade_out": 0.16, "at_end": true},
 		{"name": "walk_stop", "xfade_in": 0.12, "xfade_out": 0.16, "at_end": true},
 		{"name": "run_stop", "xfade_in": 0.12, "xfade_out": 0.18, "at_end": true},
+		{"name": "idle_alert", "xfade_in": 0.15, "xfade_out": 0.18, "at_end": false},
+		{"name": "solar_blast", "xfade_in": 0.08, "xfade_out": 0.18, "at_end": true},
+		{"name": "meditation", "xfade_in": 0.20, "xfade_out": 0.25, "at_end": false},
 		{"name": "victory", "xfade_in": 0.20, "xfade_out": 0.25, "at_end": true},
 		{"name": "defeat", "xfade_in": 0.20, "xfade_out": 0.25, "at_end": false}
 	]
@@ -300,7 +317,10 @@ func _physics_process(delta: float) -> void:
 		hit_stop_timer -= delta
 		return
 
-	var on_floor = is_on_floor()
+	if stop_transition_timer > 0.0:
+		stop_transition_timer -= delta
+
+	var on_floor = is_on_floor() if is_inside_tree() else true
 
 	# 1. Coyote Time & Floor Tracking
 	if on_floor:
@@ -312,6 +332,8 @@ func _physics_process(delta: float) -> void:
 			landing_timer = 0.22
 		if velocity.y < 0:
 			velocity.y = -0.5 # Maintain slight downward adherence for stairs
+		elif velocity.y > 0.0 and jump_buffer_timer <= 0.0:
+			velocity.y = 0.0 # Prevent horizontal wall sliding from generating upward launch
 	else:
 		if was_on_floor:
 			was_on_floor = false
@@ -344,7 +366,17 @@ func _physics_process(delta: float) -> void:
 	var is_locked_on = camera_arm != null and camera_arm.has_method("is_locked_on") and camera_arm.is_locked_on()
 	var locked_target = camera_arm.get_locked_target() if (is_locked_on and camera_arm) else null
 
+	# Camera yaw tracking for onboarding / tutorial look action
+	if camera_arm:
+		var yaw_delta = abs(wrapf(camera_arm.rotation.y - _last_camera_yaw, -PI, PI))
+		if yaw_delta > 0.04:
+			player_action_performed.emit("look")
+			_last_camera_yaw = camera_arm.rotation.y
+
 	is_guarding = (Input.is_key_pressed(KEY_Q) or Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT) or Input.is_joy_button_pressed(0, JOY_BUTTON_LEFT_SHOULDER)) and not is_attacking and not is_dashing and not is_gliding
+	if is_guarding and not _prev_is_guarding:
+		player_action_performed.emit("guard")
+	_prev_is_guarding = is_guarding
 
 	# 4. Handle Active Harpoon Grapple
 	if is_grappling:
@@ -359,11 +391,23 @@ func _physics_process(delta: float) -> void:
 			is_gliding = true
 			velocity = -visual_root.transform.basis.z * glide_speed + Vector3(0, 4.5, 0)
 
-	# 5. Handle Active Dash
+	# 5. Handle Active Dash (Collision-aware motion sweep to prevent penetration)
 	if is_dashing:
 		dash_timer -= delta
-		velocity.x = dash_direction.x * dash_speed
-		velocity.z = dash_direction.z * dash_speed
+		var sweep_step = dash_direction * (dash_speed * delta)
+		var sweep_col = KinematicCollision3D.new()
+		if test_move(global_transform, sweep_step, sweep_col, safe_margin):
+			var normal = sweep_col.get_normal()
+			var slide_dir = (dash_direction - normal * dash_direction.dot(normal)).normalized()
+			velocity.x = slide_dir.x * dash_speed
+			velocity.z = slide_dir.z * dash_speed
+		else:
+			velocity.x = dash_direction.x * dash_speed
+			velocity.z = dash_direction.z * dash_speed
+		
+		if on_floor and velocity.y > 0.0 and jump_buffer_timer <= 0.0:
+			velocity.y = 0.0
+		
 		if dash_timer <= 0.0:
 			is_dashing = false
 		move_and_slide()
@@ -483,18 +527,25 @@ func _physics_process(delta: float) -> void:
 			velocity.x = move_toward(velocity.x, 0.0, friction * delta)
 			velocity.z = move_toward(velocity.z, 0.0, friction * delta)
 
-	# 11. Turn-In-Place Detection (when standing still)
+	# 11. Turn-In-Place & Stopping Inertia Detection
 	var horiz_speed = Vector2(velocity.x, velocity.z).length()
-	if on_floor and horiz_speed < 0.2 and not is_attacking and not is_dashing and not is_guarding:
-		var cam_rot_y = camera_arm.rotation.y if camera_arm else visual_root.rotation.y
-		var turn_diff = wrapf(cam_rot_y - visual_root.rotation.y, -PI, PI)
-		if abs(turn_diff) > deg_to_rad(70.0):
-			if turn_diff > deg_to_rad(130.0) or turn_diff < -deg_to_rad(130.0):
-				_travel_to("turn_180")
-			elif turn_diff > 0:
-				_travel_to("turn_left_90")
-			else:
-				_travel_to("turn_right_90")
+	if on_floor and not is_attacking and not is_dashing and not is_guarding and stop_transition_timer <= 0.0:
+		if horiz_speed < 0.35 and previous_horiz_speed > 6.8 and anim_player and anim_player.has_animation("run_stop"):
+			_travel_to("run_stop")
+			stop_transition_timer = 0.45
+		elif horiz_speed < 0.35 and previous_horiz_speed > 3.2 and anim_player and anim_player.has_animation("walk_stop"):
+			_travel_to("walk_stop")
+			stop_transition_timer = 0.35
+		elif horiz_speed < 0.2:
+			var cam_rot_y = camera_arm.rotation.y if camera_arm else visual_root.rotation.y
+			var turn_diff = wrapf(cam_rot_y - visual_root.rotation.y, -PI, PI)
+			if abs(turn_diff) > deg_to_rad(70.0):
+				if turn_diff > deg_to_rad(130.0) or turn_diff < -deg_to_rad(130.0):
+					_travel_to("turn_180")
+				elif turn_diff > 0:
+					_travel_to("turn_left_90")
+				else:
+					_travel_to("turn_right_90")
 
 	# 12. Dynamic Body Lean & Banking Physics
 	_update_body_lean_physics(delta, horiz_speed)
@@ -504,6 +555,7 @@ func _physics_process(delta: float) -> void:
 		jump_buffer_timer = 0.15
 
 	if jump_buffer_timer > 0.0 and (on_floor or coyote_timer > 0.0) and not is_guarding:
+		player_action_performed.emit("jump")
 		velocity.y = jump_velocity
 		jump_buffer_timer = 0.0
 		coyote_timer = 0.0
@@ -513,14 +565,32 @@ func _physics_process(delta: float) -> void:
 	if Input.is_action_just_released("jump") or (Input.is_key_pressed(KEY_SPACE) == false and not on_floor and velocity.y > 2.0):
 		velocity.y *= 0.55
 
-	# 14. Execute Kinematics with Slope Floor Snapping
-	move_and_slide()
+	# 14. Execute Kinematics with Slope Floor Snapping & Stair Stepping
+	if is_inside_tree():
+		move_and_slide()
+
+	# Stair step-up assistance when contacting step risers on floor
+	if on_floor and is_on_wall() and move_dir.length_squared() > 0.01:
+		_handle_stair_step_up(move_dir, delta)
+
+	# Ground conformance & foot planting on slopes and steps
+	_update_ground_conformance(delta)
 
 	# 15. Footstep Phase Contact Tracking
 	_update_footstep_audio(delta, on_floor, horiz_speed)
 
 	# 16. Update Animation State Machine & Blend Spaces
 	_update_locomotion_animation(delta)
+
+	# Cache current horizontal speed for deceleration stop transitions
+	previous_horiz_speed = horiz_speed
+
+	# Locomotion tutorial tracking
+	if horiz_speed > 0.4:
+		if is_sprinting and horiz_speed > 6.0:
+			player_action_performed.emit("sprint")
+		else:
+			player_action_performed.emit("move")
 
 	# 17. Prana (Energy) System & Dynamic Regeneration
 	var is_sprinting_now = (Input.is_key_pressed(KEY_SHIFT) or (InputMap.has_action("sprint") and Input.is_action_pressed("sprint"))) and not is_guarding
@@ -535,6 +605,57 @@ func _physics_process(delta: float) -> void:
 	if nearby_prompt != active_prompt_cache:
 		active_prompt_cache = nearby_prompt
 		nearby_prompt_changed.emit(active_prompt_cache)
+
+## Ground conformance: adjusts visual root height and slope alignment so feet remain firmly planted
+func _update_ground_conformance(delta: float) -> void:
+	if not visual_root or not is_inside_tree():
+		return
+
+	if not is_on_floor():
+		visual_root.position.y = lerp(visual_root.position.y, 0.0, 10.0 * delta)
+		slope_alignment_pitch = lerp_angle(slope_alignment_pitch, 0.0, 8.0 * delta)
+		return
+
+	var world_3d = get_world_3d()
+	if not world_3d:
+		return
+	var space = world_3d.direct_space_state
+	if not space:
+		return
+
+	var left_origin = global_position + visual_root.transform.basis.x * -0.20 + Vector3(0.0, 0.5, 0.0)
+	var right_origin = global_position + visual_root.transform.basis.x * 0.20 + Vector3(0.0, 0.5, 0.0)
+	var ray_down = Vector3(0.0, -1.0, 0.0)
+
+	var q_l = PhysicsRayQueryParameters3D.create(left_origin, left_origin + ray_down, 1)
+	q_l.exclude = [get_rid()]
+	var hit_l = space.intersect_ray(q_l)
+
+	var q_r = PhysicsRayQueryParameters3D.create(right_origin, right_origin + ray_down, 1)
+	q_r.exclude = [get_rid()]
+	var hit_r = space.intersect_ray(q_r)
+
+	var target_y_offset = 0.0
+	if not hit_l.is_empty() and not hit_r.is_empty():
+		var l_dist = left_origin.y - hit_l.position.y
+		var r_dist = right_origin.y - hit_r.position.y
+		var avg_dist = (l_dist + r_dist) * 0.5
+		target_y_offset = clamp(0.5 - avg_dist, -0.15, 0.15)
+	elif not hit_l.is_empty():
+		target_y_offset = clamp(0.5 - (left_origin.y - hit_l.position.y), -0.15, 0.15)
+	elif not hit_r.is_empty():
+		target_y_offset = clamp(0.5 - (right_origin.y - hit_r.position.y), -0.15, 0.15)
+
+	# Calculate slope pitch alignment based on floor normal
+	var floor_n = get_floor_normal()
+	if floor_n.dot(Vector3.UP) < 0.99 and velocity.length_squared() > 0.1:
+		var forward_h = -Vector3(visual_root.transform.basis.z.x, 0, visual_root.transform.basis.z.z).normalized()
+		var slope_grade = floor_n.dot(forward_h)
+		slope_alignment_pitch = clamp(-slope_grade * 0.25, -0.22, 0.22)
+	else:
+		slope_alignment_pitch = lerp_angle(slope_alignment_pitch, 0.0, 6.0 * delta)
+
+	visual_root.position.y = lerp(visual_root.position.y, target_y_offset, 14.0 * delta)
 
 ## Dynamic body lean: roll banking into turns and pitch lean during acceleration
 func _update_body_lean_physics(delta: float, horiz_speed: float) -> void:
@@ -551,9 +672,35 @@ func _update_body_lean_physics(delta: float, horiz_speed: float) -> void:
 	var target_bank_roll = -clamp(yaw_rate * 0.075, -0.16, 0.16) * speed_ratio
 	visual_root.rotation.z = lerp_angle(visual_root.rotation.z, target_bank_roll, 10.0 * delta)
 
-	# Forward athletic pitch lean based on speed
-	var target_forward_pitch = clamp((horiz_speed / sprint_speed) * 0.08, 0.0, 0.11)
+	# Forward athletic pitch lean based on speed + slope grade
+	var target_forward_pitch = clamp((horiz_speed / sprint_speed) * 0.08, 0.0, 0.11) + slope_alignment_pitch
 	visual_root.rotation.x = lerp_angle(visual_root.rotation.x, target_forward_pitch, 8.0 * delta)
+
+## Physically tests step risers up to 0.38m to step over stair edges cleanly
+func _handle_stair_step_up(move_dir: Vector3, delta: float) -> void:
+	var max_step_height: float = 0.38
+	var step_distance: float = clamp(Vector2(velocity.x, velocity.z).length() * delta * 2.0, 0.08, 0.35)
+	
+	# 1. Test vertical clearance overhead
+	var up_disp = Vector3(0.0, max_step_height, 0.0)
+	if test_move(global_transform, up_disp, null, safe_margin):
+		return # Overhead obstruction
+	
+	# 2. Test forward displacement at elevated height
+	var elevated_trans = global_transform.translated(up_disp)
+	var fwd_disp = move_dir.normalized() * step_distance
+	if test_move(elevated_trans, fwd_disp, null, safe_margin):
+		return # Blocked forward at step height - this is a solid wall, not a step
+	
+	# 3. Test downwards to detect step tread surface
+	var target_top_trans = elevated_trans.translated(fwd_disp)
+	var down_col = KinematicCollision3D.new()
+	if test_move(target_top_trans, Vector3(0.0, -max_step_height * 1.15, 0.0), down_col, safe_margin):
+		var normal = down_col.get_normal()
+		if normal.dot(Vector3.UP) > 0.65:
+			var step_up_amount = max_step_height - down_col.get_travel().y
+			if step_up_amount > 0.03 and step_up_amount <= max_step_height:
+				global_position += Vector3(0.0, step_up_amount + 0.02, 0.0) + fwd_disp * 0.4
 
 ## Gait stride tracking for footstep contact timing and 3D audio triggering
 func _update_footstep_audio(delta: float, on_floor: bool, horiz_speed: float) -> void:
@@ -637,6 +784,7 @@ func _trigger_grapple() -> void:
 func _trigger_dash() -> void:
 	if is_dashing or dash_cooldown_timer > 0.0:
 		return
+	player_action_performed.emit("dash")
 	is_dashing = true
 	dash_timer = dash_duration
 	dash_cooldown_timer = dash_cooldown
@@ -654,6 +802,7 @@ func _trigger_attack() -> void:
 	if is_attacking or is_dashing:
 		return
 
+	player_action_performed.emit("attack")
 	is_attacking = true
 	hit_enemies.clear()
 	combo_index += 1
@@ -677,45 +826,84 @@ func _trigger_parry() -> void:
 	_travel_to("parry")
 
 func _trigger_interaction() -> void:
+	player_action_performed.emit("interact")
 	_travel_to("interact")
 
 	if interact_raycast and interact_raycast.is_colliding():
 		var col = interact_raycast.get_collider()
-		if col and col.has_method("interact"):
-			col.interact(self)
-			interacted_with.emit(col.name)
-			interaction_requested.emit(col.name)
+		var candidate = col if (col and col.has_method("interact")) else (col.get_parent() if col else null)
+		if candidate and candidate.has_method("interact") and _can_interact_with(candidate):
+			candidate.interact(self)
+			interacted_with.emit(candidate.name)
+			interaction_requested.emit(candidate.name)
 			return
 
 	if interact_detector:
 		var overlapping_areas = interact_detector.get_overlapping_areas()
 		for area in overlapping_areas:
-			if area.has_method("interact"):
-				area.interact(self)
-				interacted_with.emit(area.name)
-				interaction_requested.emit(area.name)
-				return
-			elif area.get_parent() and area.get_parent().has_method("interact"):
-				area.get_parent().interact(self)
-				interacted_with.emit(area.get_parent().name)
-				interaction_requested.emit(area.get_parent().name)
+			if not is_instance_valid(area):
+				continue
+			var target_node = area if area.has_method("interact") else area.get_parent()
+			if target_node and target_node.has_method("interact") and _can_interact_with(target_node):
+				target_node.interact(self)
+				interacted_with.emit(target_node.name)
+				interaction_requested.emit(target_node.name)
 				return
 
 func get_nearby_interactable_prompt() -> String:
 	if interact_raycast and interact_raycast.is_colliding():
 		var col = interact_raycast.get_collider()
-		if col and (col.has_method("interact") or (col.get_parent() and col.get_parent().has_method("interact"))):
-			var t_name = col.name if col.has_method("interact") else col.get_parent().name
-			return _format_prompt(t_name)
+		var candidate = col if (col and col.has_method("interact")) else (col.get_parent() if col else null)
+		if candidate and candidate.has_method("interact") and _can_interact_with(candidate):
+			return _format_prompt(candidate.name)
 	if interact_detector:
 		var overlapping_areas = interact_detector.get_overlapping_areas()
 		for area in overlapping_areas:
 			if is_instance_valid(area):
-				if area.has_method("interact"):
-					return _format_prompt(area.name)
-				elif area.get_parent() and is_instance_valid(area.get_parent()) and area.get_parent().has_method("interact"):
-					return _format_prompt(area.get_parent().name)
+				var target_node = area if area.has_method("interact") else area.get_parent()
+				if target_node and target_node.has_method("interact") and _can_interact_with(target_node):
+					return _format_prompt(target_node.name)
 	return ""
+
+## Validates unobstructed line of sight and orientation toward interactable target
+func _can_interact_with(target: Node3D) -> bool:
+	if not target or not is_instance_valid(target):
+		return false
+	
+	var p_pos: Vector3 = global_position + Vector3(0.0, 1.1, 0.0)
+	var t_pos: Vector3 = target.global_position if target.is_inside_tree() else target.position
+	t_pos += Vector3(0.0, 0.6, 0.0)
+	
+	# Distance check (max 3.2m)
+	var dist = p_pos.distance_to(t_pos)
+	if dist > 3.2:
+		# print("DEBUG _can_interact_with: dist > 3.2: ", dist)
+		return false
+	
+	# Orientation check: Target must be in front of player (within 160 degree forward arc)
+	var forward: Vector3 = -visual_root.global_transform.basis.z.normalized() if (visual_root and visual_root.is_inside_tree()) else -global_transform.basis.z.normalized()
+	var to_t: Vector3 = (t_pos - p_pos).normalized()
+	if forward.dot(to_t) < -0.15:
+		# print("DEBUG _can_interact_with: dot < -0.15: ", forward.dot(to_t))
+		return false
+	
+	# Physics line of sight check against Environment Layer 1
+	if is_inside_tree():
+		var world_3d = get_world_3d()
+		if world_3d:
+			var space = world_3d.direct_space_state
+			if space:
+				var ray_query = PhysicsRayQueryParameters3D.create(p_pos, t_pos, 1) # Layer 1: Environment
+				ray_query.exclude = [get_rid()]
+				var hit = space.intersect_ray(ray_query)
+				if not hit.is_empty():
+					var hit_col = hit.collider
+					# If the ray hit the target itself or a child of target, line of sight is clear!
+					if hit_col == target or hit_col.get_parent() == target or target.is_ancestor_of(hit_col) or (target.get_parent() and hit_col == target.get_parent()):
+						return true
+					return false
+	
+	return true
 
 func _format_prompt(raw_name: String) -> String:
 	var n = raw_name.to_lower()
@@ -745,6 +933,23 @@ func _handle_melee_hit(target: Node3D) -> void:
 
 	if target in hit_enemies or target == self:
 		return
+
+	# Line of sight check against Environment Layer 1: attacks cannot pass through solid walls/pillars
+	if is_inside_tree():
+		var world_3d = get_world_3d()
+		if world_3d:
+			var space = world_3d.direct_space_state
+			if space:
+				var p_origin = global_position + Vector3(0.0, 1.1, 0.0)
+				var t_target = target.global_position if target.is_inside_tree() else target.position
+				t_target += Vector3(0.0, 0.9, 0.0)
+				var ray = PhysicsRayQueryParameters3D.create(p_origin, t_target, 1) # Layer 1: Environment
+				ray.exclude = [get_rid()]
+				var hit = space.intersect_ray(ray)
+				if not hit.is_empty():
+					var hit_col = hit.collider
+					if hit_col != target and hit_col.get_parent() != target and not target.is_ancestor_of(hit_col) and (target.get_parent() and hit_col != target.get_parent()):
+						return # Obstructed by solid obstacle
 
 	hit_enemies.append(target)
 	var dmg = attack_damage_base
@@ -798,6 +1003,15 @@ func _setup_slash_arc() -> void:
 	visual_root.add_child(slash_arc)
 
 func take_damage_spec(attack_spec: CombatMath.AttackSpec) -> CombatMath.CombatHitResult:
+	# Dodge Invulnerability Frames (i-frames during Prana Dash)
+	if is_dashing:
+		var dodge_res = CombatMath.CombatHitResult.new()
+		dodge_res.damage_dealt = 0
+		dodge_res.poise_damage_dealt = 0.0
+		dodge_res.was_parried = false
+		dodge_res.was_blocked = false
+		return dodge_res
+
 	var p_pos = global_position if is_inside_tree() else position
 	var p_facing = -visual_root.global_transform.basis.z if (visual_root and visual_root.is_inside_tree()) else Vector3.FORWARD
 	var def_spec = CombatMath.DefenseSpec.new("veer", p_pos, p_facing)
@@ -828,6 +1042,8 @@ func take_damage_spec(attack_spec: CombatMath.AttackSpec) -> CombatMath.CombatHi
 	return result
 
 func take_damage(amount: int) -> void:
+	if is_dashing:
+		return
 	health = max(0, health - amount)
 	health_changed.emit(health, max_health)
 	_travel_to("hit_reaction")
@@ -880,7 +1096,8 @@ func _update_locomotion_animation(delta: float) -> void:
 		return
 
 	# Priority 4: Airborne (Jump, Fall & Gliding)
-	if not is_on_floor():
+	var is_airborne = not is_on_floor() if is_inside_tree() else false
+	if is_airborne:
 		if is_gliding:
 			_travel_to("fall")
 			locomotion_state_changed.emit("Glide", horiz_speed)
@@ -898,16 +1115,26 @@ func _update_locomotion_animation(delta: float) -> void:
 		locomotion_state_changed.emit("Land", horiz_speed)
 		return
 
-	# Priority 6: Ground Locomotion via BlendSpace2D
-	_travel_to("Locomotion")
+	# Priority 5b: Stopping Inertia Deceleration Step
+	if stop_transition_timer > 0.0:
+		return
 
+	# Priority 6: Ground Locomotion via BlendSpace2D
 	if horiz_speed < 0.2:
+		if combo_window_timer > 0.0 or parry_window_timer > 0.0:
+			_travel_to("idle_alert")
+			locomotion_state_changed.emit("Alert", 0.0)
+			return
+		_travel_to("Locomotion")
 		locomotion_state_changed.emit("Idle", 0.0)
 	elif horiz_speed <= 5.0:
+		_travel_to("Locomotion")
 		locomotion_state_changed.emit("Walk", horiz_speed)
 	elif horiz_speed <= 8.5:
+		_travel_to("Locomotion")
 		locomotion_state_changed.emit("Run", horiz_speed)
 	else:
+		_travel_to("Locomotion")
 		locomotion_state_changed.emit("Sprint", horiz_speed)
 
 ## Travel to target state via AnimationTree state machine or fallback to AnimationPlayer
@@ -975,3 +1202,6 @@ func _find_skeleton(node: Node) -> Skeleton3D:
 		if s:
 			return s
 	return null
+
+func notify_action_performed(action: String) -> void:
+	player_action_performed.emit(action)

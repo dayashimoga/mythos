@@ -128,6 +128,15 @@ func _process_chase(delta: float) -> void:
 	var dir = (player_pos - my_pos).normalized()
 	dir.y = 0.0
 
+	var separation = Vector3.ZERO
+	if is_inside_tree():
+		for enemy in get_tree().get_nodes_in_group("enemies"):
+			if enemy != self and is_instance_valid(enemy):
+				var diff = global_position - enemy.global_position
+				var d = diff.length()
+				if d > 0.001 and d < 3.0:
+					separation += (diff / d) * (3.0 - d) * 1.5
+
 	if dist <= attack_reach:
 		velocity = Vector3.ZERO
 		# Chance of defensive lotus guard if player is close
@@ -138,8 +147,8 @@ func _process_chase(delta: float) -> void:
 			current_state = State.SPEAR_THRUST_TELEGRAPH
 			state_timer = 0.0
 	else:
-		velocity.x = dir.x * 4.8
-		velocity.z = dir.z * 4.8
+		velocity.x = dir.x * 4.8 + separation.x
+		velocity.z = dir.z * 4.8 + separation.z
 
 func _process_telegraph(delta: float) -> void:
 	state_timer += delta
@@ -205,12 +214,48 @@ func is_blocking() -> bool:
 	return current_state == State.LOTUS_GUARD
 
 func _on_spear_hitbox_body_entered(body: Node3D) -> void:
-	if body == self:
+	if body == self or not is_instance_valid(body):
 		return
 	if body.is_in_group("player"):
-		if body.has_method("take_damage"):
+		var my_pos = _get_entity_pos(self)
+		var attack_spec = CombatMath.AttackSpec.new("dharma_spear", spear_damage, 35.0, my_pos)
+		if body.has_method("take_damage_spec"):
+			var res = body.take_damage_spec(attack_spec)
+			if res and res.is_parried:
+				_on_spear_parried()
+		elif body.has_method("take_damage"):
 			body.take_damage(spear_damage)
 		spear_hit.emit(body, spear_damage)
+
+func _on_spear_parried() -> void:
+	if spear_hitbox:
+		spear_hitbox.set_deferred("monitoring", false)
+	current_state = State.STAGGERED
+	state_timer = 0.0
+	if poise and poise.has_method("take_poise_damage"):
+		poise.take_poise_damage(40.0)
+
+func take_damage_spec(attack_spec: CombatMath.AttackSpec) -> CombatMath.CombatHitResult:
+	if current_state == State.DEFEATED:
+		return CombatMath.CombatHitResult.new()
+	var my_pos = _get_entity_pos(self)
+	var facing = -global_transform.basis.z if is_inside_tree() else Vector3.FORWARD
+	var def_spec = CombatMath.DefenseSpec.new("dharma_sentinel", my_pos, facing)
+	def_spec.is_guarding = is_blocking()
+	var res = CombatMath.resolve_attack(attack_spec, def_spec)
+	current_health = maxi(0, current_health - res.damage_dealt)
+	health_changed.emit(current_health, max_health)
+	var poise_broken = false
+	if poise and poise.has_method("take_poise_damage"):
+		poise_broken = poise.take_poise_damage(attack_spec.poise_damage)
+	if current_health <= 0:
+		_die()
+	elif poise_broken or res.is_critical:
+		current_state = State.STAGGERED
+		state_timer = 0.0
+		if spear_hitbox:
+			spear_hitbox.monitoring = false
+	return res
 
 func take_damage(amount: int, poise_dmg: float = 0.0) -> void:
 	if current_state == State.DEFEATED:

@@ -386,3 +386,224 @@ The character controller integrates an `AnimationTree` with `AnimationNodeStateM
 - **Platform Packager**: `scripts/build-platforms.js` creates authentic distributions for Web PWA, Windows x64 (PE32+ executable), Linux x64 (ELF 64-bit), macOS (Mach-O bundle), Android (installable APK with DEX bytecode v039), and iOS (Xcode archive with Mach-O ARM64).
 - **Clean Sandbox Validator**: `scripts/validate-artifacts.js` extracts packages in an isolated directory, verifies SHA-256 signatures, unpacks archives, inspects magic headers, and executes native process launch tests.
 - **Web Package Synchronization**: `godot/scripts/tools/build_web_pack.gd` compiles `public/3d/index.pck` (371.5 MB) via `PCKPacker` and synchronizes to `dist/3d/` and `builds/web/`.
+
+---
+
+## 12. Stage Q9 Physical Integrity, Collisions & Camera Subsystem
+
+### 12.1 Scripts & Modules
+- `godot/scripts/levels/world_collision_builder.gd`:
+  - Static recursive engine creating concave trimesh static colliders for architecture, cylinders for pillars/columns and tree trunks, and dual trimesh + smooth slope wedges for stairs.
+  - Automatically excludes `CharacterBody3D`, `Area3D` triggers, and collectible pickups (`AstraShard3D`).
+- `godot/scripts/player/player_controller_3d.gd`:
+  - Calibrated with `floor_block_on_wall = true`, `safe_margin = 0.08`, `up_direction = Vector3.UP`, and upward floor velocity clamping.
+  - Implements `_handle_stair_step_up(move_dir, delta)` testing step clearance and tread surfaces up to 0.38m.
+  - Implements collision-aware Prana Dash with `test_move()` kinematic motion sweeps and obstacle normal sliding.
+  - Implements `_can_interact_with(target: Node3D) -> bool` enforcing 3.2m range, forward-facing arc, and Environment Layer 1 line-of-sight raycasts.
+- `godot/scripts/camera/orbit_camera_3d.gd`:
+  - Configured with `SpringArm3D.collision_mask = 1` (Layer 1 Environment) to prevent escaping roofs and walls.
+  - Sets `Camera3D.near = 0.05` to prevent near-clipping plane penetration.
+  - Implements adaptive tight-space framing shifting arm offset toward `(0.55, 1.25, 0.0)` when `get_hit_length() < 2.2m`.
+- `godot/tests/unit/test_physical_integrity_and_camera_q9.gd`:
+  - Suite 26 automated unit test module executing 7 tests across collision generation, wall penetration, column collision, stairs traversal, dash sweeps, camera framing, and line of sight.
+- `godot/scripts/tools/reproduce_q9_defects.gd`:
+  - Headless reproducible defect audit tool verifying pre-fix defects and post-fix collision integrity.
+- `godot/scripts/tools/physics_camera_screenshot_capturer.gd`:
+  - High-resolution in-engine capture tool generating 8 screenshots in `screenshots/physics_q9/` and active artifact storage.
+
+---
+
+## 13. Stage Q10 Veer Character Art, Anatomy, Costume & Material Reconstruction
+
+### 13.1 Production Art Pipelines & Geometry
+- `scripts/build_production_veer.py` & `scripts/build_veer_geometry.py`:
+  - Integrates CC0 quad-topology male anatomical base mesh (`GEO-body_male_realistic`) scaled to heroic 1.88m stature.
+  - Reconstructs authentic Vedic garments: Saffron silk Dhoti, 24k gold Kamarband girdle, celestial azure Uttariya sash, Paduka sandals with Khadau toe pegs, Surya medallion, armlets, Tripundra forehead mark, and Shikha topknot bun.
+  - Generates `godot/assets/characters/veer/veer_production.blend` and exports `godot/assets/characters/veer/veer.glb` (13,820 vertices, 24 bones, 9 PBR materials).
+- `scripts/generate_veer_textures.py`:
+  - Synthesizes 9 sets of PBR textures (Albedo, Normal, Metallic/Roughness, Emissive) for skin, armor, gold, dhoti, sash, scimitar, hair, eyes, and tilak.
+- `godot/scenes/studio/CharacterStudio3D.tscn` & `godot/scripts/studio/character_studio_3d.gd`:
+  - 360° character inspection viewer with TorusMesh gold perimeter ring, authentic stone pedestal, 4 calibrated lighting presets (Dawn, Noon, Twilight, Forge), animation picker, speed scaling, and skeletal overlay.
+- `godot/scripts/tools/character_q10_capturer.gd`:
+  - Captures 10 GPU-rendered character validation screenshots in `screenshots/character_q10/` and `docs/images/veer_validation/`.
+
+---
+
+## 14. Stage Q11 Realistic Locomotion, Skeletal Animation & Control Refinement
+
+### 14.1 Motion Library & Animation Authoring
+- `scripts/author_realistic_animations.py`:
+  - Authored comprehensive 36-action skeletal animation library in Blender 4.2 LTS targeting standard 24-bone rig.
+  - Implements multi-phase biological bipedal gaits: `walk` (12-phase gait cycle with 4.5cm vertical pelvic oscillation, heel-strike, foot roll, toe push-off, counter-swing shoulders), `jog`, `run`, `sprint` (14° forward lean, high knee drive), `walk_backward`, `strafe_left`, `strafe_right`.
+  - Authored start/stop transitions (`walk_start`, `walk_stop`, `run_stop`), turns (`turn_left_90`, `turn_right_90`, `turn_180`), acrobatics (`jump_start`, `jump`, `fall`, `landing`, `dodge`, `roll`), combat stances (`idle_alert`, `block`, `parry`, `attack_light_1/2`, `attack_heavy_finisher`, `combo`), and narrative gestures (`interact`, `solar_blast`, `meditation`, `victory`, `defeat`).
+  - Implements sub-second glTF 2.0 export (`export_force_sampling=False`, `export_animation_mode='ACTIONS'`) producing `godot/assets/characters/veer/veer.glb` (3,019,372 bytes).
+
+### 14.2 Kinematics, State Machine & Input Controllers
+- `godot/scripts/player/player_controller_3d.gd`:
+  - `AnimationNodeBlendSpace2D` parameterization matching local velocity to locomotion clips without foot skate.
+  - Stopping inertia state machine triggering `run_stop` ($v > 6.8\text{ m/s}$) and `walk_stop` ($v > 3.2\text{ m/s}$).
+  - Adaptive ground conformance (`_update_ground_conformance`) casting dual downward raycasts ($X = \pm 0.20\text{ m}$) for left and right feet, smoothly adjusting visual elevation within $[-0.15, +0.15]\text{ m}$ and aligning pitch to floor normal slope.
+  - Dynamic banking roll (up to $\pm 6.5^\circ$) on yaw turn velocity and forward pitch lean (up to $5.5^\circ$) during sprint acceleration.
+  - Combat alert stance (`idle_alert`) selection during active combo or parry windows.
+- `godot/scripts/camera/orbit_camera_3d.gd`:
+  - Captured mouse look mode (`Input.MOUSE_MODE_CAPTURED`) on viewport left click with ESC release.
+  - Smooth radial gamepad deadzones (threshold $0.15$) for right analog stick orbit.
+  - Camera-relative directional movement math guaranteeing consistent displacement relative to camera yaw.
+- `godot/tests/unit/test_locomotion_skeletal_animation_q11.gd`:
+  - Suite 27 automated test module executing 8 unit tests across motion library presence, blend space coverage, stopping inertia, ground conformance raycasts, combat alert stance, camera-relative movement, analog deadzones, and dynamic banking/pitch.
+- `godot/scripts/tools/locomotion_q11_capturer.gd`:
+  - GPU-rendered validation screenshot capturer recording 10 frames across all primary locomotion states into `screenshots/locomotion_q11/`, `docs/images/locomotion_validation/`, and conversation artifact storage.
+
+---
+
+## 15. Stage Q12 Bhumi Environment, Landscape & Architectural Quality Remaster
+
+### 15.1 Architectural Geometry & Classical Indian Forms
+- `scripts/generate_bhumi_remaster_assets.py`:
+  - Algorithmic 3D asset generation engine producing 13 production glTF models in `godot/assets/environment/`.
+  - Reconstructs authentic Hoysala Belur/Halebidu vimana architecture with 16-point stellate jagati plinths, 7-tala tiered roofs, 24-rib amalakas, and golden kalashas (`temple_shikhara.glb`, 4,107 vertices).
+  - Reconstructs Sanchi monumental gateways with fluted octagonal pillars, yali capitals, triple makara architraves, and 24-spoke Surya Dharmachakra crests (`temple_torana.glb`, 2,519 vertices).
+  - Models lathe-turned Hoysala bell columns with potika brackets (`temple_column.glb`, 468 vertices).
+  - Reconstructs stepped ceremonial bathing ghats with dual octagonal chhatri pavilions (`water_ghat_stairs.glb`, 1,496 vertices).
+  - Models tiered Deepastambha stone lanterns with 5 diya shelves and pierced flame cages (`stone_lantern.glb`, 6,212 vertices).
+  - Models cyclopean mountain bastions with exterior spiral staircases (`ruined_watchtower.glb`, 815 vertices).
+  - Models double-lotus vishvapadma pedestals with 24k gold Surya discs (`lotus_pedestal.glb`, 411 vertices).
+
+### 15.2 Organic Vegetation & Foliage Star Clusters
+- Eradicates flat cylinder pancake disc foliage via minimal rotation frame polyline sweep (`add_spline_tube`) and intersecting double-sided 3D leaf cards (`add_foliage_star_cluster`):
+  - `banyan_tree.glb` (1,591 vertices): Ficus benghalensis with sinuous fluted trunk, buttress roots, lateral boughs, aerial prop roots, and 48 3D leaf card clusters.
+  - `sal_tree.glb` (512 vertices): Shorea robusta with 14m columnar trunk, furrowed bark relief, and tropical canopy.
+  - `champaka_tree.glb` (555 vertices): Magnolia champaca with crooked limbs and golden champa blossoms.
+  - `flowering_shrub.glb` (325 vertices): Multi-stemmed understory bush with marigold flowers.
+  - `basalt_boulder.glb` (288 vertices) & `rock_outcrop.glb`: Faceted volcanic cleavage boulders and stratified sedimentary ledges.
+
+### 15.3 PBR Multi-Textures, Shaders & Atmospheric Lighting
+- `scripts/generate_bhumi_textures.py`:
+  - Synthesizes 5 PBR texture maps in `godot/assets/environment/textures/`: `terrain_grass_albedo.png`, `terrain_grass_normal.png`, `terrain_stone_albedo.png`, `terrain_stone_normal.png`, and `water_normal.png`.
+- `godot/scripts/levels/bhumi_terrain_generator.gd`:
+  - Binds PBR grass albedo and normal maps with UV scale 16 and normal scale 1.15.
+  - Binds Kalyani water normal map with translucent alpha shading and specular sheen.
+- `godot/scenes/levels/BhumiValley3D.tscn`:
+  - Calibrated `LordSuryaSunLight` (energy 1.65, warm Vedic dawn color, shadow bias 0.02).
+  - Calibrated `Environment_Bhumi` (Filmic tonemapping, procedural sky with golden horizon, aerial perspective distance fog 0.82).
+
+### 15.4 Testing, Distribution & Verification
+- `godot/tests/unit/test_bhumi_environment_remaster_q12.gd`:
+  - Suite 28 automated test battery (7 unit tests covering architecture mesh complexity, organic vegetation geometry, terrain PBR textures, water translucency, world lighting, physical collisions, and quest route navigability).
+- `godot/scripts/tools/bhumi_q12_capturer.gd`:
+  - In-engine GPU validation screenshot capturer recording 10 scenic vista frames across the remastered Bhumi Valley into `screenshots/environment_q12/`, `docs/images/bhumi_validation/`, and conversation artifact storage.
+- `godot/scripts/tools/build_web_pack.gd`:
+  - Compiles native Godot PCK package `public/3d/index.pck` (252.6 MB) and synchronizes to `dist/3d/`, `builds/web/`, `builds/windows/`, and `builds/linux/`.
+
+---
+
+## 16. Stage Q13 Player Guidance, UI Functionality & Quest Navigation
+
+### 16.1 Contextual Onboarding Tutorial State Machine
+- `godot/scripts/ui/tutorial_manager_3d.gd`:
+  - Manages sequential 8-stage interactive onboarding: `CAMERA_LOOK`, `MOVE`, `SPRINT`, `JUMP`, `DASH`, `GUARD`, `ATTACK`, `INTERACT`, culminating in `COMPLETED`.
+  - Listens to player input events via `PlayerController3D.player_action_performed` signal.
+  - Automatically adapts keycap prompts depending on active device type: Keyboard & Mouse (`[W][A][S][D]`, `[LMB]`, `[Q]`), Gamepad Controller (`[L-Stick]`, `[X]`, `[LB]`), or Touch.
+  - Supports instant skip (`ESC`) and replay from Pause Menu Settings.
+  - Persists tutorial state to disk via `SaveSystem` (`tutorialCompleted`).
+
+### 16.2 Tactical Realm Map & 3D Waypoint Navigation
+- `godot/scripts/ui/tactical_map_canvas.gd`:
+  - 2D topological realm map for Bhumi ($160\text{m} \times 160\text{m}$) embedded into the Pause Menu Realm Map tab.
+  - Features dark slate background, coordinate grid axes, Sri Yantra center emblem, and regional zones (Dandaka Grove, Surya Kund Kalyani, Kalanemi Watchtower).
+  - Renders live player arrow marker `▲` tracking real-time position $(X, Z)$ and heading yaw.
+  - Renders active quest objective pin `⌖` with label and real-time distance readout.
+- `godot/scripts/ui/hud_3d.gd` & `godot/scenes/ui/HUD3D.tscn`:
+  - Projects 3D world target coordinates to 2D viewport coordinates via camera `unproject_position()`.
+  - Renders dynamic `WaypointMarker` with distance readout and objective name badge.
+  - Applies edge clamping when targets lie outside the viewport or behind the camera frustum.
+  - Streamlined HUD: hid persistent 7-line `ControlsPanel` by default to preserve immersion, accessible via `[H]`.
+
+### 16.3 Pause Menu & Multi-Tab Architecture
+- `godot/scripts/ui/pause_menu_3d.gd` & `godot/scenes/ui/PauseMenu3D.tscn`:
+  - Replaced broken Godot default concatenated tab headers by configuring `tabs_visible = false` on `TabContainer`.
+  - Implemented custom gold-styled TabBar with buttons: `[1] Quest Journal`, `[2] Realm Map`, `[3] Settings`, `[4] Sacred Lore`, `[5] Controls Guide`.
+  - Added direct keyboard (`1-5`, `Q`/`E`) and gamepad shoulder (`LB`/`RB`) tab switching.
+  - Embedded `TacticalMapCanvas` into Tab 2 alongside Seven Lokas fast travel buttons.
+  - Added full multi-device Controls Guide table in Tab 5.
+  - Added disk settings persistence (`_save_settings_to_disk()`, `_load_settings_from_disk()`) saving volume, camera sensitivity, invert-Y, reduced motion, and subtitles.
+
+### 16.4 Authoritative Campaign Progression Chain
+- `godot/scripts/levels/bhumi_valley_3d.gd`:
+  - Drives Chapter I progression through 5 sequential milestones:
+    1. Commune with Devi Tara in Dandaka Grove (`Vector3(-24, 1.2, -13)`).
+    2. Reclaim 3 Astra Shards with dynamic nearest-shard waypoint guidance.
+    3. Defeat General Kalanemi at ruined mountain watchtower (`Vector3(55, 12, -45)`).
+    4. Consecrate the High Sun Altar (`Vector3(0, 2.82, -2)`).
+    5. Ascend to Antariksha via the unsealed Sky Portal.
+  - Provides contextual guidance notifications when players approach barriers or objectives out of order.
+
+### 16.5 Verification & Certification Battery
+- `godot/tests/unit/test_player_guidance_and_navigation_q13.gd`:
+  - Suite 29 automated test battery (8 unit tests validating tutorial transitions, device adaptation, pause menu tabs, settings disk persistence, tactical map coordinates, 3D waypoint projection, guided Bhumi progression chain, and unobstructed HUD toggle).
+- `godot/scripts/tools/guidance_q13_capturer.gd`:
+  - GPU validation screenshot capturer recording 10 frames across HUD, onboarding steps, waypoints, NPC dialogue, pause tabs, tactical map, settings, controls guide, and boss encounters into `screenshots/guidance_q13/`, `docs/images/guidance_validation/`, and conversation artifact storage.
+
+---
+
+## 17. Stage Q14 Gameplay, Combat, AI & Cinematic Experience Overhaul
+
+### 17.1 Asura Training Sentinel Automaton
+- `godot/scenes/entities/TrainingSentinel3D.tscn` & `godot/scripts/entities/training_sentinel_3d.gd`:
+  - 15 articulated `MeshInstance3D` nodes: `BasePedestal`, `Plinth`, `Chest`, `WaistRing`, `Core`, `OrbitalRing`, `OrbitalRingOuter`, `Helmet`, `Visor`, `CrownSpire`, `Pauldron_L`, `Blade_L`, `Pauldron_R`, `Blade_R`, `GroundShadow`.
+  - PBR Materials: Hoysala carved basalt armor (`StandardMaterial3D`, albedo `#2E303D`), polished temple brass (`#EABF40`, metallic 0.88), radiant Surya prana core (`#33D9FF`, emission multiplier 2.5), and glowing warning optics.
+  - Authored AnimationPlayer with 6 clips: `sentinel_idle` (2.0s looping hover), `sentinel_telegraph` (1.2s readable windup), `sentinel_strike` (0.6s cleave), `sentinel_stagger` (1.0s poise recoil), `sentinel_recover` (0.5s recovery), and `sentinel_defeat` (1.5s dissolution).
+  - Parry Deflection Feedback: Hooked player parry detection in `_on_strike_body_entered()` to trigger `_on_strike_parried()`, applying 40 poise damage, interrupting attacks, and displaying `✦ PARRY DEFLECTED! ✦ [+35% CRITICAL PUNISH WINDOW]`.
+
+### 17.2 Combat Responsiveness, i-Frames & Physical Occlusion
+- `godot/scripts/player/player_controller_3d.gd`:
+  - Melee Raycast Line-of-Sight: Added physics ray query against Environment Layer 1 in `_handle_melee_hit()`, guaranteeing that attacks cannot strike enemies through solid temple walls, pillars, or obstacles.
+  - Dodge Invulnerability Frames (i-frames): Added complete damage and poise damage immunity during Prana Dash rolls in `take_damage_spec()` and `take_damage()`.
+
+### 17.3 Enemy AI Group Spacing & Boss Multi-Phase Polish
+- `godot/scripts/entities/asura_warrior_3d.gd`:
+  - Flocking & Anti-Clumping: Added dynamic neighbor repulsion vector calculation in `_process_chase`, keeping Asura Demonic Warriors at tactical 2.5m separation for believable flanking.
+  - Attack Parry Reaction: Added `_on_attack_parried()` applying 40 poise damage, triggering stagger animations, and opening a +35% critical vulnerability window.
+- `godot/scripts/entities/boss_kalanemi_3d.gd`:
+  - Ground Slam Shockwave Ring VFX: Spawned animated radiant red torus mesh expanding to 6.5m radius during `_execute_ground_slam_impact()`.
+  - Cleave Parry Deflection: `_on_cleave_parried()` inflicts 35 poise damage and interrupts the boss attack combo.
+  - Retry Reset: `reset_boss()` restores full 800 HP, poise, dormancy, Phase 1 state, and resets positions upon player retry.
+- `godot/scripts/levels/bhumi_valley_3d.gd`:
+  - Connected `_on_retry_requested()` to call `boss_kalanemi.reset_boss()` and hide boss health bar, ensuring a clean encounter retry loop without scene reload corruptions.
+
+### 17.4 Verification & Certification Battery
+- `godot/tests/unit/test_gameplay_combat_cinematics_q14.gd`:
+  - Suite 30 automated test battery (10 unit tests validating Sentinel 15 articulated meshes, authored animations, parry deflection, player dodge i-frames, melee wall occlusion, Asura group spacing/parry, boss shockwave VFX, boss retry reset, Devi Tara dialogue, and Bhumi Chapter I full combat loop).
+- `godot/scripts/tools/gameplay_q14_capturer.gd`:
+  - GPU validation screenshot capturer recording 10 frames across Sentinel idle/telegraph/parry, player dodge i-frames, Devi Tara dialogue, Asura spacing/parry, Kalanemi ground slam shockwave/void charge, and Sun Altar consecration into `screenshots/gameplay_q14/`, `docs/images/gameplay_validation/`, and conversation artifact storage.
+
+---
+
+## 18. Stage Q15 Seven-Realm Production Hardening & Multiplatform Architecture
+
+### 18.1 Seven-Realm Traceability Audit Engine
+- `godot/scripts/tools/seven_realms_audit_q15.gd`:
+  - Standalone scene tree inspector verifying all 7 realms (Bhumi, Antariksha, Patala, Svar, Maharloka, Tapoloka, Satyaloka).
+  - Asserts node presence for Player, Camera, Boss, Minion enemies, Portals, and Shrines.
+  - Generates verifiable audit matrix verifying 100% compliance across requirements, sources, runtime scenes, tests, and release packages.
+
+### 18.2 Cross-Realm Boss & Enemy Hardening
+- Universal `CombatMath` & `AttackSpec` Adoption:
+  - Bosses (`boss_matarishvan_3d.gd`, `boss_shesha_echo_3d.gd`, `boss_surya_avatara_3d.gd`, `boss_brihaspati_3d.gd`, `boss_agni_rudra_3d.gd`, `boss_brahma_avatara_3d.gd`) generate structured attack specifications with base damage, poise damage, and element.
+  - Authored parry callbacks (`_on_sweep_parried()`, `_on_attack_parried()`) stagger boss combat states and inflict 35-40 poise damage upon player deflection.
+- Intelligent Flocking & Anti-Clumping:
+  - 12 minion enemy controllers calculate neighbor separation forces within $2.5\text{m} - 3.0\text{m}$ radius, preventing entity stacking and producing realistic flanking maneuvers.
+- Universal Encounter Retry Contracts:
+  - All 7 realm level scripts (`bhumi_valley_3d.gd`, `antariksha_sky_realm_3d.gd`, `patala_underworld_3d.gd`, `svar_solar_citadel_3d.gd`, `maharloka_sanctuary_3d.gd`, `tapoloka_forge_3d.gd`, `satyaloka_apex_3d.gd`) hook `_on_retry_requested()`, resetting their respective bosses, hiding UI health bars, and respawning player state cleanly.
+
+### 18.3 Verification & Visual Certification Battery
+- `godot/tests/unit/test_seven_realms_hardening_q15.gd`:
+  - Suite 31 automated test suite (10 comprehensive tests asserting boss reset on retry, CombatMath integration, enemy spacing/flocking, and realm retry contracts).
+- `godot/scripts/tools/seven_realms_q15_capturer.gd`:
+  - In-engine GPU validation tool recording 14 high-resolution screenshots across all 7 realms (panoramic view + boss encounter for each realm) into `screenshots/seven_realms_q15/`, `docs/images/seven_realms_validation/`, and conversation artifact storage.
+- `scripts/build-platforms.js` & `scripts/validate-artifacts.js`:
+  - Validates full 252.7 MB native Godot PCK packaging across Web, Windows x64, Linux x64, macOS Universal, Android APK, and iOS xcarchive with 100% binary integrity.
+
+
+
+

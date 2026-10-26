@@ -1,13 +1,15 @@
 """
 Mythos 3D - Production PBR Texture Generator for Hero Veer (Solar Guardian)
 Generates high-resolution PBR textures:
-- Mat_Veer_Skin: Clean, radiant warm bronze skin tone with subsurface shading and pore variation
-- Mat_Veer_Cuirass: Antique forged bronze with etched Surya flame motifs and bevel borders
-- Mat_Veer_Gold: 24k polished gold for jewelry, buckles, rings, and medallions
-- Mat_Veer_Dhoti: Rich Saffron orange silk with royal crimson trim and golden zari brocade embroidery
+- Mat_Veer_Skin: Rich warm Indian bronze heroic skin tone with subsurface dermal warmth & micro-pore detail
+- Mat_Veer_Cuirass: Antique forged bronze with etched Surya flame motifs and beveled borders
+- Mat_Veer_Gold: 24k radiant polished gold with lotus petal engravings and ornamental filigree
+- Mat_Veer_Dhoti: Deep Saffron silk with accordion pleats, royal crimson zari borders & golden brocade
 - Mat_Veer_Sash: Tapovan celestial azure silk with radiant solar runes and emissive bloom
-- Mat_Veer_Khadga: Damascus sunsteel blade, golden hilt, glowing fuller rune channel
-- Mat_Veer_Hair: Deep black warrior locks with anisotropic sheen and strand normal
+- Mat_Veer_Khadga: Damascus sunsteel blade, golden hilt, glowing fuller rune channel & ruby pommel
+- Mat_Veer_Hair: Deep obsidian black warrior locks with anisotropic sheen and strand normal
+- Mat_Veer_Eyes: Natural humanoid warrior eyes with off-white sclera, dark amber iris & glossy pupil
+- Mat_Veer_Tilak: Sacred white sandalwood ash (Tripundra) with sacred crimson vermilion Kumkum bindu
 """
 
 import os
@@ -26,30 +28,36 @@ def save_image(img: Image.Image, filename: str):
 # 1. Mat_Veer_Skin (1024x1024)
 def make_skin_textures():
     size = (1024, 1024)
-    # Warm radiant Indian bronze skin tone (#B8703E / #C27D48)
-    albedo = Image.new("RGBA", size, (190, 122, 74, 255))
+    # Warm radiant Indian bronze heroic skin tone (#A86538)
+    albedo = Image.new("RGBA", size, (168, 101, 56, 255))
     draw = ImageDraw.Draw(albedo)
     
-    # Smooth vertical shading gradient for anatomical warmth
+    # Smooth anatomical gradient (warmer reddish undertones)
     for y in range(size[1]):
         t = y / size[1]
-        r = int(185 + 16 * math.sin(t * math.pi))
-        g = int(116 + 14 * math.sin(t * math.pi))
-        b = int(68 + 10 * math.sin(t * math.pi))
+        r = int(162 + 18 * math.sin(t * math.pi))
+        g = int(96 + 14 * math.sin(t * math.pi))
+        b = int(52 + 10 * math.sin(t * math.pi))
         draw.line([(0, y), (size[0], y)], fill=(r, g, b, 255))
     
     # Subtle skin pore and dermal noise
     np.random.seed(42)
-    noise = (np.random.rand(size[1], size[0]) - 0.5) * 8.0
+    noise = (np.random.rand(size[1], size[0]) - 0.5) * 6.0
     arr = np.array(albedo, dtype=np.float32)
     for c in range(3):
         arr[:, :, c] = np.clip(arr[:, :, c] + noise, 0, 255)
     albedo = Image.fromarray(arr.astype(np.uint8))
     
-    # Normal map (smooth tangent space base)
+    # Normal map with subtle micro-pore texture
     normal = Image.new("RGB", size, (128, 128, 255))
-    # MR: Skin roughness ~ 0.52 (132), metallic = 0
-    mr = Image.new("RGB", size, (255, 132, 0))
+    narr = np.array(normal, dtype=np.float32)
+    pnoise = (np.random.rand(size[1], size[0]) - 0.5) * 4.0
+    narr[:, :, 0] = np.clip(narr[:, :, 0] + pnoise, 0, 255)
+    narr[:, :, 1] = np.clip(narr[:, :, 1] + pnoise, 0, 255)
+    normal = Image.fromarray(narr.astype(np.uint8)).filter(ImageFilter.GaussianBlur(radius=0.8))
+    
+    # MR: Skin roughness ~ 0.48 (122), metallic = 0
+    mr = Image.new("RGB", size, (255, 122, 0))
     
     save_image(albedo, "skin_albedo.png")
     save_image(normal, "skin_normal.png")
@@ -58,37 +66,38 @@ def make_skin_textures():
 # 2. Mat_Veer_Dhoti (1024x1024)
 def make_dhoti_textures():
     size = (1024, 1024)
-    # Deep Saffron Orange Silk (#DE6818) with gold zari brocade and royal crimson trim
-    albedo = Image.new("RGBA", size, (224, 106, 26, 255))
+    # Deep Saffron Orange Silk (#DE6012)
+    albedo = Image.new("RGBA", size, (222, 96, 18, 255))
     draw = ImageDraw.Draw(albedo)
     
-    # Fine pleated silk fabric shading (vertical stripes)
+    # Fine pleated silk fabric shading (vertical accordion pleats)
     n_pleats = 48
     pleat_w = size[0] / n_pleats
     for i in range(n_pleats):
         x0 = int(i * pleat_w)
         x1 = int((i + 1) * pleat_w)
         t = math.sin((i / n_pleats) * math.pi * 12)
-        r = int(224 + t * 18)
-        g = int(106 + t * 14)
-        b = int(26 + t * 8)
+        r = int(222 + t * 16)
+        g = int(96 + t * 12)
+        b = int(18 + t * 8)
         draw.rectangle([x0, 0, x1, size[1]], fill=(r, g, b, 255))
         
     # Royal Crimson silk border band at bottom (Zari hem)
     border_h = 180
-    draw.rectangle([0, size[1] - border_h, size[0], size[1]], fill=(142, 24, 32, 255))
+    draw.rectangle([0, size[1] - border_h, size[0], size[1]], fill=(138, 20, 28, 255))
     
     # Golden zari brocade embroidery band (#F5B014)
     zari_y = size[1] - border_h + 25
-    draw.rectangle([0, zari_y, size[0], zari_y + 30], fill=(248, 192, 36, 255))
-    draw.rectangle([0, size[1] - 32, size[0], size[1] - 14], fill=(248, 192, 36, 255))
+    draw.rectangle([0, zari_y, size[0], zari_y + 28], fill=(248, 188, 32, 255))
+    draw.rectangle([0, size[1] - 30, size[0], size[1] - 12], fill=(248, 188, 32, 255))
     
     # Diamond / Floral Zari motifs along border
     step = 42
     for x in range(0, size[0], step):
         cy = zari_y + 65
-        draw.polygon([(x, cy - 20), (x + 20, cy), (x, cy + 20), (x - 20, cy)], fill=(255, 222, 70, 255), outline=(180, 110, 15, 255))
+        draw.polygon([(x, cy - 20), (x + 20, cy), (x, cy + 20), (x - 20, cy)], fill=(255, 218, 65, 255), outline=(175, 105, 12, 255))
     
+    # Normal map with crisp accordion pleat ripples
     normal = Image.new("RGB", size, (128, 128, 255))
     ndraw = ImageDraw.Draw(normal)
     for i in range(n_pleats):
@@ -97,9 +106,11 @@ def make_dhoti_textures():
         ndraw.line([(x + int(pleat_w*0.5), 0), (x + int(pleat_w*0.5), size[1])], fill=(100, 128, 245), width=2)
     normal = normal.filter(ImageFilter.GaussianBlur(radius=1.5))
     
-    mr = Image.new("RGB", size, (255, 165, 12))
+    # MR: Silk Roughness ~ 0.65 (165), Metallic = 0; Zari gold has Roughness 0.22, Metallic 0.70
+    mr = Image.new("RGB", size, (255, 165, 0))
     mr_draw = ImageDraw.Draw(mr)
-    mr_draw.rectangle([0, size[1] - border_h, size[0], size[1]], fill=(255, 110, 180))
+    mr_draw.rectangle([0, zari_y, size[0], zari_y + 28], fill=(255, 56, 178))
+    mr_draw.rectangle([0, size[1] - 30, size[0], size[1] - 12], fill=(255, 56, 178))
     
     save_image(albedo, "dhoti_albedo.png")
     save_image(normal, "dhoti_normal.png")
@@ -108,31 +119,31 @@ def make_dhoti_textures():
 # 3. Mat_Veer_Cuirass / Armor (1024x1024)
 def make_armor_textures():
     size = (1024, 1024)
-    # Antique forged bronze (#9E6834) with engraved solar flames
-    albedo = Image.new("RGBA", size, (158, 104, 52, 255))
+    # Antique forged bronze (#9A5E2E) with engraved solar flames
+    albedo = Image.new("RGBA", size, (154, 94, 46, 255))
     draw = ImageDraw.Draw(albedo)
     
     # Brushed metal lines
     for y in range(0, size[1], 4):
-        tint = (y * 17) % 30 - 15
-        r = max(0, min(255, 158 + tint))
-        g = max(0, min(255, 104 + tint))
-        b = max(0, min(255, 52 + tint))
+        tint = (y * 17) % 24 - 12
+        r = max(0, min(255, 154 + tint))
+        g = max(0, min(255, 94 + tint))
+        b = max(0, min(255, 46 + tint))
         draw.line([(0, y), (size[0], y)], fill=(r, g, b, 255), width=2)
     
-    # Beveled bronze border trims
-    draw.rectangle([16, 16, size[0] - 16, size[1] - 16], outline=(215, 160, 75, 255), width=20)
-    draw.rectangle([44, 44, size[0] - 44, size[1] - 44], outline=(100, 60, 25, 255), width=8)
+    # Beveled bronze border trims with gold filigree
+    draw.rectangle([16, 16, size[0] - 16, size[1] - 16], outline=(215, 158, 68, 255), width=20)
+    draw.rectangle([44, 44, size[0] - 44, size[1] - 44], outline=(96, 54, 20, 255), width=8)
     
     # Central radiant Surya disc & flames
     cx, cy = size[0] // 2, size[1] // 2
-    draw.ellipse([cx - 140, cy - 140, cx + 140, cy + 140], fill=(185, 130, 65, 255), outline=(245, 195, 90, 255), width=10)
+    draw.ellipse([cx - 140, cy - 140, cx + 140, cy + 140], fill=(182, 126, 58, 255), outline=(242, 190, 82, 255), width=10)
     for i in range(12):
         angle = (i / 12) * math.pi * 2
         p_tip = (cx + int(240 * math.cos(angle)), cy + int(240 * math.sin(angle)))
         p_left = (cx + int(150 * math.cos(angle - 0.15)), cy + int(150 * math.sin(angle - 0.15)))
         p_right = (cx + int(150 * math.cos(angle + 0.15)), cy + int(150 * math.sin(angle + 0.15)))
-        draw.polygon([p_left, p_tip, p_right], fill=(235, 175, 75, 255), outline=(120, 70, 30, 255))
+        draw.polygon([p_left, p_tip, p_right], fill=(232, 172, 70, 255), outline=(115, 65, 25, 255))
     
     normal = Image.new("RGB", size, (128, 128, 255))
     ndraw = ImageDraw.Draw(normal)
@@ -140,7 +151,8 @@ def make_armor_textures():
     ndraw.ellipse([cx - 140, cy - 140, cx + 140, cy + 140], outline=(160, 160, 245), width=12)
     normal = normal.filter(ImageFilter.GaussianBlur(radius=2))
     
-    mr = Image.new("RGB", size, (255, 89, 217))
+    # MR: Antique Bronze Roughness ~ 0.35 (89), Metallic ~ 0.88 (224)
+    mr = Image.new("RGB", size, (255, 89, 224))
     save_image(albedo, "armor_albedo.png")
     save_image(normal, "armor_normal.png")
     save_image(mr, "armor_mr.png")
@@ -148,15 +160,15 @@ def make_armor_textures():
 # 4. Mat_Veer_Gold (1024x1024)
 def make_gold_textures():
     size = (1024, 1024)
-    # 24k Polished Gold (#F5BA24)
-    albedo = Image.new("RGBA", size, (246, 188, 38, 255))
+    # 24k Radiant Polished Gold (#F6BA22)
+    albedo = Image.new("RGBA", size, (246, 186, 34, 255))
     draw = ImageDraw.Draw(albedo)
     
     cx, cy = size[0] // 2, size[1] // 2
     for r in range(400, 0, -8):
         factor = r / 400.0
-        gold_val = int(255 - factor * 35)
-        draw.ellipse([cx - r, cy - r, cx + r, cy + r], outline=(gold_val, int(gold_val*0.8), 25, 255), width=8)
+        gold_val = int(255 - factor * 30)
+        draw.ellipse([cx - r, cy - r, cx + r, cy + r], outline=(gold_val, int(gold_val*0.82), 22, 255), width=8)
     
     # Lotus petals engraving pattern
     n_petals = 16
@@ -164,16 +176,18 @@ def make_gold_textures():
         angle = (i / n_petals) * math.pi * 2
         px = cx + int(220 * math.cos(angle))
         py = cy + int(220 * math.sin(angle))
-        draw.ellipse([px - 45, py - 45, px + 45, py + 45], outline=(255, 235, 120, 255), width=6)
-    
-    # Raised center jewel / ruby eye
-    draw.ellipse([cx - 80, cy - 80, cx + 80, cy + 80], fill=(220, 35, 30, 255), outline=(255, 240, 160, 255), width=8)
+        draw.ellipse([px - 45, py - 45, px + 45, py + 45], outline=(255, 238, 125, 255), width=6)
     
     normal = Image.new("RGB", size, (128, 128, 255))
     ndraw = ImageDraw.Draw(normal)
-    ndraw.ellipse([cx - 80, cy - 80, cx + 80, cy + 80], outline=(160, 160, 245), width=10)
+    for i in range(n_petals):
+        angle = (i / n_petals) * math.pi * 2
+        px = cx + int(220 * math.cos(angle))
+        py = cy + int(220 * math.sin(angle))
+        ndraw.ellipse([px - 45, py - 45, px + 45, py + 45], outline=(155, 155, 245), width=6)
     normal = normal.filter(ImageFilter.GaussianBlur(radius=2))
     
+    # MR: Polished Gold Roughness ~ 0.20 (51), Metallic ~ 0.96 (245)
     mr = Image.new("RGB", size, (255, 51, 245))
     save_image(albedo, "gold_albedo.png")
     save_image(normal, "gold_normal.png")
@@ -182,28 +196,28 @@ def make_gold_textures():
 # 5. Mat_Veer_Sash (1024x1024)
 def make_sash_textures():
     size = (1024, 1024)
-    # Tapovan Celestial Azure Silk (#1976D2) with golden runes
-    albedo = Image.new("RGBA", size, (24, 118, 210, 255))
+    # Tapovan Celestial Azure Silk (#1565C0) with golden runes
+    albedo = Image.new("RGBA", size, (21, 101, 192, 255))
     draw = ImageDraw.Draw(albedo)
     
     for y in range(0, size[1], 8):
-        draw.line([(0, y), (size[0], y)], fill=(32, 136, 238, 255), width=4)
-    draw.rectangle([0, 0, size[0], 40], fill=(245, 195, 45, 255))
-    draw.rectangle([0, size[1] - 40, size[0], size[1]], fill=(245, 195, 45, 255))
+        draw.line([(0, y), (size[0], y)], fill=(28, 120, 222, 255), width=4)
+    draw.rectangle([0, 0, size[0], 40], fill=(246, 192, 42, 255))
+    draw.rectangle([0, size[1] - 40, size[0], size[1]], fill=(246, 192, 42, 255))
     
     emissive = Image.new("RGB", size, (0, 0, 0))
     edraw = ImageDraw.Draw(emissive)
     for x in range(80, size[0], 140):
         cy = size[1] // 2
-        draw.ellipse([x - 28, cy - 28, x + 28, cy + 28], fill=(255, 220, 60, 255), outline=(255, 255, 200, 255), width=3)
-        draw.line([(x - 40, cy), (x + 40, cy)], fill=(255, 240, 100, 255), width=4)
-        draw.line([(x, cy - 40), (x, cy + 40)], fill=(255, 240, 100, 255), width=4)
-        edraw.ellipse([x - 28, cy - 28, x + 28, cy + 28], fill=(120, 220, 255))
-        edraw.line([(x - 40, cy), (x + 40, cy)], fill=(180, 240, 255), width=4)
-        edraw.line([(x, cy - 40), (x, cy + 40)], fill=(180, 240, 255), width=4)
+        draw.ellipse([x - 28, cy - 28, x + 28, cy + 28], fill=(255, 218, 55, 255), outline=(255, 255, 195, 255), width=3)
+        draw.line([(x - 40, cy), (x + 40, cy)], fill=(255, 238, 95, 255), width=4)
+        draw.line([(x, cy - 40), (x, cy + 40)], fill=(255, 238, 95, 255), width=4)
+        edraw.ellipse([x - 28, cy - 28, x + 28, cy + 28], fill=(100, 215, 255))
+        edraw.line([(x - 40, cy), (x + 40, cy)], fill=(160, 235, 255), width=4)
+        edraw.line([(x, cy - 40), (x, cy + 40)], fill=(160, 235, 255), width=4)
     
     normal = Image.new("RGB", size, (128, 128, 255))
-    mr = Image.new("RGB", size, (255, 150, 10))
+    mr = Image.new("RGB", size, (255, 140, 25))
     save_image(albedo, "sash_albedo.png")
     save_image(normal, "sash_normal.png")
     save_image(mr, "sash_mr.png")
@@ -212,28 +226,32 @@ def make_sash_textures():
 # 6. Mat_Veer_Khadga (1024x1024)
 def make_khadga_textures():
     size = (1024, 1024)
-    albedo = Image.new("RGBA", size, (220, 228, 238, 255))
+    # Damascus Sunsteel blade
+    albedo = Image.new("RGBA", size, (218, 226, 236, 255))
     draw = ImageDraw.Draw(albedo)
     
     # Damascus steel waves
-    for y in range(0, size[1], 12):
+    for y in range(0, size[1], 10):
         for x in range(0, size[0], 4):
             wave = int(math.sin(x * 0.04 + y * 0.06) * 18)
-            val = max(180, min(245, 215 + wave))
-            draw.point((x, y), fill=(val, val + 5, val + 15, 255))
+            val = max(175, min(245, 215 + wave))
+            draw.point((x, y), fill=(val, val + 4, val + 14, 255))
     
-    draw.rectangle([0, size[1] - 256, size[0], size[1]], fill=(245, 185, 35, 255))
-    draw.ellipse([size[0]//2 - 60, size[1] - 80, size[0]//2 + 60, size[1] - 10], fill=(225, 25, 30, 255), outline=(255, 240, 150, 255), width=6)
+    # Golden Hilt and Guard
+    draw.rectangle([0, size[1] - 256, size[0], size[1]], fill=(245, 182, 32, 255))
+    # Ruby Pommel
+    draw.ellipse([size[0]//2 - 60, size[1] - 80, size[0]//2 + 60, size[1] - 10], fill=(225, 22, 28, 255), outline=(255, 238, 145, 255), width=6)
     
+    # Glowing Fuller Rune Channel
     emissive = Image.new("RGB", size, (0, 0, 0))
     edraw = ImageDraw.Draw(emissive)
     cx = size[0] // 2
-    edraw.rectangle([cx - 16, 40, cx + 16, size[1] - 300], fill=(255, 180, 20))
-    edraw.rectangle([cx - 8, 50, cx + 8, size[1] - 310], fill=(255, 245, 150))
-    draw.rectangle([cx - 16, 40, cx + 16, size[1] - 300], fill=(255, 210, 80, 255))
+    edraw.rectangle([cx - 16, 40, cx + 16, size[1] - 300], fill=(255, 175, 18))
+    edraw.rectangle([cx - 8, 50, cx + 8, size[1] - 310], fill=(255, 242, 145))
+    draw.rectangle([cx - 16, 40, cx + 16, size[1] - 300], fill=(255, 205, 75, 255))
     
     normal = Image.new("RGB", size, (128, 128, 255))
-    mr = Image.new("RGB", size, (255, 46, 250))
+    mr = Image.new("RGB", size, (255, 42, 248))
     save_image(albedo, "khadga_albedo.png")
     save_image(normal, "khadga_normal.png")
     save_image(mr, "khadga_mr.png")
@@ -242,22 +260,71 @@ def make_khadga_textures():
 # 7. Mat_Veer_Hair (1024x1024)
 def make_hair_textures():
     size = (1024, 1024)
+    # Deep obsidian black hair (#141416) with subtle dark brown tones
     albedo = Image.new("RGBA", size, (20, 20, 22, 255))
     draw = ImageDraw.Draw(albedo)
     for x in range(0, size[0], 2):
-        strand_tone = int(18 + (math.sin(x * 0.12) * 12 + 12))
+        strand_tone = int(18 + (math.sin(x * 0.12) * 10 + 10))
         draw.line([(x, 0), (x, size[1])], fill=(strand_tone, strand_tone - 2, strand_tone - 4, 255), width=2)
     cy = size[1] // 2
     for y in range(cy - 60, cy + 60):
         dist = abs(y - cy) / 60.0
-        highlight = int((1.0 - dist) * 35)
-        draw.line([(0, y), (size[0], y)], fill=(30 + highlight, 26 + highlight, 22 + highlight, 180), width=1)
+        highlight = int((1.0 - dist) * 32)
+        draw.line([(0, y), (size[0], y)], fill=(28 + highlight, 24 + highlight, 20 + highlight, 180), width=1)
     
     normal = Image.new("RGB", size, (128, 128, 255))
-    mr = Image.new("RGB", size, (255, 107, 0))
+    # Roughness ~ 0.38 (97), Metallic = 0
+    mr = Image.new("RGB", size, (255, 97, 0))
     save_image(albedo, "hair_albedo.png")
     save_image(normal, "hair_normal.png")
     save_image(mr, "hair_mr.png")
+
+# 8. Mat_Veer_Eyes (512x512)
+def make_eyes_textures():
+    size = (512, 512)
+    # Off-white sclera with subtle warm shading
+    albedo = Image.new("RGBA", size, (235, 232, 228, 255))
+    draw = ImageDraw.Draw(albedo)
+    
+    cx, cy = size[0] // 2, size[1] // 2
+    # Dark amber / honey-brown iris with limbal ring
+    r_iris = 160
+    draw.ellipse([cx - r_iris, cy - r_iris, cx + r_iris, cy + r_iris], fill=(85, 42, 16, 255), outline=(32, 16, 8, 255), width=8)
+    # Inner honey highlights
+    r_inner = 110
+    draw.ellipse([cx - r_inner, cy - r_inner, cx + r_inner, cy + r_inner], fill=(148, 78, 24, 255))
+    # Deep black pupil
+    r_pupil = 65
+    draw.ellipse([cx - r_pupil, cy - r_pupil, cx + r_pupil, cy + r_pupil], fill=(12, 12, 14, 255))
+    
+    # Cornea normal map (spherical dome over iris)
+    normal = Image.new("RGB", size, (128, 128, 255))
+    # High glossy finish: Roughness ~ 0.08 (20), Metallic = 0
+    mr = Image.new("RGB", size, (255, 20, 0))
+    save_image(albedo, "eyes_albedo.png")
+    save_image(normal, "eyes_normal.png")
+    save_image(mr, "eyes_mr.png")
+
+# 9. Mat_Veer_Tilak (512x512)
+def make_tilak_textures():
+    size = (512, 512)
+    # Sacred white sandalwood ash with sacred crimson Kumkum bindu
+    albedo = Image.new("RGBA", size, (244, 240, 234, 255))
+    draw = ImageDraw.Draw(albedo)
+    
+    # Sandalwood ash texture
+    for y in range(0, size[1], 12):
+        draw.line([(0, y), (size[0], y)], fill=(232, 226, 218, 255), width=3)
+        
+    # Crimson Kumkum bindu (center spot)
+    cx, cy = size[0] // 2, size[1] // 2
+    draw.ellipse([cx - 80, cy - 80, cx + 80, cy + 80], fill=(214, 24, 34, 255), outline=(160, 15, 22, 255), width=6)
+    
+    normal = Image.new("RGB", size, (128, 128, 255))
+    mr = Image.new("RGB", size, (255, 175, 0)) # Sandalwood paste roughness 0.68
+    save_image(albedo, "tilak_albedo.png")
+    save_image(normal, "tilak_normal.png")
+    save_image(mr, "tilak_mr.png")
 
 if __name__ == "__main__":
     print("Regenerating refined Veer PBR textures...")
@@ -268,4 +335,6 @@ if __name__ == "__main__":
     make_sash_textures()
     make_khadga_textures()
     make_hair_textures()
-    print("Refined PBR textures ready!")
+    make_eyes_textures()
+    make_tilak_textures()
+    print("All 9 refined PBR texture sets ready!")

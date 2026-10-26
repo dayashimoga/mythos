@@ -333,12 +333,97 @@ func _trigger_phase_two() -> void:
 		tween.tween_property(visual_mesh, "scale", Vector3(1.15, 1.15, 1.15), 1.0)
 
 func _on_sweep_hit_body(body: Node3D) -> void:
-	if body.is_in_group("player") and body.has_method("take_damage"):
-		body.take_damage(sweep_damage, 35.0)
+	if body.is_in_group("player"):
+		var dmg = sweep_damage if not is_enraged else int(sweep_damage * 1.3)
+		var atk = CombatMath.AttackSpec.new("matarishvan_sweep", dmg, 35.0, global_position)
+		if body.has_method("take_damage_spec"):
+			var res = body.take_damage_spec(atk)
+			if res and res.was_parried:
+				_on_sweep_parried()
+		elif body.has_method("take_damage"):
+			body.take_damage(dmg)
+
+func _on_sweep_parried() -> void:
+	if sweep_hitbox:
+		sweep_hitbox.monitoring = false
+	attack_cooldown = 2.2
+	current_state = State.STAGGERED
+	state_timer = 0.0
+	_play_anim("boss_stagger")
+	AudioManager3D.play_3d("hit_impact", global_position, 1.3)
+	if poise:
+		poise.take_poise_damage(35.0)
 
 func _on_slam_hit_body(body: Node3D) -> void:
-	if body.is_in_group("player") and body.has_method("take_damage"):
-		body.take_damage(dive_damage, 60.0)
+	if body.is_in_group("player"):
+		var dmg = dive_damage if not is_enraged else int(dive_damage * 1.35)
+		var atk = CombatMath.AttackSpec.new("matarishvan_dive", dmg, 60.0, global_position)
+		if body.has_method("take_damage_spec"):
+			body.take_damage_spec(atk)
+		elif body.has_method("take_damage"):
+			body.take_damage(dmg)
+
+func take_damage_spec(attack_spec: CombatMath.AttackSpec) -> CombatMath.CombatHitResult:
+	if current_state == State.DEFEATED or current_state == State.ENRAGE_ROAR:
+		return CombatMath.CombatHitResult.new()
+
+	var my_pos = global_position if is_inside_tree() else position
+	var facing = -global_transform.basis.z if is_inside_tree() else Vector3.FORWARD
+	var def_spec = CombatMath.DefenseSpec.new("boss_matarishvan", my_pos, facing)
+	def_spec.poise = poise
+
+	var res = CombatMath.resolve_attack(attack_spec, def_spec)
+	current_health = max(0, current_health - res.damage_dealt)
+	boss_health_changed.emit(current_health, max_health)
+
+	if current_phase == 1 and current_health <= int(max_health * 0.5):
+		_trigger_phase_two()
+		return res
+
+	if poise and res.poise_damage_dealt > 0.0:
+		var broken = poise.take_poise_damage(res.poise_damage_dealt)
+		if broken and current_state != State.STAGGERED:
+			current_state = State.STAGGERED
+			state_timer = 0.0
+			_play_anim("boss_stagger")
+			if sweep_hitbox: sweep_hitbox.monitoring = false
+			if slam_hitbox: slam_hitbox.monitoring = false
+
+	if is_inside_tree() and visual_mesh:
+		var tween = create_tween()
+		tween.tween_property(visual_mesh, "scale", Vector3(1.1, 0.9, 1.1), 0.08)
+		tween.tween_property(visual_mesh, "scale", Vector3.ONE, 0.12)
+
+	if current_health <= 0:
+		_die()
+
+	return res
+
+func reset_boss() -> void:
+	current_health = max_health
+	if poise:
+		poise.current = poise.max_poise
+		poise.is_staggered = false
+	current_phase = 1
+	is_enraged = false
+	current_state = State.IDLE
+	state_timer = 0.0
+	attack_cooldown = 0.0
+	velocity = Vector3.ZERO
+	if visual_mesh:
+		visual_mesh.scale = Vector3.ONE
+	if sweep_hitbox:
+		sweep_hitbox.monitoring = false
+	if slam_hitbox:
+		slam_hitbox.monitoring = false
+	if telegraph_ring:
+		telegraph_ring.visible = false
+	if tempest_core_light:
+		tempest_core_light.light_color = Color(0.25, 0.85, 1.0)
+		tempest_core_light.light_energy = 4.0
+	boss_health_changed.emit(current_health, max_health)
+	boss_phase_changed.emit(1)
+	_play_anim("boss_idle")
 
 func _die() -> void:
 	current_state = State.DEFEATED

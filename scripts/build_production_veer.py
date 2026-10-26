@@ -39,21 +39,24 @@ def clear_scene():
     bpy.ops.wm.read_factory_settings(use_empty=True)
 
 def setup_materials():
-    """Create 7 Principled BSDF materials with PBR texture nodes."""
+    """Create 9 Principled BSDF materials with PBR texture nodes and double-sided rendering."""
     materials = {}
     mat_configs = [
-        ("Mat_Veer_Skin", "skin_albedo.png", "skin_normal.png", "skin_mr.png", None),
-        ("Mat_Veer_Cuirass", "armor_albedo.png", "armor_normal.png", "armor_mr.png", None),
-        ("Mat_Veer_Gold", "gold_albedo.png", "gold_normal.png", "gold_mr.png", None),
-        ("Mat_Veer_Dhoti", "dhoti_albedo.png", "dhoti_normal.png", "dhoti_mr.png", None),
-        ("Mat_Veer_Sash", "sash_albedo.png", "sash_normal.png", "sash_mr.png", "sash_emissive.png"),
-        ("Mat_Veer_Khadga", "khadga_albedo.png", "khadga_normal.png", "khadga_mr.png", "khadga_emissive.png"),
-        ("Mat_Veer_Hair", "hair_albedo.png", "hair_normal.png", "hair_mr.png", None),
+        ("Mat_Veer_Skin", "skin_albedo.png", "skin_normal.png", "skin_mr.png", None),      # 0
+        ("Mat_Veer_Cuirass", "armor_albedo.png", "armor_normal.png", "armor_mr.png", None),# 1
+        ("Mat_Veer_Gold", "gold_albedo.png", "gold_normal.png", "gold_mr.png", None),      # 2
+        ("Mat_Veer_Dhoti", "dhoti_albedo.png", "dhoti_normal.png", "dhoti_mr.png", None),   # 3
+        ("Mat_Veer_Sash", "sash_albedo.png", "sash_normal.png", "sash_mr.png", "sash_emissive.png"), # 4
+        ("Mat_Veer_Khadga", "khadga_albedo.png", "khadga_normal.png", "khadga_mr.png", "khadga_emissive.png"), # 5
+        ("Mat_Veer_Hair", "hair_albedo.png", "hair_normal.png", "hair_mr.png", None),      # 6
+        ("Mat_Veer_Eyes", "eyes_albedo.png", "eyes_normal.png", "eyes_mr.png", None),      # 7
+        ("Mat_Veer_Tilak", "tilak_albedo.png", "tilak_normal.png", "tilak_mr.png", None),  # 8
     ]
 
     for name, alb, nrm, mr, em in mat_configs:
         mat = bpy.data.materials.new(name=name)
         mat.use_nodes = True
+        mat.use_backface_culling = False # Ensure double-sided rendering for garments, ornaments, and hair
         nodes = mat.node_tree.nodes
         links = mat.node_tree.links
         nodes.clear()
@@ -120,6 +123,8 @@ def main():
         mats_dict["Mat_Veer_Sash"],    # 4
         mats_dict["Mat_Veer_Khadga"],  # 5
         mats_dict["Mat_Veer_Hair"],    # 6
+        mats_dict["Mat_Veer_Eyes"],    # 7
+        mats_dict["Mat_Veer_Tilak"],   # 8
     ]
 
     # 2. Load Base Mesh & Eyes from CC0 bundle
@@ -166,6 +171,15 @@ def main():
         for v in eye.data.vertices:
             v.co.z -= min_z
 
+    # Smart Project Body Mesh into unified 0..1 UV layout
+    bpy.ops.object.select_all(action='DESELECT')
+    body_obj.select_set(True)
+    bpy.context.view_layer.objects.active = body_obj
+    bpy.ops.object.mode_set(mode='EDIT')
+    bpy.ops.mesh.select_all(action='SELECT')
+    bpy.ops.uv.smart_project(angle_limit=1.15, island_margin=0.02)
+    bpy.ops.object.mode_set(mode='OBJECT')
+
     # Assign materials to body and eyes
     for m in mat_list:
         body_obj.data.materials.append(m)
@@ -173,7 +187,14 @@ def main():
         for m in mat_list:
             eye.data.materials.append(m)
         if len(eye.data.materials) > 0:
-            eye.data.materials[0] = mats_dict["Mat_Veer_Gold"]
+            eye.data.materials[0] = mats_dict["Mat_Veer_Eyes"]
+        bpy.ops.object.select_all(action='DESELECT')
+        eye.select_set(True)
+        bpy.context.view_layer.objects.active = eye
+        bpy.ops.object.mode_set(mode='EDIT')
+        bpy.ops.mesh.select_all(action='SELECT')
+        bpy.ops.uv.smart_project(angle_limit=1.15, island_margin=0.02)
+        bpy.ops.object.mode_set(mode='OBJECT')
 
     # 3. Create All 3D Vedic Pieces
     topknot_obj = geom.create_topknot_and_hair(mat_list)
@@ -211,8 +232,17 @@ def main():
     bpy.context.view_layer.objects.active = body_obj
     bpy.ops.object.join()
     body_obj.name = "VeerSkinnedHumanoidMesh"
+    body_obj.data.name = "Veer_Humanoid_Mesh"
 
-    print(f"Unified mesh '{body_obj.name}' compiled with {len(body_obj.data.vertices)} vertices across {len(body_obj.data.materials)} material slots.")
+    # Shift entire unified character geometry so sandal soles rest precisely at Z = 0.0m on the ground
+    min_mesh_z = min(v.co.z for v in body_obj.data.vertices)
+    dz = -min_mesh_z # typically +0.024
+    if abs(dz) > 1e-4:
+        for v in body_obj.data.vertices:
+            v.co.z += dz
+        print(f"Shifted unified character mesh by dz = +{dz:.4f}m so bottom of sandals rests precisely at Z = 0.0m.")
+
+    print(f"Unified mesh '{body_obj.name}' (data: '{body_obj.data.name}') compiled with {len(body_obj.data.vertices)} vertices across {len(body_obj.data.materials)} material slots.")
 
     # 5. Build 24-bone Armature in exact Rest Pose
     arm_data = bpy.data.armatures.new("VeerArmature")
@@ -225,8 +255,12 @@ def main():
 
     def make_bone(name, head, tail, parent_name=None):
         b = ebones.new(name)
-        b.head = head
-        b.tail = tail
+        if name != "root":
+            b.head = (head[0], head[1], head[2] + dz)
+            b.tail = (tail[0], tail[1], tail[2] + dz)
+        else:
+            b.head = head
+            b.tail = tail
         if parent_name and parent_name in ebones:
             b.parent = ebones[parent_name]
         return b
@@ -238,7 +272,7 @@ def main():
     make_bone("chest", (0, 0, 1.18), (0, 0, 1.45), "spine_01")
     make_bone("neck", (0, 0, 1.45), (0, 0, 1.54), "chest")
     make_bone("head", (0, 0, 1.54), (0, 0, 1.74), "neck")
-    make_bone("topknot", (0, -0.04, 1.74), (0, -0.06, 1.86), "head")
+    make_bone("topknot", (0, -0.035, 1.78), (0, -0.05, 1.88), "head")
 
     # Left arm
     make_bone("shoulder_l", (0.05, 0, 1.40), (0.18, 0, 1.38), "chest")
@@ -254,14 +288,14 @@ def main():
     make_bone("socket_right_hand", (-0.46, -0.11, 0.74), (-0.48, -0.13, 0.68), "hand_r")
 
     # Left leg
-    make_bone("thigh_l", (0.11, 0, 0.90), (0.12, 0.01, 0.50), "pelvis")
-    make_bone("shin_l", (0.12, 0.01, 0.50), (0.15, 0.06, 0.10), "thigh_l")
-    make_bone("foot_l", (0.15, 0.06, 0.10), (0.15, -0.12, 0.02), "shin_l")
+    make_bone("thigh_l", (0.11, 0, 0.90), (0.14, 0.01, 0.50), "pelvis")
+    make_bone("shin_l", (0.14, 0.01, 0.50), (0.19, 0.035, 0.12), "thigh_l")
+    make_bone("foot_l", (0.19, 0.035, 0.12), (0.215, -0.12, 0.02), "shin_l")
 
     # Right leg
-    make_bone("thigh_r", (-0.11, 0, 0.90), (-0.12, 0.01, 0.50), "pelvis")
-    make_bone("shin_r", (-0.12, 0.01, 0.50), (-0.15, 0.06, 0.10), "thigh_r")
-    make_bone("foot_r", (-0.15, 0.06, 0.10), (-0.15, -0.12, 0.02), "shin_r")
+    make_bone("thigh_r", (-0.11, 0, 0.90), (-0.14, 0.01, 0.50), "pelvis")
+    make_bone("shin_r", (-0.14, 0.01, 0.50), (-0.19, 0.035, 0.12), "thigh_r")
+    make_bone("foot_r", (-0.19, 0.035, 0.12), (-0.215, -0.12, 0.02), "shin_r")
 
     # Sash
     make_bone("sash_01", (0.0, -0.12, 0.94), (0.08, -0.15, 0.68), "pelvis")
@@ -308,7 +342,35 @@ def main():
 
     print(f"Surya-Kripana scimitar ({len(khadga_v_indices)} vertices) rigidly bound to socket_right_hand.")
 
-    # 8. Author 22 Skeletal Animations on Armature
+    # 7b. Lock Paduka sandals and foot vertices to foot_l and foot_r (eliminate any root bone pinning)
+    vg_root = body_obj.vertex_groups.get("root")
+    vg_foot_l = body_obj.vertex_groups.get("foot_l")
+    vg_foot_r = body_obj.vertex_groups.get("foot_r")
+
+    sandal_foot_count = 0
+    for v in body_obj.data.vertices:
+        if v.co.z < 0.11:
+            if vg_root:
+                try:
+                    vg_root.remove([v.index])
+                except:
+                    pass
+            if v.co.x > 0.0:
+                if vg_foot_l:
+                    vg_foot_l.add([v.index], 1.0, 'REPLACE')
+                    sandal_foot_count += 1
+            else:
+                if vg_foot_r:
+                    vg_foot_r.add([v.index], 1.0, 'REPLACE')
+                    sandal_foot_count += 1
+        elif v.co.z < 0.48:
+            if vg_root:
+                try:
+                    vg_root.remove([v.index])
+                except:
+                    pass
+
+    print(f"Paduka sandals and feet ({sandal_foot_count} vertices) locked to foot_l & foot_r with zero root pinning.")
     if arm_obj.animation_data is None:
         arm_obj.animation_data_create()
 
@@ -434,6 +496,81 @@ def main():
         ],
     }
     add_anim("walk", 1.0, walk_kfs)
+
+    # 2b. Walk Backward (1.0s)
+    walk_bwd_kfs = {
+        "thigh_l": [
+            (0.0, euler_to_quat(math.radians(25.0), 0.0, 0.0)),
+            (0.5, euler_to_quat(math.radians(-20.0), 0.0, 0.0)),
+            (1.0, euler_to_quat(math.radians(25.0), 0.0, 0.0)),
+        ],
+        "shin_l": [
+            (0.0, euler_to_quat(math.radians(5.0), 0.0, 0.0)),
+            (0.5, euler_to_quat(math.radians(20.0), 0.0, 0.0)),
+            (1.0, euler_to_quat(math.radians(5.0), 0.0, 0.0)),
+        ],
+        "thigh_r": [
+            (0.0, euler_to_quat(math.radians(-20.0), 0.0, 0.0)),
+            (0.5, euler_to_quat(math.radians(25.0), 0.0, 0.0)),
+            (1.0, euler_to_quat(math.radians(-20.0), 0.0, 0.0)),
+        ],
+        "shin_r": [
+            (0.0, euler_to_quat(math.radians(20.0), 0.0, 0.0)),
+            (0.5, euler_to_quat(math.radians(5.0), 0.0, 0.0)),
+            (1.0, euler_to_quat(math.radians(20.0), 0.0, 0.0)),
+        ],
+        "arm_l": [
+            (0.0, euler_to_quat(math.radians(-15.0), 0.0, 0.0)),
+            (0.5, euler_to_quat(math.radians(15.0), 0.0, 0.0)),
+            (1.0, euler_to_quat(math.radians(-15.0), 0.0, 0.0)),
+        ],
+        "arm_r": [
+            (0.0, euler_to_quat(math.radians(15.0), 0.0, 0.0)),
+            (0.5, euler_to_quat(math.radians(-15.0), 0.0, 0.0)),
+            (1.0, euler_to_quat(math.radians(15.0), 0.0, 0.0)),
+        ],
+    }
+    add_anim("walk_backward", 1.0, walk_bwd_kfs)
+
+    # 2c. Strafe Left (0.8s)
+    strafe_l_kfs = {
+        "pelvis": [
+            (0.0, euler_to_quat(0.0, 0.0, math.radians(-3.0))),
+            (0.4, euler_to_quat(0.0, 0.0, math.radians(3.0))),
+            (0.8, euler_to_quat(0.0, 0.0, math.radians(-3.0))),
+        ],
+        "thigh_l": [
+            (0.0, euler_to_quat(0.0, 0.0, math.radians(-12.0))),
+            (0.4, euler_to_quat(0.0, 0.0, math.radians(4.0))),
+            (0.8, euler_to_quat(0.0, 0.0, math.radians(-12.0))),
+        ],
+        "thigh_r": [
+            (0.0, euler_to_quat(0.0, 0.0, math.radians(-4.0))),
+            (0.4, euler_to_quat(0.0, 0.0, math.radians(12.0))),
+            (0.8, euler_to_quat(0.0, 0.0, math.radians(-4.0))),
+        ],
+    }
+    add_anim("strafe_left", 0.8, strafe_l_kfs)
+
+    # 2d. Strafe Right (0.8s)
+    strafe_r_kfs = {
+        "pelvis": [
+            (0.0, euler_to_quat(0.0, 0.0, math.radians(3.0))),
+            (0.4, euler_to_quat(0.0, 0.0, math.radians(-3.0))),
+            (0.8, euler_to_quat(0.0, 0.0, math.radians(3.0))),
+        ],
+        "thigh_l": [
+            (0.0, euler_to_quat(0.0, 0.0, math.radians(4.0))),
+            (0.4, euler_to_quat(0.0, 0.0, math.radians(-12.0))),
+            (0.8, euler_to_quat(0.0, 0.0, math.radians(4.0))),
+        ],
+        "thigh_r": [
+            (0.0, euler_to_quat(0.0, 0.0, math.radians(12.0))),
+            (0.4, euler_to_quat(0.0, 0.0, math.radians(-4.0))),
+            (0.8, euler_to_quat(0.0, 0.0, math.radians(12.0))),
+        ],
+    }
+    add_anim("strafe_right", 0.8, strafe_r_kfs)
 
     # 3. Run & Jog (0.75s)
     run_kfs = {
@@ -625,15 +762,40 @@ def main():
     atk1_kfs = {
         "chest": [
             (0.0, euler_to_quat(0.0, 0.0, 0.0)),
-            (0.15, euler_to_quat(0.0, math.radians(25.0), 0.0)),
-            (0.35, euler_to_quat(math.radians(5.0), math.radians(-35.0), 0.0)),
-            (0.6, euler_to_quat(0.0, 0.0, 0.0)),
+            (0.12, euler_to_quat(math.radians(-10.0), math.radians(25.0), 0.0)),
+            (0.28, euler_to_quat(math.radians(8.0), math.radians(-35.0), math.radians(-5.0))),
+            (0.48, euler_to_quat(math.radians(2.0), math.radians(-10.0), 0.0)),
+            (0.60, euler_to_quat(0.0, 0.0, 0.0)),
         ],
         "arm_r": [
             (0.0, euler_to_quat(0.0, 0.0, 0.0)),
-            (0.15, euler_to_quat(math.radians(-30.0), math.radians(-25.0), math.radians(30.0))),
-            (0.35, euler_to_quat(math.radians(15.0), math.radians(50.0), math.radians(-15.0))),
-            (0.6, euler_to_quat(0.0, 0.0, 0.0)),
+            (0.12, euler_to_quat(math.radians(35.0), math.radians(-25.0), math.radians(35.0))),
+            (0.28, euler_to_quat(math.radians(-75.0), math.radians(25.0), math.radians(-30.0))),
+            (0.48, euler_to_quat(math.radians(-20.0), math.radians(10.0), 0.0)),
+            (0.60, euler_to_quat(0.0, 0.0, 0.0)),
+        ],
+        "forearm_r": [
+            (0.0, euler_to_quat(0.0, 0.0, 0.0)),
+            (0.12, euler_to_quat(math.radians(20.0), math.radians(-15.0), 0.0)),
+            (0.28, euler_to_quat(math.radians(-45.0), math.radians(-30.0), 0.0)),
+            (0.48, euler_to_quat(math.radians(-10.0), 0.0, 0.0)),
+            (0.60, euler_to_quat(0.0, 0.0, 0.0)),
+        ],
+        "arm_l": [
+            (0.0, euler_to_quat(0.0, 0.0, 0.0)),
+            (0.12, euler_to_quat(math.radians(-20.0), math.radians(15.0), 0.0)),
+            (0.28, euler_to_quat(math.radians(45.0), math.radians(-25.0), math.radians(25.0))),
+            (0.60, euler_to_quat(0.0, 0.0, 0.0)),
+        ],
+        "thigh_r": [
+            (0.0, euler_to_quat(0.0, 0.0, 0.0)),
+            (0.28, euler_to_quat(math.radians(-20.0), 0.0, 0.0)),
+            (0.60, euler_to_quat(0.0, 0.0, 0.0)),
+        ],
+        "thigh_l": [
+            (0.0, euler_to_quat(0.0, 0.0, 0.0)),
+            (0.28, euler_to_quat(math.radians(25.0), 0.0, 0.0)),
+            (0.60, euler_to_quat(0.0, 0.0, 0.0)),
         ],
     }
     add_anim("attack_light_1", 0.6, atk1_kfs)
@@ -749,7 +911,8 @@ def main():
         export_format='GLB',
         use_selection=True,
         export_animations=True,
-        export_nla_strips=True,
+        export_animation_mode='ACTIONS',
+        export_force_sampling=False,
         export_skins=True,
         export_morph=False,
         export_apply=False

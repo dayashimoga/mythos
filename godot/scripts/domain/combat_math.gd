@@ -50,6 +50,10 @@ class AttackSpec:
 	var element: Element = Element.SURYA
 	var origin: Vector3 = Vector3.ZERO
 
+	var base_damage: int:
+		get: return damage
+		set(v): damage = v
+
 	func _init(p_id: String = "", p_dmg: int = 25, p_poise: float = 30.0, p_origin: Vector3 = Vector3.ZERO) -> void:
 		attacker_id = p_id
 		damage = p_dmg
@@ -76,6 +80,20 @@ class CombatHitResult:
 	var was_blocked: bool = false
 	var triggered_stagger: bool = false
 	var is_critical: bool = false
+
+	var is_parried: bool:
+		get: return was_parried
+		set(v): was_parried = v
+
+	var is_blocked: bool:
+		get: return was_blocked
+		set(v): was_blocked = v
+
+	func _init(p_hit: bool = true, p_parried: bool = false, p_stagger: bool = false, p_dmg: int = 0, p_poise: float = 0.0) -> void:
+		was_parried = p_parried
+		triggered_stagger = p_stagger
+		damage_dealt = p_dmg
+		poise_damage_dealt = p_poise
 
 ## Evaluates attack against defense state authoritatively matching legacy TypeScript formulas.
 static func resolve_attack(attack: AttackSpec, defense: DefenseSpec) -> CombatHitResult:

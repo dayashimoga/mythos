@@ -236,6 +236,14 @@ static func play_fanfare() -> void:
 	if instance:
 		instance.play_sfx("quest_complete", 1.0, 2.0)
 
+static func play_hit() -> void:
+	if instance:
+		instance.play_sfx("hit_impact", 1.0, 1.0)
+
+static func play_parry() -> void:
+	if instance:
+		instance.play_sfx("parry_clink", 1.0, 2.0)
+
 static func set_ambience(realm_id: String) -> void:
 	if instance:
 		instance.play_realm_ambience(realm_id)

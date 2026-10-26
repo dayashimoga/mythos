@@ -2,14 +2,17 @@ class_name HUD3D
 extends CanvasLayer
 
 ## Production 3D HUD & Interface Suite
-## Manages Player Vitality (HP & Prana), Active Weapon Badge, Compass & Waypoint Navigation,
-## Quest Objectives, Astra Shards, Contextual Interaction Prompts, Boss Health, Dialogue Modals,
-## Combat Lock-On, Pause Menu Suite, Dev Drawer, Subtitles, and Defeat/Victory Overlays.
+## Manages Player Vitality (HP & Prana), Active Weapon Badge, Compass & 3D Waypoint Navigation,
+## Interactive First-Time Tutorial Onboarding, Quest Objectives, Contextual Prompts, Boss Health,
+## Dialogue Modals, Pause Menu Suite, Dev Drawer, Subtitles, and Defeat/Victory Overlays.
 
 signal dialogue_advanced()
 signal retry_requested()
 signal ascend_requested()
 signal menu_toggled(is_open: bool)
+
+const PauseMenuScript = preload("res://scripts/ui/pause_menu_3d.gd")
+const TutorialManagerScript = preload("res://scripts/ui/tutorial_manager_3d.gd")
 
 # Player Vitality & Indicators
 @onready var health_bar: ProgressBar = find_child("HealthBar", true, false) as ProgressBar
@@ -25,18 +28,30 @@ signal menu_toggled(is_open: bool)
 @onready var banner_label: Label = find_child("BannerLabel", true, false) as Label
 @onready var banner_panel: PanelContainer = find_child("BannerPanel", true, false) as PanelContainer
 
-const PauseMenuScript = preload("res://scripts/ui/pause_menu_3d.gd")
-
 # Navigation & Pause Menu
-@onready var pause_menu: Control = $PauseMenu if has_node("PauseMenu") else null
+@onready var pause_menu: Control = find_child("PauseMenu", true, false) as Control
 @onready var btn_menu: Button = find_child("BtnMenu", true, false) as Button
 
-# Dev Drawer Controls
+# Dev Drawer & Controls Panel
 @onready var btn_dev_toggle: Button = find_child("BtnDevToggle", true, false) as Button
 @onready var dev_drawer: PanelContainer = find_child("DevDrawer", true, false) as PanelContainer
 @onready var btn_studio: Button = find_child("BtnStudio", true, false) as Button
 @onready var btn_toggle_touch: Button = find_child("BtnToggleTouch", true, false) as Button
 @onready var touch_controls: Control = find_child("TouchControls", true, false) as Control
+@onready var controls_panel: PanelContainer = find_child("ControlsPanel", true, false) as PanelContainer
+
+# Interactive Tutorial Onboarding
+@onready var tutorial_panel: PanelContainer = find_child("TutorialPanel", true, false) as PanelContainer
+@onready var tutorial_title_label: Label = find_child("TutorialTitleLabel", true, false) as Label
+@onready var tutorial_step_label: Label = find_child("TutorialStepLabel", true, false) as Label
+@onready var tutorial_desc_label: Label = find_child("TutorialDescLabel", true, false) as Label
+@onready var tutorial_keycap_label: Label = find_child("TutorialKeycapLabel", true, false) as Label
+var tutorial_manager: RefCounted = null
+
+# Screen-Space 3D Waypoint Marker
+@onready var waypoint_marker: Control = find_child("WaypointMarker", true, false) as Control
+@onready var waypoint_dist_label: Label = find_child("WaypointDistanceLabel", true, false) as Label
+@onready var waypoint_name_label: Label = find_child("WaypointNameLabel", true, false) as Label
 
 # Contextual Interaction Prompt
 @onready var context_prompt_panel: PanelContainer = find_child("ContextPromptPanel", true, false) as PanelContainer
@@ -72,11 +87,13 @@ var next_realm_scene_path: String = "res://scenes/levels/AntarikshaSkyRealm3D.ts
 
 # Waypoint Navigation target
 var waypoint_target_pos: Vector3 = Vector3.ZERO
+var waypoint_label_text: String = ""
 var has_waypoint: bool = false
 var prompt_anim_time: float = 0.0
 var subtitle_timer: float = 0.0
 
 func _ready() -> void:
+	_ensure_node_references()
 	if banner_panel:
 		banner_panel.visible = false
 	if target_lock_panel:
@@ -95,12 +112,16 @@ func _ready() -> void:
 		subtitle_panel.visible = false
 	if dev_drawer:
 		dev_drawer.visible = false
+	if controls_panel:
+		controls_panel.visible = false
+	if waypoint_marker:
+		waypoint_marker.visible = false
+
+	_setup_tutorial_manager()
 
 	if btn_menu:
 		btn_menu.pressed.connect(func():
-			if pause_menu:
-				pause_menu.toggle_menu(current_realm_name, quest_mgr_ref)
-				menu_toggled.emit(pause_menu.visible)
+			_toggle_pause_menu()
 		)
 
 	if btn_dev_toggle:
@@ -131,6 +152,16 @@ func _ready() -> void:
 				get_tree().change_scene_to_file(next_realm_scene_path)
 		)
 
+	if pause_menu:
+		pause_menu.tutorial_reset_requested.connect(func():
+			if tutorial_manager:
+				tutorial_manager.restart_tutorial()
+		)
+		pause_menu.tutorial_skip_requested.connect(func():
+			if tutorial_manager:
+				tutorial_manager.skip_tutorial()
+		)
+
 	# Wire Touch buttons
 	var btn_atk = find_child("BtnTouchAttack", true, false)
 	var btn_jump = find_child("BtnTouchJump", true, false)
@@ -140,44 +171,139 @@ func _ready() -> void:
 
 	if btn_atk:
 		btn_atk.pressed.connect(func():
+			if tutorial_manager: tutorial_manager.notify_input_device(TutorialManagerScript.InputDevice.TOUCH)
 			if player_ref: player_ref._trigger_attack()
 		)
 	if btn_jump:
 		btn_jump.pressed.connect(func():
+			if tutorial_manager: tutorial_manager.notify_input_device(TutorialManagerScript.InputDevice.TOUCH)
 			if player_ref and (player_ref.is_on_floor() or player_ref.coyote_timer > 0.0):
 				player_ref.velocity.y = player_ref.jump_velocity
+				if player_ref.has_signal("player_action_performed"):
+					player_ref.player_action_performed.emit("jump")
 		)
 	if btn_dash:
 		btn_dash.pressed.connect(func():
+			if tutorial_manager: tutorial_manager.notify_input_device(TutorialManagerScript.InputDevice.TOUCH)
 			if player_ref: player_ref._trigger_dash()
 		)
 	if btn_guard:
 		btn_guard.pressed.connect(func():
+			if tutorial_manager: tutorial_manager.notify_input_device(TutorialManagerScript.InputDevice.TOUCH)
 			if player_ref: player_ref.is_guarding = not player_ref.is_guarding
 		)
 	if btn_interact:
 		btn_interact.pressed.connect(func():
+			if tutorial_manager: tutorial_manager.notify_input_device(TutorialManagerScript.InputDevice.TOUCH)
 			if dialogue_panel and dialogue_panel.visible:
 				_advance_dialogue()
 			elif player_ref:
 				player_ref._trigger_interaction()
 		)
 
+func _ensure_node_references() -> void:
+	if not health_bar: health_bar = find_child("HealthBar", true, false) as ProgressBar
+	if not health_label: health_label = find_child("HealthLabel", true, false) as Label
+	if not energy_bar: energy_bar = find_child("EnergyBar", true, false) as ProgressBar
+	if not energy_label: energy_label = find_child("EnergyLabel", true, false) as Label
+	if not weapon_badge_label: weapon_badge_label = find_child("WeaponBadgeLabel", true, false) as Label
+	if not compass_label: compass_label = find_child("CompassLabel", true, false) as Label
+	if not shards_label: shards_label = find_child("ShardsLabel", true, false) as Label
+	if not objective_label: objective_label = find_child("ObjectiveLabel", true, false) as Label
+	if not pause_menu: pause_menu = find_child("PauseMenu", true, false) as Control
+	if not controls_panel: controls_panel = find_child("ControlsPanel", true, false) as PanelContainer
+	if not tutorial_panel: tutorial_panel = find_child("TutorialPanel", true, false) as PanelContainer
+	if not tutorial_title_label: tutorial_title_label = find_child("TutorialTitleLabel", true, false) as Label
+	if not tutorial_step_label: tutorial_step_label = find_child("TutorialStepLabel", true, false) as Label
+	if not tutorial_desc_label: tutorial_desc_label = find_child("TutorialDescLabel", true, false) as Label
+	if not tutorial_keycap_label: tutorial_keycap_label = find_child("TutorialKeycapLabel", true, false) as Label
+	if not waypoint_marker: waypoint_marker = find_child("WaypointMarker", true, false) as Control
+	if not waypoint_dist_label: waypoint_dist_label = find_child("WaypointDistanceLabel", true, false) as Label
+	if not waypoint_name_label: waypoint_name_label = find_child("WaypointNameLabel", true, false) as Label
+	if not context_prompt_panel: context_prompt_panel = find_child("ContextPromptPanel", true, false) as PanelContainer
+	if not context_prompt_label: context_prompt_label = find_child("ContextPromptLabel", true, false) as Label
+	if not subtitle_panel: subtitle_panel = find_child("SubtitlePanel", true, false) as PanelContainer
+	if not subtitle_label: subtitle_label = find_child("SubtitleLabel", true, false) as Label
+
+func _setup_tutorial_manager() -> void:
+	if not tutorial_manager:
+		tutorial_manager = TutorialManagerScript.new()
+		tutorial_manager.step_changed.connect(_on_tutorial_step_changed)
+		tutorial_manager.tutorial_finished.connect(_on_tutorial_finished)
+
+func _on_tutorial_step_changed(step_id: int, title: String, instruction: String, keycap: String) -> void:
+	if not tutorial_panel:
+		return
+	if tutorial_title_label:
+		tutorial_title_label.text = title
+	if tutorial_desc_label:
+		tutorial_desc_label.text = instruction
+	if tutorial_keycap_label:
+		tutorial_keycap_label.text = keycap
+	if tutorial_step_label:
+		tutorial_step_label.text = "Action %d of 8  •  [ESC: Skip]" % step_id
+	tutorial_panel.visible = true
+
+func _on_tutorial_finished() -> void:
+	if tutorial_panel:
+		var tween = create_tween()
+		tween.tween_property(tutorial_panel, "modulate:a", 0.0, 0.4)
+		tween.tween_callback(func():
+			tutorial_panel.visible = false
+			tutorial_panel.modulate.a = 1.0
+		)
+	show_banner("✦ ONBOARDING COMPLETE: Walk with Surya's grace! ✦", 3.0)
+
 func _process(delta: float) -> void:
-	# Update Compass & Waypoint Needle
+	# 1. Update Compass & Waypoint Needle
 	_update_compass_navigation()
 
-	# Pulse Context Prompt
+	# 2. Update 3D Screen-Space Waypoint Marker Projection & Clamping
+	_update_waypoint_projection()
+
+	# 3. Pulse Context Prompt
 	if context_prompt_panel and context_prompt_panel.visible:
 		prompt_anim_time += delta * 4.0
 		var pulse = 0.85 + sin(prompt_anim_time) * 0.15
 		context_prompt_panel.modulate.a = pulse
 
-	# Handle Subtitle Decay
+	# 4. Handle Subtitle Decay
 	if subtitle_panel and subtitle_panel.visible:
 		subtitle_timer -= delta
 		if subtitle_timer <= 0.0:
 			subtitle_panel.visible = false
+
+func _update_waypoint_projection() -> void:
+	if not waypoint_marker:
+		return
+
+	if not has_waypoint:
+		waypoint_marker.visible = false
+		return
+
+	var cam = get_viewport().get_camera_3d() if is_inside_tree() else null
+	if not cam:
+		waypoint_marker.visible = false
+		return
+
+	var is_behind = cam.is_position_behind(waypoint_target_pos)
+	var screen_pos = cam.unproject_position(waypoint_target_pos)
+	var vp_size = get_viewport().get_visible_rect().size
+	var pad = 42.0
+
+	if is_behind:
+		screen_pos = vp_size - screen_pos
+
+	var clamped_x = clamp(screen_pos.x, pad, vp_size.x - pad)
+	var clamped_y = clamp(screen_pos.y, pad, vp_size.y - pad)
+
+	waypoint_marker.position = Vector2(clamped_x, clamped_y) - waypoint_marker.size * 0.5
+	waypoint_marker.visible = true
+
+	var player_pos = player_ref.global_position if (player_ref and player_ref.is_inside_tree()) else Vector3.ZERO
+	var dist = player_pos.distance_to(waypoint_target_pos)
+	if waypoint_dist_label:
+		waypoint_dist_label.text = "%dm" % int(dist)
 
 func _update_compass_navigation() -> void:
 	if not compass_label:
@@ -233,14 +359,21 @@ func _update_compass_navigation() -> void:
 		compass_label.text = "🧭 %s %03d°" % [card, int(heading_deg)]
 
 func _unhandled_input(event: InputEvent) -> void:
-	if pause_menu and (event is InputEventKey and event.pressed and not event.echo and (event.keycode == KEY_ESCAPE or event.keycode == KEY_P)):
-		pause_menu.toggle_menu(current_realm_name, quest_mgr_ref)
-		menu_toggled.emit(pause_menu.visible)
+	# Detect input device type and notify tutorial
+	if tutorial_manager:
+		if event is InputEventKey or event is InputEventMouse:
+			tutorial_manager.notify_input_device(TutorialManagerScript.InputDevice.KEYBOARD_MOUSE)
+		elif event is InputEventJoypadButton or event is InputEventJoypadMotion:
+			tutorial_manager.notify_input_device(TutorialManagerScript.InputDevice.GAMEPAD)
+
+	# Toggle Pause Menu
+	if (event is InputEventKey and event.pressed and not event.echo and (event.keycode == KEY_ESCAPE or event.keycode == KEY_P)) or \
+	   (event is InputEventJoypadButton and event.pressed and event.button_index == JOY_BUTTON_START):
+		_toggle_pause_menu()
 		get_viewport().set_input_as_handled()
 		return
-	elif pause_menu and (event is InputEventJoypadButton and event.pressed and event.button_index == JOY_BUTTON_START):
-		pause_menu.toggle_menu(current_realm_name, quest_mgr_ref)
-		menu_toggled.emit(pause_menu.visible)
+	elif event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_H:
+		toggle_controls_panel()
 		get_viewport().set_input_as_handled()
 		return
 	elif event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_F1:
@@ -263,6 +396,18 @@ func _unhandled_input(event: InputEvent) -> void:
 			get_tree().change_scene_to_file(next_realm_scene_path)
 			get_viewport().set_input_as_handled()
 
+func _toggle_pause_menu() -> void:
+	if not pause_menu:
+		return
+	var p_pos = player_ref.global_position if (player_ref and player_ref.is_inside_tree()) else Vector3.ZERO
+	var p_yaw = player_ref.visual_root.rotation.y if (player_ref and player_ref.visual_root) else 0.0
+	pause_menu.toggle_menu(current_realm_name, quest_mgr_ref, p_pos, p_yaw, waypoint_target_pos, waypoint_label_text)
+	menu_toggled.emit(pause_menu.visible)
+
+func toggle_controls_panel() -> void:
+	if controls_panel:
+		controls_panel.visible = not controls_panel.visible
+
 func toggle_dev_drawer() -> void:
 	if dev_drawer:
 		dev_drawer.visible = not dev_drawer.visible
@@ -278,11 +423,20 @@ func set_player(player: PlayerController3D) -> void:
 			player_ref.prana_changed.connect(update_prana)
 		if player_ref.has_signal("nearby_prompt_changed") and not player_ref.nearby_prompt_changed.is_connected(set_context_prompt):
 			player_ref.nearby_prompt_changed.connect(set_context_prompt)
+		if player_ref.has_signal("player_action_performed") and not player_ref.player_action_performed.is_connected(_on_player_action):
+			player_ref.player_action_performed.connect(_on_player_action)
 		if player_ref.camera_arm:
 			if player_ref.camera_arm.has_signal("target_locked") and not player_ref.camera_arm.target_locked.is_connected(_on_target_locked):
 				player_ref.camera_arm.target_locked.connect(_on_target_locked)
 			if player_ref.camera_arm.has_signal("target_unlocked") and not player_ref.camera_arm.target_unlocked.is_connected(_on_target_unlocked):
 				player_ref.camera_arm.target_unlocked.connect(_on_target_unlocked)
+
+	if tutorial_manager:
+		tutorial_manager.start_tutorial()
+
+func _on_player_action(action: String) -> void:
+	if tutorial_manager:
+		tutorial_manager.notify_action(action)
 
 func set_quest_manager(quest_mgr: QuestManager, realm_name: String = "Bhumi") -> void:
 	quest_mgr_ref = quest_mgr
@@ -326,12 +480,18 @@ func update_objective(text: String) -> void:
 
 func set_waypoint(pos: Vector3, label: String = "") -> void:
 	waypoint_target_pos = pos
+	waypoint_label_text = label
 	has_waypoint = true
+	if waypoint_name_label and not label.is_empty():
+		waypoint_name_label.text = label
 	if not label.is_empty():
 		update_objective(label)
 
 func clear_waypoint() -> void:
 	has_waypoint = false
+	waypoint_label_text = ""
+	if waypoint_marker:
+		waypoint_marker.visible = false
 
 func set_context_prompt(text: String) -> void:
 	if not context_prompt_panel or not context_prompt_label:
@@ -367,7 +527,6 @@ func show_banner(text: String, duration: float = 3.5) -> void:
 	tween.tween_property(banner_panel, "modulate:a", 0.0, 0.6)
 	tween.tween_callback(func(): banner_panel.visible = false)
 
-# Stage E Dialogue Modal System
 func show_dialogue(speaker: String, role: String, text: String, on_advance: Callable = Callable()) -> void:
 	_on_dialogue_callback = on_advance
 	if dialogue_speaker:
@@ -391,7 +550,6 @@ func hide_dialogue() -> void:
 	if dialogue_panel:
 		dialogue_panel.visible = false
 
-# Stage E Boss Health Bar
 func show_boss_bar(boss_name: String, current_hp: int, max_hp: int) -> void:
 	if boss_name_label:
 		boss_name_label.text = "☠ " + boss_name.to_upper() + " ☠"
@@ -410,7 +568,6 @@ func hide_boss_bar() -> void:
 	if boss_panel:
 		boss_panel.visible = false
 
-# Stage E Defeat & Victory Overlays
 func show_defeat_overlay() -> void:
 	if defeat_overlay:
 		defeat_overlay.visible = true

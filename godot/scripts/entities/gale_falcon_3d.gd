@@ -175,18 +175,18 @@ func _process_staggered(delta: float) -> void:
 		if poise:
 			poise.current = poise.max_poise
 
-func take_damage(amount: int, poise_dmg: float = 15.0) -> void:
+func take_damage_spec(attack_spec: CombatMath.AttackSpec) -> CombatMath.CombatHitResult:
 	if current_state == State.DEFEATED:
-		return
+		return CombatMath.CombatHitResult.new(false, false, false, 0, 0.0)
 
-	var final_dmg = amount
+	var final_dmg = attack_spec.base_damage
 	if current_state == State.STAGGERED:
-		final_dmg = int(amount * 1.35)
+		final_dmg = int(attack_spec.base_damage * 1.35)
 
 	current_health = max(0, current_health - final_dmg)
-
+	var broken = false
 	if poise:
-		var broken = poise.take_poise_damage(poise_dmg)
+		broken = poise.take_poise_damage(attack_spec.poise_damage)
 		if broken and current_state != State.STAGGERED:
 			current_state = State.STAGGERED
 			state_timer = 0.0
@@ -202,9 +202,32 @@ func take_damage(amount: int, poise_dmg: float = 15.0) -> void:
 	if current_health <= 0:
 		_die()
 
+	return CombatMath.CombatHitResult.new(true, false, broken, final_dmg, attack_spec.poise_damage)
+
+func take_damage(amount: int, poise_dmg: float = 15.0) -> void:
+	var spec = CombatMath.AttackSpec.new("generic", amount, poise_dmg, Vector3.ZERO)
+	take_damage_spec(spec)
+
 func _on_talon_hit_body(body: Node3D) -> void:
-	if body.is_in_group("player") and body.has_method("take_damage"):
-		body.take_damage(talon_damage, 20.0)
+	if body.is_in_group("player"):
+		if talon_hitbox:
+			talon_hitbox.set_deferred("monitoring", false)
+		if body.has_method("take_damage_spec"):
+			var spec = CombatMath.AttackSpec.new("falcon_talon", talon_damage, 20.0, global_position)
+			var res = body.take_damage_spec(spec)
+			if res and res.is_parried:
+				_on_talon_parried()
+		elif body.has_method("take_damage"):
+			body.take_damage(talon_damage)
+
+func _on_talon_parried() -> void:
+	current_state = State.STAGGERED
+	state_timer = 0.0
+	_play_anim("stagger")
+	if talon_hitbox:
+		talon_hitbox.monitoring = false
+	if poise:
+		poise.take_poise_damage(30.0)
 
 func _die() -> void:
 	current_state = State.DEFEATED

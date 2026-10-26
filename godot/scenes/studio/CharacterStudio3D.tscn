@@ -53,14 +53,14 @@ metallic = 0.88
 roughness = 0.2
 emission_enabled = true
 emission = Color(1, 0.65, 0, 1)
-emission_energy_multiplier = 0.8
+emission_energy_multiplier = 0.25
 
-[sub_resource type="CylinderMesh" id="CylinderMesh_gold_ring"]
+[sub_resource type="TorusMesh" id="TorusMesh_gold_ring"]
 material = SubResource("StandardMaterial3D_gold_ring")
-top_radius = 2.22
-bottom_radius = 2.22
-height = 0.04
-radial_segments = 36
+inner_radius = 2.18
+outer_radius = 2.22
+rings = 48
+ring_segments = 16
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_brazier"]
 albedo_color = Color(1, 0.65, 0.1, 1)
@@ -104,10 +104,10 @@ light_energy = 1.2
 omni_range = 6.0
 
 [node name="UnderLight3D" type="OmniLight3D" parent="Lights"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.6, 0)
 light_color = Color(1, 0.45, 0.05, 1)
-light_energy = 0.2
-omni_range = 3.5
+light_energy = 0.05
+omni_range = 4.0
 
 [node name="SanctumFloor" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.45, 0)
@@ -138,8 +138,8 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.175, 0)
 mesh = SubResource("CylinderMesh_pedestal")
 
 [node name="GoldRing" type="MeshInstance3D" parent="Pedestal"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.01, 0)
-mesh = SubResource("CylinderMesh_gold_ring")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.005, 0)
+mesh = SubResource("TorusMesh_gold_ring")
 
 [node name="VeerModel" parent="Pedestal" instance=ExtResource("2_veer")]
 

@@ -114,7 +114,16 @@ func _process_stalk(delta: float) -> void:
 	_safe_look_at(player_pos)
 
 	var dir = (player_pos - my_pos).normalized() if dist > 0.001 else Vector3.FORWARD
-	velocity = dir * 5.5
+	var separation = Vector3.ZERO
+	if is_inside_tree():
+		for enemy in get_tree().get_nodes_in_group("enemies"):
+			if enemy != self and is_instance_valid(enemy):
+				var diff = global_position - enemy.global_position
+				var d = diff.length()
+				if d > 0.001 and d < 3.0:
+					separation += (diff / d) * (3.0 - d) * 1.5
+
+	velocity = dir * 5.5 + separation
 
 	if dist <= attack_reach:
 		current_state = State.TWIN_SLASH
@@ -160,10 +169,21 @@ func _on_strike_hitbox_body_entered(body: Node3D) -> void:
 	if body.is_in_group("player"):
 		var attack_spec = CombatMath.AttackSpec.new("naga_constrictor", melee_damage, 35.0, global_position)
 		if body.has_method("take_damage_spec"):
-			body.take_damage_spec(attack_spec)
+			var res = body.take_damage_spec(attack_spec)
+			if res and res.is_parried:
+				_on_attack_parried()
 		elif body.has_method("take_damage"):
 			body.take_damage(melee_damage)
 		strike_connected.emit(body, melee_damage)
+
+func _on_attack_parried() -> void:
+	if strike_hitbox:
+		strike_hitbox.set_deferred("monitoring", false)
+	current_state = State.STAGGERED
+	state_timer = 0.0
+	_play_anim("stagger")
+	if poise and poise.has_method("take_poise_damage"):
+		poise.take_poise_damage(35.0)
 
 func take_damage_spec(attack_spec: CombatMath.AttackSpec) -> CombatMath.CombatHitResult:
 	if current_state == State.DEFEATED:

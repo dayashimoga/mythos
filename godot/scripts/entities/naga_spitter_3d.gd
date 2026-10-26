@@ -121,7 +121,17 @@ func _process_slither(delta: float) -> void:
 	elif dist < preferred_distance - 2.0:
 		move_vec -= to_player * 0.8
 
-	velocity = move_vec.normalized() * 4.2
+	# Separation force
+	var separation = Vector3.ZERO
+	if is_inside_tree():
+		for enemy in get_tree().get_nodes_in_group("enemies"):
+			if enemy != self and is_instance_valid(enemy):
+				var diff = global_position - enemy.global_position
+				var d = diff.length()
+				if d > 0.001 and d < 3.0:
+					separation += (diff / d) * (3.0 - d) * 1.5
+
+	velocity = move_vec.normalized() * 4.2 + separation
 	_safe_look_at(player_pos)
 
 	if state_timer >= 2.2:
@@ -161,7 +171,11 @@ func _process_spit(delta: float) -> void:
 			if dist <= preferred_distance + 4.0:
 				var attack_spec = CombatMath.AttackSpec.new("naga_spitter", spit_damage, 20.0, global_position)
 				if target_player.has_method("take_damage_spec"):
-					target_player.take_damage_spec(attack_spec)
+					var res = target_player.take_damage_spec(attack_spec)
+					if res and res.is_parried:
+						current_state = State.STAGGERED
+						state_timer = 0.0
+						_play_anim("stagger")
 				elif target_player.has_method("take_damage"):
 					target_player.take_damage(spit_damage)
 

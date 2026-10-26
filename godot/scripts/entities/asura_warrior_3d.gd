@@ -143,21 +143,35 @@ func _process_chase(delta: float) -> void:
 		var target_rot = atan2(to_player.x, to_player.z)
 		visual.rotation.y = lerp_angle(visual.rotation.y, target_rot, delta * 6.0)
 
+	# Group spacing: Add gentle repulsion from nearby allies to prevent clumping
+	var separation = Vector3.ZERO
+	if is_inside_tree():
+		var allies = get_tree().get_nodes_in_group("enemies")
+		for ally in allies:
+			if ally != self and is_instance_valid(ally):
+				var to_self = global_position - ally.global_position
+				to_self.y = 0.0
+				var d_sq = to_self.length_squared()
+				if d_sq > 0.01 and d_sq < 6.25: # within 2.5m
+					separation += to_self.normalized() * (2.5 - sqrt(d_sq)) * 0.8
+
 	if dist <= attack_range and attack_cooldown <= 0.0:
 		_start_telegraph()
 	elif attack_cooldown > 0.0 and dist <= 4.2:
 		# Tactical lateral strafing/circling around player while on cooldown
 		var dir = to_player.normalized()
 		var tangent = Vector3(-dir.z, 0.0, dir.x) * strafe_direction
-		velocity.x = tangent.x * (move_speed * 0.75)
-		velocity.z = tangent.z * (move_speed * 0.75)
+		var combined = (tangent + separation).normalized()
+		velocity.x = combined.x * (move_speed * 0.75)
+		velocity.z = combined.z * (move_speed * 0.75)
 		_play_anim("walk")
 	else:
 		# Pursue (run if far, walk if closing in)
 		var dir = to_player.normalized()
 		var spd = move_speed * 1.35 if dist > 6.0 else move_speed
-		velocity.x = dir.x * spd
-		velocity.z = dir.z * spd
+		var combined = (dir + separation).normalized()
+		velocity.x = combined.x * spd
+		velocity.z = combined.z * spd
 		_play_anim("run" if dist > 6.0 else "walk")
 
 func _start_telegraph() -> void:
@@ -234,7 +248,22 @@ func _process_staggered(delta: float) -> void:
 func _on_strike_body_entered(body: Node3D) -> void:
 	if body is PlayerController3D and body.has_method("take_damage_spec"):
 		var atk = CombatMath.AttackSpec.new("asura_warrior", 18, 22.0, global_position)
-		body.take_damage_spec(atk)
+		var res = body.take_damage_spec(atk)
+		if res and res.was_parried:
+			_on_attack_parried()
+
+func _on_attack_parried() -> void:
+	if strike_area:
+		strike_area.monitoring = false
+	current_state = State.STAGGERED
+	_play_anim("stagger", 0.05)
+	AudioManager3D.play_3d("hit_impact", global_position, 1.3)
+	if poise:
+		poise.take_poise_damage(40.0)
+	if status_label:
+		status_label.text = "✦ ATTACK PARRIED! ✦\n[ +35% CRITICAL STAGGER ]"
+		status_label.modulate = Color(0.2, 1.0, 0.4)
+	staggered.emit()
 
 func take_damage_spec(attack_spec: CombatMath.AttackSpec) -> CombatMath.CombatHitResult:
 	if current_state == State.DEFEATED:

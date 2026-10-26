@@ -262,19 +262,92 @@ func _trigger_phase_2() -> void:
 	boss_phase_changed.emit(2)
 
 func _on_ray_hit_body(body: Node3D) -> void:
-	if body == self:
+	if body == self or not is_instance_valid(body):
 		return
 	if body.is_in_group("player"):
-		if body.has_method("take_damage"):
+		var attack_spec = CombatMath.AttackSpec.new("brahma_ray", quad_ray_damage, 35.0, _get_entity_pos(self))
+		if body.has_method("take_damage_spec"):
+			var res = body.take_damage_spec(attack_spec)
+			if res and res.is_parried:
+				_on_attack_parried(45.0)
+		elif body.has_method("take_damage"):
 			body.take_damage(quad_ray_damage)
 		quad_ray_fired.emit(body, quad_ray_damage)
 
 func _on_slam_hit_body(body: Node3D) -> void:
-	if body == self:
+	if body == self or not is_instance_valid(body):
 		return
 	if body.is_in_group("player"):
-		if body.has_method("take_damage"):
+		var attack_spec = CombatMath.AttackSpec.new("dharma_slam", wheel_slam_damage, 50.0, _get_entity_pos(self))
+		if body.has_method("take_damage_spec"):
+			var res = body.take_damage_spec(attack_spec)
+			if res and res.is_parried:
+				_on_attack_parried(60.0)
+		elif body.has_method("take_damage"):
 			body.take_damage(wheel_slam_damage)
+
+func _on_attack_parried(poise_damage: float = 45.0) -> void:
+	if ray_hitbox:
+		ray_hitbox.set_deferred("monitoring", false)
+	if slam_hitbox:
+		slam_hitbox.set_deferred("monitoring", false)
+	current_state = State.STAGGERED
+	state_timer = 0.0
+	AudioManager3D.play_hit()
+	if poise and poise.has_method("take_poise_damage"):
+		poise.take_poise_damage(poise_damage)
+
+func take_damage_spec(attack_spec: CombatMath.AttackSpec) -> CombatMath.CombatHitResult:
+	if current_state == State.DEFEATED:
+		return CombatMath.CombatHitResult.new()
+	var my_pos = _get_entity_pos(self)
+	var facing = -global_transform.basis.z if is_inside_tree() else Vector3.FORWARD
+	var def_spec = CombatMath.DefenseSpec.new("boss_brahma_avatara", my_pos, facing)
+	var res = CombatMath.resolve_attack(attack_spec, def_spec)
+	current_health = maxi(0, current_health - res.damage_dealt)
+	boss_health_changed.emit(current_health, max_health)
+
+	if current_phase == 1 and current_health <= max_health / 2 and current_health > 0:
+		_trigger_phase_2()
+		return res
+
+	var poise_broken = false
+	if poise and poise.has_method("take_poise_damage"):
+		poise_broken = poise.take_poise_damage(attack_spec.poise_damage)
+
+	if current_health <= 0:
+		_die()
+	elif poise_broken and not is_enraged:
+		current_state = State.STAGGERED
+		state_timer = 0.0
+		velocity = Vector3.ZERO
+		if ray_hitbox:
+			ray_hitbox.monitoring = false
+		if slam_hitbox:
+			slam_hitbox.monitoring = false
+	return res
+
+func reset_boss() -> void:
+	current_health = max_health
+	current_phase = 1
+	is_enraged = false
+	current_state = State.IDLE
+	state_timer = 0.0
+	attack_cooldown = 1.0
+	velocity = Vector3.ZERO
+	if ray_hitbox:
+		ray_hitbox.monitoring = false
+	if slam_hitbox:
+		slam_hitbox.monitoring = false
+	if brahma_halo_light:
+		brahma_halo_light.light_color = Color(1.0, 0.85, 0.2, 1.0)
+		brahma_halo_light.light_energy = 4.0
+	if is_inside_tree():
+		scale = Vector3.ONE
+	if poise:
+		poise.current = max_poise
+	boss_health_changed.emit(current_health, max_health)
+	boss_phase_changed.emit(1)
 
 func take_damage(amount: int, poise_dmg: float = 0.0) -> void:
 	if current_state == State.DEFEATED:

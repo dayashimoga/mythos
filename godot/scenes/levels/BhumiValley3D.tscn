@@ -26,13 +26,13 @@
 [ext_resource type="PackedScene" path="res://assets/environment/flowering_shrub.glb" id="24_shrub"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_Surya"]
-sky_top_color = Color(0.22, 0.44, 0.76, 1)
-sky_horizon_color = Color(0.94, 0.76, 0.48, 1)
-sky_curve = 0.08
-ground_bottom_color = Color(0.18, 0.15, 0.12, 1)
-ground_horizon_color = Color(0.76, 0.60, 0.40, 1)
-ground_curve = 0.06
-sun_angle_max = 26.0
+sky_top_color = Color(0.24, 0.48, 0.82, 1)
+sky_horizon_color = Color(0.96, 0.78, 0.52, 1)
+sky_curve = 0.09
+ground_bottom_color = Color(0.20, 0.16, 0.12, 1)
+ground_horizon_color = Color(0.72, 0.56, 0.38, 1)
+ground_curve = 0.05
+sun_angle_max = 28.0
 
 [sub_resource type="Sky" id="Sky_Vedic"]
 sky_material = SubResource("ProceduralSkyMaterial_Surya")
@@ -41,18 +41,19 @@ sky_material = SubResource("ProceduralSkyMaterial_Surya")
 background_mode = 2
 sky = SubResource("Sky_Vedic")
 ambient_light_source = 3
-ambient_light_color = Color(0.74, 0.76, 0.82, 1)
-ambient_light_sky_contribution = 0.6
-ambient_light_energy = 0.95
+ambient_light_color = Color(0.70, 0.75, 0.85, 1)
+ambient_light_sky_contribution = 0.55
+ambient_light_energy = 0.90
 tonemap_mode = 2
+tonemap_exposure = 1.05
 glow_enabled = true
-glow_intensity = 0.35
-glow_bloom = 0.18
+glow_intensity = 0.28
+glow_bloom = 0.14
 fog_enabled = true
-fog_light_color = Color(0.88, 0.80, 0.70, 1)
-fog_density = 0.0032
-fog_aerial_perspective = 0.68
-fog_sky_affect = 0.38
+fog_light_color = Color(0.90, 0.82, 0.72, 1)
+fog_density = 0.0024
+fog_aerial_perspective = 0.82
+fog_sky_affect = 0.25
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_barrier"]
 size = Vector3(10, 8, 3)
@@ -76,11 +77,11 @@ environment = SubResource("Environment_Bhumi")
 
 [node name="LordSuryaSunLight" type="DirectionalLight3D" parent="."]
 transform = Transform3D(0.819152, -0.40558, 0.40558, 0, 0.707107, 0.707107, -0.573576, -0.579228, 0.579228, 0, 32, 0)
-light_color = Color(1, 0.94, 0.85, 1)
-light_energy = 1.45
+light_color = Color(1, 0.94, 0.82, 1)
+light_energy = 1.65
 shadow_enabled = true
-shadow_bias = 0.04
-directional_shadow_max_distance = 150.0
+shadow_bias = 0.02
+directional_shadow_max_distance = 160.0
 
 [node name="TerrainContainer" type="Node3D" parent="."]
 
@@ -299,10 +300,10 @@ transform = Transform3D(1.15, 0, 0, 0, 1.15, 0, 0, 0, 1.15, 30, 2.2, -16)
 [node name="Interactables" type="Node3D" parent="."]
 
 [node name="SunShrine3D" parent="Interactables" instance=ExtResource("4_shrine")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.4, -2)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.82, -2)
 
 [node name="Shard_01_Sanctum" parent="Interactables" instance=ExtResource("5_shard")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.4, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.6, -2)
 
 [node name="Shard_02_Kalyani" parent="Interactables" instance=ExtResource("5_shard")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 0.2, 45)

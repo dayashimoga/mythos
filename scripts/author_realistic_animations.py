@@ -21,7 +21,7 @@ if not arm_obj or not body_obj:
     raise RuntimeError("Could not find Veer armature or mesh in blend file!")
 
 # Validate and repair mesh deform weights
-body_obj.data.name = "Veer_Mesh"
+body_obj.data.name = "Veer_Humanoid_Mesh"
 fixed = body_obj.data.validate(verbose=False)
 print("Mesh validation & repair status:", fixed)
 
@@ -89,6 +89,11 @@ def add_full_action(name, duration_sec, rot_dict, loc_dict=None, fps=30.0):
             kfp.interpolation = 'BEZIER'
             kfp.handle_left_type = 'AUTO'
             kfp.handle_right_type = 'AUTO'
+
+    # Push to NLA track for universal compatibility
+    track = arm_obj.animation_data.nla_tracks.new()
+    track.name = name
+    track.strips.new(name, 1, act)
 
     return act
 
@@ -1088,6 +1093,58 @@ def_loc = {
 }
 add_full_action("defeat", 1.8, def_rot, def_loc)
 
+# =========================================================================
+# 19. SOLAR_BLAST (Channeling & Prana Burst, 0.75s)
+# =========================================================================
+solar_rot = {
+    "chest": [
+        (0.0, euler_to_quat(0.0, 0.0, 0.0)),
+        (0.3, euler_to_quat(math.radians(-15.0), 0.0, 0.0)),
+        (0.5, euler_to_quat(math.radians(20.0), 0.0, 0.0)),
+        (0.75, euler_to_quat(0.0, 0.0, 0.0)),
+    ],
+    "arm_r": [
+        (0.0, euler_to_quat(0.0, 0.0, 0.0)),
+        (0.3, euler_to_quat(math.radians(-60.0), math.radians(20.0), 0.0)),
+        (0.5, euler_to_quat(math.radians(-90.0), math.radians(0.0), 0.0)),
+        (0.75, euler_to_quat(0.0, 0.0, 0.0)),
+    ],
+    "arm_l": [
+        (0.0, euler_to_quat(0.0, 0.0, 0.0)),
+        (0.3, euler_to_quat(math.radians(30.0), math.radians(-30.0), 0.0)),
+        (0.5, euler_to_quat(math.radians(-40.0), math.radians(-15.0), 0.0)),
+        (0.75, euler_to_quat(0.0, 0.0, 0.0)),
+    ],
+}
+add_full_action("solar_blast", 0.75, solar_rot)
+
+# =========================================================================
+# 20. MEDITATION (Tapovan Focused Breathing, 2.0s loop)
+# =========================================================================
+med_rot = {
+    "chest": [
+        (0.0, euler_to_quat(0.0, 0.0, 0.0)),
+        (1.0, euler_to_quat(math.radians(5.0), 0.0, 0.0)),
+        (2.0, euler_to_quat(0.0, 0.0, 0.0)),
+    ],
+    "arm_l": [
+        (0.0, euler_to_quat(math.radians(10.0), 0.0, math.radians(15.0))),
+        (1.0, euler_to_quat(math.radians(12.0), 0.0, math.radians(18.0))),
+        (2.0, euler_to_quat(math.radians(10.0), 0.0, math.radians(15.0))),
+    ],
+    "arm_r": [
+        (0.0, euler_to_quat(math.radians(10.0), 0.0, math.radians(-15.0))),
+        (1.0, euler_to_quat(math.radians(12.0), 0.0, math.radians(-18.0))),
+        (2.0, euler_to_quat(math.radians(10.0), 0.0, math.radians(-15.0))),
+    ],
+    "head": [
+        (0.0, euler_to_quat(math.radians(6.0), 0.0, 0.0)),
+        (1.0, euler_to_quat(math.radians(4.0), 0.0, 0.0)),
+        (2.0, euler_to_quat(math.radians(6.0), 0.0, 0.0)),
+    ],
+}
+add_full_action("meditation", 2.0, med_rot)
+
 print(f"Authored all actions! Total actions in blend: {len(bpy.data.actions)}")
 
 # CRITICAL: Reset pose to Rest Pose before saving and exporting!
@@ -1104,7 +1161,7 @@ print("Reset Armature pose to Rest Pose.")
 bpy.ops.wm.save_as_mainfile(filepath=BLEND_PATH)
 print(f"Saved updated blend file to: {BLEND_PATH}")
 
-# Export production GLB
+# Export production GLB (Fast export with ACTIONS mode and no force sampling)
 bpy.ops.object.select_all(action='DESELECT')
 arm_obj.select_set(True)
 body_obj.select_set(True)
@@ -1116,12 +1173,11 @@ bpy.ops.export_scene.gltf(
     use_selection=True,
     export_animations=True,
     export_animation_mode='ACTIONS',
-    export_anim_single_armature=True,
-    export_optimize_animation_size=True,
+    export_force_sampling=False,
     export_skins=True,
     export_morph=False,
     export_apply=False
 )
 
 print(f"Exported updated GLB to: {GLB_PATH} ({os.path.getsize(GLB_PATH)} bytes)")
-print("=== Stage Q2 Motion Library Authoring Complete! ===")
+print("=== Stage Q11 Locomotion & Combat Motion Library Complete! ===")

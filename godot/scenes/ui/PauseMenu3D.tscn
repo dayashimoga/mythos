@@ -1,14 +1,15 @@
-[gd_scene load_steps=6 format=3 uid="uid://c7pausemenu3d"]
+[gd_scene load_steps=7 format=3 uid="uid://c7pausemenu3d"]
 
 [ext_resource type="Script" path="res://scripts/ui/pause_menu_3d.gd" id="1_pause"]
+[ext_resource type="Script" path="res://scripts/ui/tactical_map_canvas.gd" id="2_tactical_map"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_modal"]
-bg_color = Color(0.05, 0.07, 0.12, 0.94)
+bg_color = Color(0.05, 0.07, 0.12, 0.96)
 border_width_left = 2
 border_width_top = 2
 border_width_right = 2
 border_width_bottom = 2
-border_color = Color(0.95, 0.82, 0.35, 0.88)
+border_color = Color(0.95, 0.82, 0.35, 0.92)
 corner_radius_top_left = 12
 corner_radius_top_right = 12
 corner_radius_bottom_right = 12
@@ -60,31 +61,31 @@ grow_vertical = 2
 color = Color(0.02, 0.03, 0.05, 0.85)
 
 [node name="Panel" type="PanelContainer" parent="."]
-custom_minimum_size = Vector2(860, 560)
+custom_minimum_size = Vector2(920, 580)
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -430.0
-offset_top = -280.0
-offset_right = 430.0
-offset_bottom = 280.0
+offset_left = -460.0
+offset_top = -290.0
+offset_right = 460.0
+offset_bottom = 290.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_modal")
 
 [node name="Margin" type="MarginContainer" parent="Panel"]
 layout_mode = 2
-theme_override_constants/margin_left = 24
-theme_override_constants/margin_top = 18
-theme_override_constants/margin_right = 24
-theme_override_constants/margin_bottom = 18
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 16
 
 [node name="VBox" type="VBoxContainer" parent="Panel/Margin"]
 layout_mode = 2
-theme_override_constants/separation = 14
+theme_override_constants/separation = 10
 
 [node name="TopHBox" type="HBoxContainer" parent="Panel/Margin/VBox"]
 layout_mode = 2
@@ -92,7 +93,7 @@ layout_mode = 2
 [node name="TitleLabel" type="Label" parent="Panel/Margin/VBox/TopHBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.98, 0.85, 0.4, 1)
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 17
 text = "✦ MYTHOS: SANCTUM ARCHIVES & CONTROLS ✦"
 
 [node name="Spacer" type="Control" parent="Panel/Margin/VBox/TopHBox"]
@@ -101,18 +102,64 @@ size_flags_horizontal = 3
 
 [node name="BtnRestart" type="Button" parent="Panel/Margin/VBox/TopHBox"]
 layout_mode = 2
+focus_mode = 2
 theme_override_font_sizes/font_size = 12
 text = "[R] Respawn Checkpoint"
 
 [node name="BtnResume" type="Button" parent="Panel/Margin/VBox/TopHBox"]
 layout_mode = 2
+focus_mode = 2
 theme_override_colors/font_color = Color(0.2, 0.95, 0.8, 1)
 theme_override_font_sizes/font_size = 13
 text = "[ESC] Resume Journey"
 
+[node name="TabBarHBox" type="HBoxContainer" parent="Panel/Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="BtnTabJournal" type="Button" parent="Panel/Margin/VBox/TabBarHBox"]
+layout_mode = 2
+focus_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "[1] Quest Journal"
+
+[node name="BtnTabMap" type="Button" parent="Panel/Margin/VBox/TabBarHBox"]
+layout_mode = 2
+focus_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "[2] Realm Map"
+
+[node name="BtnTabSettings" type="Button" parent="Panel/Margin/VBox/TabBarHBox"]
+layout_mode = 2
+focus_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "[3] Settings"
+
+[node name="BtnTabCodex" type="Button" parent="Panel/Margin/VBox/TabBarHBox"]
+layout_mode = 2
+focus_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "[4] Sacred Lore"
+
+[node name="BtnTabControls" type="Button" parent="Panel/Margin/VBox/TabBarHBox"]
+layout_mode = 2
+focus_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "[5] Controls Guide"
+
+[node name="TabHintLabel" type="Label" parent="Panel/Margin/VBox/TabBarHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.65, 0.7, 0.8, 0.85)
+theme_override_font_sizes/font_size = 11
+text = "[Q / E / LB / RB: Switch Tabs]"
+horizontal_alignment = 2
+vertical_alignment = 1
+
 [node name="TabContainer" type="TabContainer" parent="Panel/Margin/VBox"]
 layout_mode = 2
 size_flags_vertical = 3
+tabs_visible = false
 theme_override_styles/tab_selected = SubResource("StyleBoxFlat_tab_selected")
 theme_override_styles/tab_unselected = SubResource("StyleBoxFlat_tab_unselected")
 
@@ -132,19 +179,50 @@ Loading campaign objectives..."
 [node name="Realm Map" type="MarginContainer" parent="Panel/Margin/VBox/TabContainer"]
 visible = false
 layout_mode = 2
-theme_override_constants/margin_left = 16
-theme_override_constants/margin_top = 16
-theme_override_constants/margin_right = 16
-theme_override_constants/margin_bottom = 16
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 12
 
-[node name="Scroll" type="ScrollContainer" parent="Panel/Margin/VBox/TabContainer/Realm Map"]
+[node name="MapHBox" type="HBoxContainer" parent="Panel/Margin/VBox/TabContainer/Realm Map"]
 layout_mode = 2
+theme_override_constants/separation = 16
 
-[node name="MapGridContainer" type="GridContainer" parent="Panel/Margin/VBox/TabContainer/Realm Map/Scroll"]
+[node name="TacticalMapContainer" type="VBoxContainer" parent="Panel/Margin/VBox/TabContainer/Realm Map/MapHBox"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="MapTitle" type="Label" parent="Panel/Margin/VBox/TabContainer/Realm Map/MapHBox/TacticalMapContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0.35, 1)
+theme_override_font_sizes/font_size = 12
+text = "🗺️ 2D TACTICAL TOPOLOGY — REALM OF BHUMI"
+
+[node name="TacticalMapCanvas" type="Control" parent="Panel/Margin/VBox/TabContainer/Realm Map/MapHBox/TacticalMapContainer"]
+custom_minimum_size = Vector2(380, 380)
+layout_mode = 2
+script = ExtResource("2_tactical_map")
+
+[node name="FastTravelVBox" type="VBoxContainer" parent="Panel/Margin/VBox/TabContainer/Realm Map/MapHBox"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/h_separation = 16
-theme_override_constants/v_separation = 12
+theme_override_constants/separation = 8
+
+[node name="TravelTitle" type="Label" parent="Panel/Margin/VBox/TabContainer/Realm Map/MapHBox/FastTravelVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.3, 0.85, 1, 1)
+theme_override_font_sizes/font_size = 12
+text = "🌀 INTER-REALM FAST TRAVEL (SEVEN LOKAS)"
+
+[node name="Scroll" type="ScrollContainer" parent="Panel/Margin/VBox/TabContainer/Realm Map/MapHBox/FastTravelVBox"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="MapGridContainer" type="GridContainer" parent="Panel/Margin/VBox/TabContainer/Realm Map/MapHBox/FastTravelVBox/Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/h_separation = 12
+theme_override_constants/v_separation = 8
 columns = 2
 
 [node name="Settings & Accessibility" type="MarginContainer" parent="Panel/Margin/VBox/TabContainer"]
@@ -155,92 +233,124 @@ theme_override_constants/margin_top = 16
 theme_override_constants/margin_right = 20
 theme_override_constants/margin_bottom = 16
 
-[node name="Grid" type="GridContainer" parent="Panel/Margin/VBox/TabContainer/Settings & Accessibility"]
+[node name="VBoxSettings" type="VBoxContainer" parent="Panel/Margin/VBox/TabContainer/Settings & Accessibility"]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="Grid" type="GridContainer" parent="Panel/Margin/VBox/TabContainer/Settings & Accessibility/VBoxSettings"]
 layout_mode = 2
 theme_override_constants/h_separation = 24
-theme_override_constants/v_separation = 14
+theme_override_constants/v_separation = 10
 columns = 2
 
-[node name="LabelMaster" type="Label" parent="Panel/Margin/VBox/TabContainer/Settings & Accessibility/Grid"]
+[node name="LabelMaster" type="Label" parent="Panel/Margin/VBox/TabContainer/Settings & Accessibility/VBoxSettings/Grid"]
 layout_mode = 2
 text = "Master Volume"
 
-[node name="SliderMaster" type="HSlider" parent="Panel/Margin/VBox/TabContainer/Settings & Accessibility/Grid"]
+[node name="SliderMaster" type="HSlider" parent="Panel/Margin/VBox/TabContainer/Settings & Accessibility/VBoxSettings/Grid"]
 custom_minimum_size = Vector2(240, 20)
 layout_mode = 2
+focus_mode = 2
 max_value = 1.0
 step = 0.05
 value = 1.0
 
-[node name="LabelSFX" type="Label" parent="Panel/Margin/VBox/TabContainer/Settings & Accessibility/Grid"]
+[node name="LabelSFX" type="Label" parent="Panel/Margin/VBox/TabContainer/Settings & Accessibility/VBoxSettings/Grid"]
 layout_mode = 2
 text = "Sound Effects (SFX)"
 
-[node name="SliderSFX" type="HSlider" parent="Panel/Margin/VBox/TabContainer/Settings & Accessibility/Grid"]
+[node name="SliderSFX" type="HSlider" parent="Panel/Margin/VBox/TabContainer/Settings & Accessibility/VBoxSettings/Grid"]
 custom_minimum_size = Vector2(240, 20)
 layout_mode = 2
+focus_mode = 2
 max_value = 1.0
 step = 0.05
 value = 1.0
 
-[node name="LabelAmbience" type="Label" parent="Panel/Margin/VBox/TabContainer/Settings & Accessibility/Grid"]
+[node name="LabelAmbience" type="Label" parent="Panel/Margin/VBox/TabContainer/Settings & Accessibility/VBoxSettings/Grid"]
 layout_mode = 2
 text = "Atmospheric Ambience"
 
-[node name="SliderAmbience" type="HSlider" parent="Panel/Margin/VBox/TabContainer/Settings & Accessibility/Grid"]
+[node name="SliderAmbience" type="HSlider" parent="Panel/Margin/VBox/TabContainer/Settings & Accessibility/VBoxSettings/Grid"]
 custom_minimum_size = Vector2(240, 20)
 layout_mode = 2
+focus_mode = 2
 max_value = 1.0
 step = 0.05
 value = 0.7
 
-[node name="LabelSens" type="Label" parent="Panel/Margin/VBox/TabContainer/Settings & Accessibility/Grid"]
+[node name="LabelSens" type="Label" parent="Panel/Margin/VBox/TabContainer/Settings & Accessibility/VBoxSettings/Grid"]
 layout_mode = 2
 text = "Camera Sensitivity"
 
-[node name="SliderCamSens" type="HSlider" parent="Panel/Margin/VBox/TabContainer/Settings & Accessibility/Grid"]
+[node name="SliderCamSens" type="HSlider" parent="Panel/Margin/VBox/TabContainer/Settings & Accessibility/VBoxSettings/Grid"]
 custom_minimum_size = Vector2(240, 20)
 layout_mode = 2
+focus_mode = 2
 min_value = 0.5
 max_value = 2.5
 step = 0.1
 value = 1.0
 
-[node name="LabelInvert" type="Label" parent="Panel/Margin/VBox/TabContainer/Settings & Accessibility/Grid"]
+[node name="LabelInvert" type="Label" parent="Panel/Margin/VBox/TabContainer/Settings & Accessibility/VBoxSettings/Grid"]
 layout_mode = 2
 text = "Invert Pitch (Y-Axis)"
 
-[node name="CheckInvertY" type="CheckBox" parent="Panel/Margin/VBox/TabContainer/Settings & Accessibility/Grid"]
+[node name="CheckInvertY" type="CheckBox" parent="Panel/Margin/VBox/TabContainer/Settings & Accessibility/VBoxSettings/Grid"]
 layout_mode = 2
+focus_mode = 2
 text = "Inverted"
 
-[node name="LabelShake" type="Label" parent="Panel/Margin/VBox/TabContainer/Settings & Accessibility/Grid"]
+[node name="LabelShake" type="Label" parent="Panel/Margin/VBox/TabContainer/Settings & Accessibility/VBoxSettings/Grid"]
 layout_mode = 2
 text = "Screen Shake Limit"
 
-[node name="SliderShake" type="HSlider" parent="Panel/Margin/VBox/TabContainer/Settings & Accessibility/Grid"]
+[node name="SliderShake" type="HSlider" parent="Panel/Margin/VBox/TabContainer/Settings & Accessibility/VBoxSettings/Grid"]
 custom_minimum_size = Vector2(240, 20)
 layout_mode = 2
+focus_mode = 2
 max_value = 1.0
 step = 0.1
 value = 1.0
 
-[node name="LabelMotion" type="Label" parent="Panel/Margin/VBox/TabContainer/Settings & Accessibility/Grid"]
+[node name="LabelMotion" type="Label" parent="Panel/Margin/VBox/TabContainer/Settings & Accessibility/VBoxSettings/Grid"]
 layout_mode = 2
 text = "Reduced Motion"
 
-[node name="CheckReducedMotion" type="CheckBox" parent="Panel/Margin/VBox/TabContainer/Settings & Accessibility/Grid"]
+[node name="CheckReducedMotion" type="CheckBox" parent="Panel/Margin/VBox/TabContainer/Settings & Accessibility/VBoxSettings/Grid"]
 layout_mode = 2
+focus_mode = 2
 text = "Enable Reduced Motion"
 
-[node name="LabelSubs" type="Label" parent="Panel/Margin/VBox/TabContainer/Settings & Accessibility/Grid"]
+[node name="LabelSubs" type="Label" parent="Panel/Margin/VBox/TabContainer/Settings & Accessibility/VBoxSettings/Grid"]
 layout_mode = 2
 text = "Subtitles & Speaker Badges"
 
-[node name="CheckSubtitles" type="CheckBox" parent="Panel/Margin/VBox/TabContainer/Settings & Accessibility/Grid"]
+[node name="CheckSubtitles" type="CheckBox" parent="Panel/Margin/VBox/TabContainer/Settings & Accessibility/VBoxSettings/Grid"]
 layout_mode = 2
+focus_mode = 2
 button_pressed = true
 text = "Enabled"
+
+[node name="TutorialHBox" type="HBoxContainer" parent="Panel/Margin/VBox/TabContainer/Settings & Accessibility/VBoxSettings"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="LabelTutorial" type="Label" parent="Panel/Margin/VBox/TabContainer/Settings & Accessibility/VBoxSettings/TutorialHBox"]
+layout_mode = 2
+text = "Player Guidance & Tutorial:"
+
+[node name="BtnResetTutorial" type="Button" parent="Panel/Margin/VBox/TabContainer/Settings & Accessibility/VBoxSettings/TutorialHBox"]
+layout_mode = 2
+focus_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "↺ Replay Onboarding Tutorial"
+
+[node name="BtnSkipTutorial" type="Button" parent="Panel/Margin/VBox/TabContainer/Settings & Accessibility/VBoxSettings/TutorialHBox"]
+layout_mode = 2
+focus_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "⏩ Skip Tutorial"
 
 [node name="Sacred Codex" type="MarginContainer" parent="Panel/Margin/VBox/TabContainer"]
 visible = false
@@ -257,9 +367,42 @@ theme_override_constants/separation = 16
 [node name="CodexItemList" type="ItemList" parent="Panel/Margin/VBox/TabContainer/Sacred Codex/HBox"]
 custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
+focus_mode = 2
 
 [node name="CodexTextLabel" type="RichTextLabel" parent="Panel/Margin/VBox/TabContainer/Sacred Codex/HBox"]
 layout_mode = 2
 size_flags_horizontal = 3
 bbcode_enabled = true
 text = "[color=#FFD166]Select a Codex entry to read mythological lore...[/color]"
+
+[node name="Controls Guide" type="MarginContainer" parent="Panel/Margin/VBox/TabContainer"]
+visible = false
+layout_mode = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
+
+[node name="ControlsGuideLabel" type="RichTextLabel" parent="Panel/Margin/VBox/TabContainer/Controls Guide"]
+layout_mode = 2
+bbcode_enabled = true
+text = "[b][color=#FFD166]MYTHOS CONTROL SCHEMES & SHORTCUTS[/color][/b]
+
+[table=3]
+[cell][b][color=#38BDF8]ACTION[/color][/b][/cell][cell][b][color=#FFB703]KEYBOARD & MOUSE[/color][/b][/cell][cell][b][color=#10B981]GAMEPAD CONTROLLER[/color][/b][/cell]
+[cell]Movement / Walk[/cell][cell][W] [A] [S] [D][/cell][cell]Left Analog Stick [L-Stick][/cell]
+[cell]Haste / Sprint[/cell][cell]Hold [SHIFT] while moving[/cell][cell]Press [L3] or Hold [RT][/cell]
+[cell]Camera Orbit / Pitch[/cell][cell]Mouse Motion / Right Click Drag[/cell][cell]Right Analog Stick [R-Stick][/cell]
+[cell]Camera Zoom[/cell][cell]Mouse Scroll Wheel[/cell][cell]D-Pad Up / Down[/cell]
+[cell]Jump / Mantle[/cell][cell][SPACE][/cell][cell][A / Cross Button][/cell]
+[cell]Prana Dash (Dodge)[/cell][cell][SHIFT] or [F][/cell][cell][B / Circle Button][/cell]
+[cell]Surya Combo Slash[/cell][cell]Left Click [LMB][/cell][cell][X / Square Button][/cell]
+[cell]Surya Shield Guard[/cell][cell]Hold [Q] or [C][/cell][cell]Hold Left Bumper [LB / L1][/cell]
+[cell]Parry Deflection[/cell][cell]Press [F] at impact[/cell][cell]Right Bumper [RB / R1][/cell]
+[cell]Combat Lock-On[/cell][cell][TAB] or Middle-Click[/cell][cell]Press [R3] (Right Stick)[/cell]
+[cell]Commune / Interact[/cell][cell][E] or [ENTER][/cell][cell][Y / Triangle Button][/cell]
+[cell]Over-The-Shoulder View[/cell][cell][C][/cell][cell]D-Pad Left[/cell]
+[cell]Pause Menu / Journal[/cell][cell][ESC] or [P][/cell][cell]Start / Menu Button[/cell]
+[cell]Toggle Controls Overlay[/cell][cell][H][/cell][cell]Select / Back Button[/cell]
+[/table]
+"

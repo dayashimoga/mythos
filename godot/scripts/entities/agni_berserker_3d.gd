@@ -118,6 +118,15 @@ func _process_chase(delta: float) -> void:
 	_safe_look_at(player_pos)
 	var dir = (player_pos - my_pos).normalized() if dist > 0.001 else Vector3.FORWARD
 
+	var separation = Vector3.ZERO
+	if is_inside_tree():
+		for enemy in get_tree().get_nodes_in_group("enemies"):
+			if enemy != self and is_instance_valid(enemy):
+				var diff = global_position - enemy.global_position
+				var d = diff.length()
+				if d > 0.001 and d < 3.0:
+					separation += (diff / d) * (3.0 - d) * 1.5
+
 	if dist <= attack_reach:
 		velocity = Vector3.ZERO
 		if randf() > 0.5:
@@ -126,7 +135,7 @@ func _process_chase(delta: float) -> void:
 			current_state = State.FLAME_WHIRLWIND
 		state_timer = 0.0
 	else:
-		velocity = dir * 6.0
+		velocity = dir * 6.0 + separation
 
 func _process_slash_telegraph(delta: float) -> void:
 	state_timer += delta
@@ -179,10 +188,48 @@ func _process_stagger(delta: float) -> void:
 func _on_slash_hitbox_body_entered(body: Node3D) -> void:
 	if not is_instance_valid(body) or body == self:
 		return
-	if body.is_in_group("player") and body.has_method("take_damage"):
+	if body.is_in_group("player"):
 		var dmg = slash_damage if current_state == State.TWIN_SLASH_EXECUTE else whirlwind_damage
-		body.take_damage(dmg)
+		var attack_spec = CombatMath.AttackSpec.new("agni_berserker", dmg, 35.0, _get_entity_pos(self))
+		if body.has_method("take_damage_spec"):
+			var res = body.take_damage_spec(attack_spec)
+			if res and res.is_parried:
+				_on_slash_parried()
+		elif body.has_method("take_damage"):
+			body.take_damage(dmg)
 		slash_hit.emit(body, dmg)
+
+func _on_slash_parried() -> void:
+	if slash_hitbox:
+		slash_hitbox.set_deferred("monitoring", false)
+	current_state = State.STAGGERED
+	state_timer = 0.0
+	if poise and poise.has_method("take_poise_damage"):
+		poise.take_poise_damage(40.0)
+
+func take_damage_spec(attack_spec: CombatMath.AttackSpec) -> CombatMath.CombatHitResult:
+	if current_state == State.DEFEATED:
+		return CombatMath.CombatHitResult.new()
+	var my_pos = _get_entity_pos(self)
+	var facing = -global_transform.basis.z if is_inside_tree() else Vector3.FORWARD
+	var def_spec = CombatMath.DefenseSpec.new("agni_berserker", my_pos, facing)
+	var res = CombatMath.resolve_attack(attack_spec, def_spec)
+	current_health = max(0, current_health - res.damage_dealt)
+	var poise_broken = false
+	if poise and poise.has_method("take_poise_damage"):
+		poise_broken = poise.take_poise_damage(attack_spec.poise_damage)
+	if current_health <= 0:
+		_die()
+	elif poise_broken or res.is_critical:
+		current_state = State.STAGGERED
+		state_timer = 0.0
+		if slash_hitbox:
+			slash_hitbox.monitoring = false
+	return res
+
+func take_damage(amount: int) -> void:
+	var spec = CombatMath.AttackSpec.new("generic", amount, 20.0, Vector3.ZERO)
+	take_damage_spec(spec)
 
 func take_hit(damage: int, poise_dmg: float = 20.0, _is_parryable: bool = false, impact_dir: Vector3 = Vector3.ZERO) -> void:
 	if current_state == State.DEFEATED:

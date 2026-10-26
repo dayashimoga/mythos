@@ -41,6 +41,12 @@ func _init() -> void:
 	var test_svar_remaster = load("res://tests/unit/test_svar_remaster.gd")
 	var test_game_presentation_ui = load("res://tests/unit/test_game_presentation_and_ui.gd")
 	var test_prod_hardening = load("res://tests/unit/test_production_hardening_and_certification.gd")
+	var test_physical_integrity_q9 = load("res://tests/unit/test_physical_integrity_and_camera_q9.gd")
+	var test_locomotion_q11 = load("res://tests/unit/test_locomotion_skeletal_animation_q11.gd")
+	var test_bhumi_q12 = load("res://tests/unit/test_bhumi_environment_remaster_q12.gd")
+	var test_guidance_q13 = load("res://tests/unit/test_player_guidance_and_navigation_q13.gd")
+	var test_gameplay_combat_q14 = load("res://tests/unit/test_gameplay_combat_cinematics_q14.gd")
+	var test_seven_realms_q15 = load("res://tests/unit/test_seven_realms_hardening_q15.gd")
 
 	var suites = [
 		{"name": "Combat Mathematics (Domain)", "runner": test_combat_math},
@@ -67,7 +73,13 @@ func _init() -> void:
 		{"name": "Suite 22: Seven-Realm Narrative, Animated NPCs & Cinematic Director (Stage Q6)", "runner": test_narrative_cinematics},
 		{"name": "Suite 23: Svar Production Remaster & Cosmic Realm Verification (Stage Q5-C)", "runner": test_svar_remaster},
 		{"name": "Suite 24: Game Presentation, Modern UI/UX, Audio & Accessibility (Stage Q7)", "runner": test_game_presentation_ui},
-		{"name": "Suite 25: Production Hardening, Seven-Realm Verification & Release Certification (Stage Q8)", "runner": test_prod_hardening}
+		{"name": "Suite 25: Production Hardening, Seven-Realm Verification & Release Certification (Stage Q8)", "runner": test_prod_hardening},
+		{"name": "Suite 26: Physical Integrity, Collisions & Camera Correction (Stage Q9)", "runner": test_physical_integrity_q9},
+		{"name": "Suite 27: Realistic Locomotion, Skeletal Animation & Control Refinement (Stage Q11)", "runner": test_locomotion_q11},
+		{"name": "Suite 28: Bhumi Environment, Landscape & Architectural Quality Remaster (Stage Q12)", "runner": test_bhumi_q12},
+		{"name": "Suite 29: Player Guidance, UI Functionality & Quest Navigation (Stage Q13)", "runner": test_guidance_q13},
+		{"name": "Suite 30: Gameplay, Combat, AI & Cinematic Experience Overhaul (Stage Q14)", "runner": test_gameplay_combat_q14},
+		{"name": "Suite 31: Seven-Realm Production Hardening & Release Certification (Stage Q15)", "runner": test_seven_realms_q15}
 	]
 
 	for suite in suites:

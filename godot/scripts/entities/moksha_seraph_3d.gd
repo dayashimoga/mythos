@@ -107,15 +107,24 @@ func _process_hover(delta: float) -> void:
 		var dir = (player_pos - my_pos).normalized()
 		dir.y = 0.0
 
+		var separation = Vector3.ZERO
+		if is_inside_tree():
+			for enemy in get_tree().get_nodes_in_group("enemies"):
+				if enemy != self and is_instance_valid(enemy):
+					var diff = global_position - enemy.global_position
+					var d = diff.length()
+					if d > 0.001 and d < 3.0:
+						separation += (diff / d) * (3.0 - d) * 1.5
+
 		if dist > preferred_range + 1.0:
-			velocity.x = dir.x * 4.5
-			velocity.z = dir.z * 4.5
+			velocity.x = dir.x * 4.5 + separation.x
+			velocity.z = dir.z * 4.5 + separation.z
 		elif dist < preferred_range - 1.0:
-			velocity.x = -dir.x * 3.5
-			velocity.z = -dir.z * 3.5
+			velocity.x = -dir.x * 3.5 + separation.x
+			velocity.z = -dir.z * 3.5 + separation.z
 		else:
-			velocity.x = 0.0
-			velocity.z = 0.0
+			velocity.x = separation.x
+			velocity.z = separation.z
 
 		# Health-based barrier check
 		if not barrier_used and float(current_health) / float(max_health) <= barrier_threshold_ratio:
@@ -149,7 +158,15 @@ func _process_execute(delta: float) -> void:
 	if target_player:
 		var dist = _get_entity_pos(self).distance_to(_get_entity_pos(target_player))
 		if dist <= perception_radius:
-			if target_player.has_method("take_damage"):
+			var attack_spec = CombatMath.AttackSpec.new("moksha_burst", burst_damage, 30.0, _get_entity_pos(self))
+			if target_player.has_method("take_damage_spec"):
+				var res = target_player.take_damage_spec(attack_spec)
+				if res and res.is_parried:
+					current_state = State.STAGGERED
+					state_timer = 0.0
+					if poise and poise.has_method("take_poise_damage"):
+						poise.take_poise_damage(35.0)
+			elif target_player.has_method("take_damage"):
 				target_player.take_damage(burst_damage)
 			burst_hit.emit(target_player, burst_damage)
 
@@ -186,6 +203,29 @@ func _process_stagger(delta: float) -> void:
 
 func is_barrier_active() -> bool:
 	return barrier_timer > 0.0
+
+func take_damage_spec(attack_spec: CombatMath.AttackSpec) -> CombatMath.CombatHitResult:
+	if current_state == State.DEFEATED:
+		return CombatMath.CombatHitResult.new()
+	var my_pos = _get_entity_pos(self)
+	var facing = -global_transform.basis.z if is_inside_tree() else Vector3.FORWARD
+	var def_spec = CombatMath.DefenseSpec.new("moksha_seraph", my_pos, facing)
+	def_spec.is_guarding = is_barrier_active()
+	var res = CombatMath.resolve_attack(attack_spec, def_spec)
+	current_health = maxi(0, current_health - res.damage_dealt)
+	health_changed.emit(current_health, max_health)
+	var poise_broken = false
+	if poise and poise.has_method("take_poise_damage"):
+		poise_broken = poise.take_poise_damage(attack_spec.poise_damage)
+	if current_health <= 0:
+		_die()
+	elif poise_broken or res.is_critical:
+		current_state = State.STAGGERED
+		state_timer = 0.0
+		if seraph_light:
+			seraph_light.light_color = Color(0.4, 0.4, 0.8, 1.0)
+			seraph_light.light_energy = 1.0
+	return res
 
 func take_damage(amount: int, poise_dmg: float = 0.0) -> void:
 	if current_state == State.DEFEATED:

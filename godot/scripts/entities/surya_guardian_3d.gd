@@ -117,8 +117,17 @@ func _process_patrol(delta: float) -> void:
 	_safe_look_at(player_pos)
 	var dir = (player_pos - my_pos).normalized() if dist > 0.001 else Vector3.FORWARD
 
+	var separation = Vector3.ZERO
+	if is_inside_tree():
+		for enemy in get_tree().get_nodes_in_group("enemies"):
+			if enemy != self and is_instance_valid(enemy):
+				var diff = global_position - enemy.global_position
+				var d = diff.length()
+				if d > 0.001 and d < 3.0:
+					separation += (diff / d) * (3.0 - d) * 1.5
+
 	if dist > attack_reach + 1.0:
-		velocity = dir * 4.8
+		velocity = dir * 4.8 + separation
 		_play_anim("walk")
 	else:
 		velocity = Vector3.ZERO
@@ -185,10 +194,21 @@ func _on_thrust_hitbox_body_entered(body: Node3D) -> void:
 		var my_pos = _get_entity_pos(self)
 		var attack_spec = CombatMath.AttackSpec.new("surya_guardian", spear_damage, 35.0, my_pos)
 		if body.has_method("take_damage_spec"):
-			body.take_damage_spec(attack_spec)
+			var res = body.take_damage_spec(attack_spec)
+			if res and res.is_parried:
+				_on_attack_parried()
 		elif body.has_method("take_damage"):
 			body.take_damage(spear_damage)
 		spear_hit.emit(body, spear_damage)
+
+func _on_attack_parried() -> void:
+	if thrust_hitbox:
+		thrust_hitbox.set_deferred("monitoring", false)
+	current_state = State.STAGGERED
+	state_timer = 0.0
+	_play_anim("idle")
+	if poise and poise.has_method("take_poise_damage"):
+		poise.take_poise_damage(40.0)
 
 func take_damage_spec(attack_spec: CombatMath.AttackSpec) -> CombatMath.CombatHitResult:
 	if current_state == State.DEFEATED:

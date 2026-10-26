@@ -276,7 +276,9 @@ func _on_sweep_hit_body(body: Node3D) -> void:
 		var dmg = sweep_damage if not is_enraged else int(sweep_damage * 1.3)
 		var attack_spec = CombatMath.AttackSpec.new("shesha_sweep", dmg, 45.0, global_position)
 		if body.has_method("take_damage_spec"):
-			body.take_damage_spec(attack_spec)
+			var res = body.take_damage_spec(attack_spec)
+			if res and res.is_parried:
+				_on_attack_parried(45.0)
 		elif body.has_method("take_damage"):
 			body.take_damage(dmg)
 
@@ -287,9 +289,46 @@ func _on_quake_hit_body(body: Node3D) -> void:
 		var dmg = quake_damage if not is_enraged else int(quake_damage * 1.25)
 		var attack_spec = CombatMath.AttackSpec.new("shesha_quake", dmg, 60.0, global_position)
 		if body.has_method("take_damage_spec"):
-			body.take_damage_spec(attack_spec)
+			var res = body.take_damage_spec(attack_spec)
+			if res and res.is_parried:
+				_on_attack_parried(60.0)
 		elif body.has_method("take_damage"):
 			body.take_damage(dmg)
+
+func _on_attack_parried(poise_damage: float = 40.0) -> void:
+	if sweep_hitbox:
+		sweep_hitbox.set_deferred("monitoring", false)
+	if quake_hitbox:
+		quake_hitbox.set_deferred("monitoring", false)
+	current_state = State.STAGGERED
+	state_timer = 0.0
+	_play_anim("boss_stagger")
+	AudioManager3D.play_hit()
+	if poise:
+		poise.take_poise_damage(poise_damage)
+
+func reset_boss() -> void:
+	current_health = max_health
+	current_phase = 1
+	is_enraged = false
+	current_state = State.IDLE
+	state_timer = 0.0
+	attack_cooldown = 1.0
+	velocity = Vector3.ZERO
+	if sweep_hitbox:
+		sweep_hitbox.monitoring = false
+	if quake_hitbox:
+		quake_hitbox.monitoring = false
+	if nagamani_light:
+		nagamani_light.light_color = Color(0.1, 0.9, 0.4, 1.0)
+		nagamani_light.light_energy = 3.0
+	if is_inside_tree():
+		scale = Vector3.ONE
+	if poise:
+		poise.current = max_poise
+	boss_health_changed.emit(current_health, max_health)
+	boss_phase_changed.emit(1)
+	_play_anim("boss_idle")
 
 func take_damage_spec(attack_spec: CombatMath.AttackSpec) -> CombatMath.CombatHitResult:
 	if current_state == State.DEFEATED:

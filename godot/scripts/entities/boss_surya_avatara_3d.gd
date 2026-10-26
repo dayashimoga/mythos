@@ -285,7 +285,9 @@ func _on_cleave_hit_body(body: Node3D) -> void:
 		var dmg = cleave_damage if not is_enraged else int(cleave_damage * 1.25)
 		var attack_spec = CombatMath.AttackSpec.new("surya_cleave", dmg, 45.0, _get_entity_pos(self))
 		if body.has_method("take_damage_spec"):
-			body.take_damage_spec(attack_spec)
+			var res = body.take_damage_spec(attack_spec)
+			if res and res.is_parried:
+				_on_cleave_parried(45.0)
 		elif body.has_method("take_damage"):
 			body.take_damage(dmg)
 
@@ -296,9 +298,46 @@ func _on_quake_hit_body(body: Node3D) -> void:
 		var dmg = quake_damage if not is_enraged else int(quake_damage * 1.3)
 		var attack_spec = CombatMath.AttackSpec.new("surya_quake", dmg, 65.0, _get_entity_pos(self))
 		if body.has_method("take_damage_spec"):
-			body.take_damage_spec(attack_spec)
+			var res = body.take_damage_spec(attack_spec)
+			if res and res.is_parried:
+				_on_cleave_parried(65.0)
 		elif body.has_method("take_damage"):
 			body.take_damage(dmg)
+
+func _on_cleave_parried(poise_dmg: float = 40.0) -> void:
+	if cleave_hitbox:
+		cleave_hitbox.set_deferred("monitoring", false)
+	if quake_hitbox:
+		quake_hitbox.set_deferred("monitoring", false)
+	current_state = State.STAGGERED
+	state_timer = 0.0
+	_play_anim("boss_cleave_telegraph")
+	AudioManager3D.play_hit()
+	if poise:
+		poise.take_poise_damage(poise_dmg)
+
+func reset_boss() -> void:
+	current_health = max_health
+	current_phase = 1
+	is_enraged = false
+	current_state = State.IDLE
+	state_timer = 0.0
+	attack_cooldown = 1.0
+	velocity = Vector3.ZERO
+	if cleave_hitbox:
+		cleave_hitbox.monitoring = false
+	if quake_hitbox:
+		quake_hitbox.monitoring = false
+	if solar_halo_light:
+		solar_halo_light.light_color = Color(1.0, 0.85, 0.4, 1.0)
+		solar_halo_light.light_energy = 4.0
+	if is_inside_tree():
+		scale = Vector3.ONE
+	if poise:
+		poise.current = max_poise
+	boss_health_changed.emit(current_health, max_health)
+	boss_phase_changed.emit(1)
+	_play_anim("boss_idle")
 
 func take_damage_spec(attack_spec: CombatMath.AttackSpec) -> CombatMath.CombatHitResult:
 	if current_state == State.DEFEATED:

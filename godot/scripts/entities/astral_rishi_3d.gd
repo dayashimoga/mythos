@@ -108,18 +108,27 @@ func _process_hover(delta: float) -> void:
 		_start_blink()
 		return
 
-	# Maintain preferred range
+	# Maintain preferred range with neighbor separation
+	var separation = Vector3.ZERO
+	if is_inside_tree():
+		for enemy in get_tree().get_nodes_in_group("enemies"):
+			if enemy != self and is_instance_valid(enemy):
+				var diff = global_position - enemy.global_position
+				var d = diff.length()
+				if d > 0.001 and d < 3.0:
+					separation += (diff / d) * (3.0 - d) * 1.5
+
 	if dist > preferred_range + 2.0:
 		var dir = (player_pos - my_pos).normalized()
-		velocity.x = dir.x * 3.5
-		velocity.z = dir.z * 3.5
+		velocity.x = dir.x * 3.5 + separation.x
+		velocity.z = dir.z * 3.5 + separation.z
 	elif dist < preferred_range - 2.0:
 		var dir = (my_pos - player_pos).normalized()
-		velocity.x = dir.x * 3.5
-		velocity.z = dir.z * 3.5
+		velocity.x = dir.x * 3.5 + separation.x
+		velocity.z = dir.z * 3.5 + separation.z
 	else:
-		velocity.x = move_toward(velocity.x, 0.0, 5.0 * delta)
-		velocity.z = move_toward(velocity.z, 0.0, 5.0 * delta)
+		velocity.x = move_toward(velocity.x, 0.0, 5.0 * delta) + separation.x
+		velocity.z = move_toward(velocity.z, 0.0, 5.0 * delta) + separation.z
 		# Ready to cast mantra
 		if state_timer > 1.5:
 			_start_cast_telegraph()
@@ -147,7 +156,15 @@ func _execute_cast() -> void:
 	if target_player and is_instance_valid(target_player):
 		var dist = _get_entity_pos(self).distance_to(_get_entity_pos(target_player))
 		if dist <= perception_radius:
-			if target_player.has_method("take_damage"):
+			var attack_spec = CombatMath.AttackSpec.new("astral_mantra", mantra_damage, 25.0, _get_entity_pos(self))
+			if target_player.has_method("take_damage_spec"):
+				var res = target_player.take_damage_spec(attack_spec)
+				if res and res.is_parried:
+					current_state = State.STAGGERED
+					state_timer = 0.0
+					if poise and poise.has_method("take_poise_damage"):
+						poise.take_poise_damage(35.0)
+			elif target_player.has_method("take_damage"):
 				target_player.take_damage(mantra_damage)
 			mantra_cast.emit(target_player, mantra_damage)
 
@@ -191,6 +208,28 @@ func _process_stagger(delta: float) -> void:
 			poise.current = poise.max_poise
 		current_state = State.HOVER_MEDITATE
 		state_timer = 0.0
+
+func take_damage_spec(attack_spec: CombatMath.AttackSpec) -> CombatMath.CombatHitResult:
+	if current_state == State.DEFEATED:
+		return CombatMath.CombatHitResult.new()
+	var my_pos = _get_entity_pos(self)
+	var facing = -global_transform.basis.z if is_inside_tree() else Vector3.FORWARD
+	var def_spec = CombatMath.DefenseSpec.new("astral_rishi", my_pos, facing)
+	var res = CombatMath.resolve_attack(attack_spec, def_spec)
+	current_health = max(0, current_health - res.damage_dealt)
+	var poise_broken = false
+	if poise and poise.has_method("take_poise_damage"):
+		poise_broken = poise.take_poise_damage(attack_spec.poise_damage)
+	if current_health <= 0:
+		_die()
+	elif poise_broken or res.is_critical:
+		current_state = State.STAGGERED
+		state_timer = 0.0
+	return res
+
+func take_damage(amount: int) -> void:
+	var spec = CombatMath.AttackSpec.new("generic", amount, 20.0, Vector3.ZERO)
+	take_damage_spec(spec)
 
 func take_hit(damage: int, poise_dmg: float = 20.0, _is_parryable: bool = false, impact_dir: Vector3 = Vector3.ZERO) -> void:
 	if current_state == State.DEFEATED:

@@ -14,7 +14,10 @@ extends Node3D
 var quest_mgr: QuestManager = QuestManager.new()
 var dialogue_runner: DialogueRunner = DialogueRunner.new()
 
+const WorldCollisionBuilderScript = preload("res://scripts/levels/world_collision_builder.gd")
+
 func _ready() -> void:
+	WorldCollisionBuilderScript.build_collisions(self)
 	# 1. Initialize Quest
 	quest_mgr.start_mission("sanctum_calibration")
 	if hud:

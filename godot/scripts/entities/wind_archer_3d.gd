@@ -99,7 +99,17 @@ func _process_hover_strafe(delta: float) -> void:
 		var dist_diff = dist - preferred_distance
 		var forward_vec = transform.basis.z * -clamp(dist_diff * 0.5, -1.0, 1.0)
 
-		velocity = (side_vec * 3.5 + forward_vec * 4.0)
+		# Flocking separation
+		var separation = Vector3.ZERO
+		if is_inside_tree():
+			for enemy in get_tree().get_nodes_in_group("enemies"):
+				if enemy != self and is_instance_valid(enemy):
+					var diff = global_position - enemy.global_position
+					var d = diff.length()
+					if d > 0.001 and d < 3.0:
+						separation += (diff / d) * (3.0 - d) * 1.5
+
+		velocity = (side_vec * 3.5 + forward_vec * 4.0) + separation
 		_play_anim("walk")
 		move_and_slide()
 
@@ -135,10 +145,19 @@ func _fire_arrow() -> void:
 		bow_light.visible = false
 
 	# Direct raycast damage to player if line of sight is clear
-	if target_player and target_player.has_method("take_damage"):
+	if target_player:
 		var dist = global_position.distance_to(target_player.global_position)
 		if dist <= perception_radius + 4.0:
-			target_player.take_damage(arrow_damage, 25.0)
+			if target_player.has_method("take_damage_spec"):
+				var spec = CombatMath.AttackSpec.new("wind_arrow", arrow_damage, 25.0, global_position)
+				var res = target_player.take_damage_spec(spec)
+				if res and res.is_parried:
+					# Player parried the projectile! Stagger the archer!
+					current_state = State.STAGGERED
+					state_timer = 0.0
+					_play_anim("stagger")
+			elif target_player.has_method("take_damage"):
+				target_player.take_damage(arrow_damage)
 
 	strafe_dir *= -1.0 # Reverse strafe direction for next volley
 
@@ -159,18 +178,18 @@ func _process_staggered(delta: float) -> void:
 		if poise:
 			poise.current = poise.max_poise
 
-func take_damage(amount: int, poise_dmg: float = 20.0) -> void:
+func take_damage_spec(attack_spec: CombatMath.AttackSpec) -> CombatMath.CombatHitResult:
 	if current_state == State.DEFEATED:
-		return
+		return CombatMath.CombatHitResult.new(false, false, false, 0, 0.0)
 
-	var final_dmg = amount
+	var final_dmg = attack_spec.base_damage
 	if current_state == State.STAGGERED:
-		final_dmg = int(amount * 1.35)
+		final_dmg = int(attack_spec.base_damage * 1.35)
 
 	current_health = max(0, current_health - final_dmg)
-
+	var broken = false
 	if poise:
-		var broken = poise.take_poise_damage(poise_dmg)
+		broken = poise.take_poise_damage(attack_spec.poise_damage)
 		if broken and current_state != State.STAGGERED:
 			current_state = State.STAGGERED
 			state_timer = 0.0
@@ -185,6 +204,12 @@ func take_damage(amount: int, poise_dmg: float = 20.0) -> void:
 
 	if current_health <= 0:
 		_die()
+
+	return CombatMath.CombatHitResult.new(true, false, broken, final_dmg, attack_spec.poise_damage)
+
+func take_damage(amount: int, poise_dmg: float = 20.0) -> void:
+	var spec = CombatMath.AttackSpec.new("generic", amount, poise_dmg, Vector3.ZERO)
+	take_damage_spec(spec)
 
 func _die() -> void:
 	current_state = State.DEFEATED

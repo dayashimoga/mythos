@@ -105,6 +105,15 @@ func _process_stalk(delta: float) -> void:
 	_safe_look_at(player_pos)
 	var dir = (player_pos - my_pos).normalized() if dist > 0.001 else Vector3.FORWARD
 
+	var separation = Vector3.ZERO
+	if is_inside_tree():
+		for enemy in get_tree().get_nodes_in_group("enemies"):
+			if enemy != self and is_instance_valid(enemy):
+				var diff = global_position - enemy.global_position
+				var d = diff.length()
+				if d > 0.001 and d < 3.0:
+					separation += (diff / d) * (3.0 - d) * 1.5
+
 	if dist <= attack_reach:
 		velocity = Vector3.ZERO
 		current_state = State.POUNCE_TELEGRAPH
@@ -114,7 +123,7 @@ func _process_stalk(delta: float) -> void:
 		current_state = State.MAGMA_SPIT_TELEGRAPH
 		state_timer = 0.0
 	else:
-		velocity = dir * 5.0
+		velocity = dir * 5.0 + separation
 
 func _process_spit_telegraph(delta: float) -> void:
 	state_timer += delta
@@ -134,7 +143,15 @@ func _execute_spit() -> void:
 	if target_player and is_instance_valid(target_player):
 		var dist = _get_entity_pos(self).distance_to(_get_entity_pos(target_player))
 		if dist <= perception_radius:
-			if target_player.has_method("take_damage"):
+			var attack_spec = CombatMath.AttackSpec.new("magma_spit", spit_damage, 20.0, _get_entity_pos(self))
+			if target_player.has_method("take_damage_spec"):
+				var res = target_player.take_damage_spec(attack_spec)
+				if res and res.is_parried:
+					current_state = State.STAGGERED
+					state_timer = 0.0
+					if poise and poise.has_method("take_poise_damage"):
+						poise.take_poise_damage(25.0)
+			elif target_player.has_method("take_damage"):
 				target_player.take_damage(spit_damage)
 			spit_fired.emit(target_player, spit_damage)
 
@@ -184,9 +201,47 @@ func _process_stagger(delta: float) -> void:
 func _on_pounce_hitbox_body_entered(body: Node3D) -> void:
 	if not is_instance_valid(body) or body == self:
 		return
-	if body.is_in_group("player") and body.has_method("take_damage"):
-		body.take_damage(pounce_damage)
+	if body.is_in_group("player"):
+		var attack_spec = CombatMath.AttackSpec.new("hound_pounce", pounce_damage, 35.0, _get_entity_pos(self))
+		if body.has_method("take_damage_spec"):
+			var res = body.take_damage_spec(attack_spec)
+			if res and res.is_parried:
+				_on_pounce_parried()
+		elif body.has_method("take_damage"):
+			body.take_damage(pounce_damage)
 		pounce_hit.emit(body, pounce_damage)
+
+func _on_pounce_parried() -> void:
+	if pounce_hitbox:
+		pounce_hitbox.set_deferred("monitoring", false)
+	current_state = State.STAGGERED
+	state_timer = 0.0
+	if poise and poise.has_method("take_poise_damage"):
+		poise.take_poise_damage(35.0)
+
+func take_damage_spec(attack_spec: CombatMath.AttackSpec) -> CombatMath.CombatHitResult:
+	if current_state == State.DEFEATED:
+		return CombatMath.CombatHitResult.new()
+	var my_pos = _get_entity_pos(self)
+	var facing = -global_transform.basis.z if is_inside_tree() else Vector3.FORWARD
+	var def_spec = CombatMath.DefenseSpec.new("tapas_magma_hound", my_pos, facing)
+	var res = CombatMath.resolve_attack(attack_spec, def_spec)
+	current_health = max(0, current_health - res.damage_dealt)
+	var poise_broken = false
+	if poise and poise.has_method("take_poise_damage"):
+		poise_broken = poise.take_poise_damage(attack_spec.poise_damage)
+	if current_health <= 0:
+		_die()
+	elif poise_broken or res.is_critical:
+		current_state = State.STAGGERED
+		state_timer = 0.0
+		if pounce_hitbox:
+			pounce_hitbox.monitoring = false
+	return res
+
+func take_damage(amount: int) -> void:
+	var spec = CombatMath.AttackSpec.new("generic", amount, 20.0, Vector3.ZERO)
+	take_damage_spec(spec)
 
 func take_hit(damage: int, poise_dmg: float = 20.0, _is_parryable: bool = false, impact_dir: Vector3 = Vector3.ZERO) -> void:
 	if current_state == State.DEFEATED:

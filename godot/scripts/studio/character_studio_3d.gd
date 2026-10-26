@@ -259,31 +259,31 @@ func apply_lighting_preset(preset: LightPreset) -> void:
 		LightPreset.SURYA_DAWN:
 			sun_light.rotation_degrees = Vector3(-32.0, 45.0, 0.0)
 			sun_light.light_color = Color(1.0, 0.88, 0.65)
-			sun_light.light_energy = 2.2
+			sun_light.light_energy = 1.95
 			rim_light.light_color = Color(1.0, 0.92, 0.75)
-			rim_light.light_energy = 1.6
+			rim_light.light_energy = 1.4
 			if fill_light:
 				fill_light.light_color = Color(0.85, 0.75, 0.95)
-				fill_light.light_energy = 1.2
+				fill_light.light_energy = 1.0
 			under_light.light_color = Color(1.0, 0.65, 0.2)
-			under_light.light_energy = 0.5
+			under_light.light_energy = 0.04
 			if world_env and world_env.environment:
-				world_env.environment.background_energy_multiplier = 1.1
-				world_env.environment.ambient_light_color = Color(0.42, 0.35, 0.30)
+				world_env.environment.background_energy_multiplier = 1.05
+				world_env.environment.ambient_light_color = Color(0.35, 0.30, 0.28)
 
 		LightPreset.HIGH_NOON:
 			sun_light.rotation_degrees = Vector3(-75.0, 20.0, 0.0)
 			sun_light.light_color = Color(1.0, 0.98, 0.92)
-			sun_light.light_energy = 2.6
+			sun_light.light_energy = 2.2
 			rim_light.light_color = Color(1.0, 0.88, 0.7)
-			rim_light.light_energy = 1.0
+			rim_light.light_energy = 0.9
 			if fill_light:
 				fill_light.light_color = Color(0.8, 0.85, 0.95)
-				fill_light.light_energy = 1.4
-			under_light.light_energy = 0.2
+				fill_light.light_energy = 1.1
+			under_light.light_energy = 0.0
 			if world_env and world_env.environment:
-				world_env.environment.background_energy_multiplier = 1.35
-				world_env.environment.ambient_light_color = Color(0.38, 0.36, 0.35)
+				world_env.environment.background_energy_multiplier = 1.2
+				world_env.environment.ambient_light_color = Color(0.32, 0.30, 0.30)
 
 		LightPreset.TWILIGHT_TAPAS:
 			sun_light.rotation_degrees = Vector3(-18.0, -110.0, 0.0)

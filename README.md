@@ -1,12 +1,12 @@
 # ☀️ Mythos: Astra & The Seven Realms
-> **Production Release v1.15.0-3d — Complete 3D Action-Adventure RPG Vertical Slice & Cross-Platform Engine Architecture**
+> **Production Release v1.16.0-3d — Seven-Realm Production Hardened & Independently Certified**
 
 [![Godot Engine CI](https://github.com/organization/mythos-astra-game/actions/workflows/godot-ci.yml/badge.svg)](https://github.com/organization/mythos-astra-game/actions/workflows/godot-ci.yml)
 [![CI - Multi-Platform Matrix](https://github.com/organization/mythos-astra-game/actions/workflows/ci.yml/badge.svg)](https://github.com/organization/mythos-astra-game/actions/workflows/ci.yml)
 [![Release Pipeline](https://github.com/organization/mythos-astra-game/actions/workflows/release.yml/badge.svg)](https://github.com/organization/mythos-astra-game/actions/workflows/release.yml)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Test Coverage: 95.73%](https://img.shields.io/badge/Coverage-95.73%25-brightgreen.svg)](#test-coverage)
-[![Godot Tests: 53/53 Passed](https://img.shields.io/badge/Godot%20Tests-53%2F53%20Passed-brightgreen.svg)](#test-coverage)
+[![Godot Tests: 216/216 Passed](https://img.shields.io/badge/Godot%20Tests-216%2F216%20Passed-brightgreen.svg)](#test-coverage)
 [![Vitest Tests: 504/504 Passed](https://img.shields.io/badge/Vitest%20Tests-504%2F504%20Passed-brightgreen.svg)](#test-coverage)
 [![Target Platforms](https://img.shields.io/badge/Platforms-Web%20|%20Win%20|%20Linux%20|%20macOS%20|%20Android%20|%20iOS-orange.svg)](#supported-platforms)
 
@@ -16,9 +16,15 @@
 
 **Mythos: Astra & The Seven Realms** is an epic third-person 3D mythological action-adventure RPG and tactical ARPG rooted in ancient Vedic cosmology, philosophy, and sacred Hoysala architecture.
 
-Players assume the mantle of **Veer**, the last consecrated Solar Guardian, journeying through two expansive, fully realized 3D realms:
-1. **Chapter I — Valley of Bhumi**: Cleansing demonic Tamas miasma, communing with Sage Tara, destroying patrolling Asura warriors, conquering **General Kalanemi** in a multi-phase boss fight, and consecrating the ancient Surya Altar.
+Players assume the mantle of **Veer**, the last consecrated Solar Guardian, journeying through seven expansive, fully realized 3D realms:
+1. **Chapter I — Valley of Bhumi**: Cleansing demonic Tamas miasma, communing with Sage Tara, mastering Training Sentinel combat drills, destroying patrolling Asura warriors, conquering **General Kalanemi** in a multi-phase boss fight, and consecrating the ancient Surya Altar.
 2. **Chapter II — Realm of Antariksha**: Ascending to the floating sky citadels of Vayu via Prana Glider and Harpoon Grapple, navigating vertical thermal updrafts, battling airborne Gale Falcons and Wind Archers, defeating **Matarishvan**, the Corrupted Cyclone Titan, and harmonizing the Vayu Wind Turbines.
+3. **Chapter III — Subterranean Vaults of Patala**: Navigating glowing crystal chasms and basalt bridges, evading Naga Spitters and Constrictors, defeating **Shesha Echo**, and reclaiming the primordial earth resonance.
+4. **Chapter IV — Solar Citadels of Svar**: Traversing golden solar terraces in the celestial heavens, repelling Surya Guardians and Solar Gryphons, and conquering **Surya Avatara** atop the grand disc altar.
+5. **Chapter V — Astral Sanctuary of Maharloka**: Ascending the starlit cosmic libraries, navigating levitating scripture platforms, battling Scripture Golems and Astral Rishis, and solving riddles of **Brihaspati**.
+6. **Chapter VI — Primordial Forge of Tapoloka**: Enduring the molten caldera, braving Agni Berserkers and Magma Hounds, and overcoming **Agni Rudra** in the forge of creation.
+7. **Chapter VII — Apex of Satyaloka**: Ascending to the cosmic summit, walking the transcendent white-and-gold lotus causeways, confronting Dharma Sentinels and Moksha Seraphs, and reaching equilibrium before **Brahma Avatara** and the eternal Wheel of Time.
+
 
 ---
 

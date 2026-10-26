@@ -423,3 +423,244 @@ Total: 166 passed, 0 failed. Exit Code: 0.
 8. `08_campaign_end_to_end_progression_certification.png`: Celestial Realm Map with all seven lokas unlocked.
 9. `09_production_hud_and_pause_system_certification.png`: Settings and accessibility sliders with audio controls.
 10. `10_final_moksha_consecration_and_epilogue_certification.png`: Final Grand Climax Resolution at Moksha Mahapeetham.
+
+---
+
+## 14. Stage Q9 Physical Integrity, Collisions & Camera Correction Verification
+
+### 14.1 Suite 26: Physical Integrity, Collisions & Camera Correction (`test_physical_integrity_and_camera_q9.gd`)
+`godot/tests/unit/test_physical_integrity_and_camera_q9.gd` validates:
+1. `test_world_collision_builder_hierarchical_coverage`: Verifies recursive collision builder runs cleanly across Bhumi Valley, Antariksha, and Patala; asserts StaticBody3D generation on Layer 1 for complex architecture (`TempleShikhara`), pillars (`Col_01`), and stairs (`Ghat_North`); confirms Area3D triggers and Astra Shard pickups are excluded from static colliders.
+2. `test_player_wall_penetration_prevention`: Verifies player controller wall blocking configurations (`floor_block_on_wall = true`, `safe_margin = 0.08`, `up_direction = Vector3.UP`), mesh AABB dimensions of the sanctum back wall, and vertical velocity clamping on floor (`velocity.y = 0.0`).
+3. `test_pillar_and_column_solid_collision`: Confirms cylindrical collision generation (`CylinderShape3D`) on temple columns (`Col_01`) with radius $\ge 0.35\text{m}$ and height $\ge 2.0\text{m}$, preventing capsule tunneling into pillar cores.
+4. `test_stair_and_ghat_step_traversal`: Validates floor snap length ($\ge 0.40\text{m}$), maximum slope angle ($\ge 45^\circ$), `_handle_stair_step_up` step-up riser calibration ($0.38\text{m}$), and smooth stair ramp colliders (`BoxShape3D`).
+5. `test_dash_motion_sweep_and_no_tunneling`: Validates Prana Dash speed ($18.0\text{ m/s}$) and duration ($0.22\text{s}$), verifying kinematic `test_move()` motion sweeps prevent obstacle tunneling.
+6. `test_camera_springarm_occlusion_and_roof_containment`: Verifies `SpringArm3D.collision_mask` checks Layer 1 (Environment), camera near-clipping plane $\le 0.05$, pitch limits ($-70.0^\circ$ to $25.0^\circ$), and adaptive tight-space framing configuration.
+7. `test_environment_interaction_line_of_sight_enforcement`: Tests `_can_interact_with()` line-of-sight checks, rejecting targets beyond $3.2\text{m}$ or behind the player, and validates contextual prompt formatting and suppression through solid walls.
+
+### 14.2 Comprehensive Multi-Suite Godot 3D Status (173 Tests, 100% Passing)
+```text
+========================================================
+  MYTHOS 3D GODOT ENGINE TEST RUNNER (Headless CI)
+========================================================
+Suite  1: Combat Mathematics (Domain)                                     [7/7 passed]
+Suite  2: Quest & Narrative Manager (Domain)                              [3/3 passed]
+Suite  3: Save State & Tamper Verification (Domain)                       [3/3 passed]
+Suite  4: Dialogue Runner (Domain)                                        [2/2 passed]
+Suite  5: Veer 3D Skinned Model & Rigging (Model/Anim)                    [4/4 passed]
+Suite  6: 3D Character Studio (Viewer/Inspection)                         [3/3 passed]
+Suite  7: 3D Physics, Camera & Traversal (Integration)                   [8/8 passed]
+Suite  8: 3D Landscape & World Architecture (Stage D)                     [8/8 passed]
+Suite  9: 3D Gameplay Vertical Slice & Boss Fight (Stage E)               [7/7 passed]
+Suite 10: Chapter II — Realm of Antariksha & Aerial Traversal (Stage G)   [9/9 passed]
+Suite 11: Chapter III — Realm of Patala & Subterranean Vaults (Stage H)   [9/9 passed]
+Suite 12: Chapter IV — Realm of Svar & Solar Citadels (Stage I)           [9/9 passed]
+Suite 13: Chapter V — Realm of Maharloka & Astral Libraries (Stage J)     [9/9 passed]
+Suite 14: Chapter VI — Realm of Tapoloka & Primordial Forge (Stage K)     [9/9 passed]
+Suite 15: Chapter VII — Realm of Satyaloka & Cosmic Dharma (Stage L)      [8/8 passed]
+Suite 16: Complete Seven-Realm Rendered Scene Lifecycle & E2E (Stage Q0)  [9/9 passed]
+Suite 17: Realistic 3D Locomotion & AnimationTree (Stage Q2)              [9/9 passed]
+Suite 18: Bhumi 3D Environment & Landscape Remaster (Stage Q3)            [6/6 passed]
+Suite 19: Polished 3D Combat, Enemy AI & Boss Experience (Stage Q4)       [6/6 passed]
+Suite 20: Antariksha Production Remaster (Stage Q5-A)                     [6/6 passed]
+Suite 21: Patala Production Remaster (Stage Q5-B)                         [6/6 passed]
+Suite 22: Seven-Realm Narrative, Animated NPCs & Cinematics (Stage Q6)    [7/7 passed]
+Suite 23: Svar Production Remaster & Cosmic Realm Verification (Stage Q5-C)[6/6 passed]
+Suite 24: Game Presentation, Modern UI/UX, Audio & Accessibility (Stage Q7)[7/7 passed]
+Suite 25: Production Hardening, Seven-Realm Verification & Release Certification (Stage Q8) [7/7 passed]
+Suite 26: Physical Integrity, Collisions & Camera Correction (Stage Q9)   [7/7 passed]
+--------------------------------------------------------
+Summary: Total: 173 | Passed: 173 | Failed: 0
+========================================================
+[TEST RUNNER] ALL GODOT 3D SUITES PASSED CLEANLY.
+```
+
+### 14.3 Stage Q9 Physical Integrity & Camera Screenshot Tour (`screenshots/physics_q9/`)
+1. `01_temple_sanctum_traversal_wall_containment.png`: Veer navigating temple sanctum against solid rear wall, proving zero penetration through stone architecture.
+2. `02_water_ghat_stairs_step_traversal.png`: Veer smoothly ascending water ghat stairs with compound trimesh step treads and smooth slope ramp.
+3. `03_temple_pillars_and_columns_solid_collision.png`: Veer traversing alongside carved temple columns with solid cylindrical collision shapes.
+4. `04_camera_orbit_tight_space_framing_under_roof.png`: Camera looking upward inside sanctum, SpringArm contracting safely under roof with adaptive framing keeping Veer centered.
+5. `05_environment_interaction_line_of_sight_altar.png`: Direct line of sight interaction facing Sun Altar with contextual prompt displayed.
+6. `06_environment_interaction_through_wall_occlusion.png`: Veer behind solid sanctum rear wall with interaction prompt suppressed by line-of-sight raycast.
+7. `07_prana_dash_motion_sweep_boundary.png`: Prana Dash motion sweep cleanly preserving collision boundaries without tunneling.
+8. `08_seven_realms_physical_integrity_overview.png`: Multi-realm physical collision verification in Antariksha sky realm.
+
+---
+
+## 15. Stage Q11 Realistic Locomotion, Skeletal Animation & Control Refinement Verification
+
+### 15.1 Suite 27: Realistic Locomotion, Skeletal Animation & Control Refinement (`test_locomotion_skeletal_animation_q11.gd`)
+`godot/tests/unit/test_locomotion_skeletal_animation_q11.gd` validates:
+1. `test_authored_locomotion_animation_library`: Instantiates production `veer.glb`, queries `AnimationPlayer`, and asserts presence of all 36 authored action clips, verifying multi-phase locomotion, transitions, acrobatics, and combat stances.
+2. `test_locomotion_blend_space_coverage`: Asserts `AnimationNodeBlendSpace2D` presence in `PlayerController3D` and validates coverage across Idle $(0, 0)$, Walk $(0, 4.2)$, Jog $(0, 7.5)$, Sprint $(0, 10.5)$, Walk Backward $(0, -3.5)$, Strafe Left $(-3.8, 0)$, and Strafe Right $(3.8, 0)$.
+3. `test_stopping_inertia_transitions`: Simulates deceleration from high speeds ($10.5\text{ m/s}$ and $4.2\text{ m/s}$) to zero velocity, verifying automatic triggering of `run_stop` (for entry speed $> 6.8\text{ m/s}$) and `walk_stop` (for entry speed $> 3.2\text{ m/s}$) stopping states.
+4. `test_ground_conformance_and_foot_placement`: Verifies `_update_ground_conformance` dual foot raycast configuration ($X = \pm 0.20\text{m}$), clamps visual mesh vertical offset within $[-0.15, +0.15]\text{m}$, and tests slope pitch alignment.
+5. `test_combat_alert_stance_selection`: Asserts that standing stationary with an active combo window or parry window transitions automatically into `idle_alert`.
+6. `test_camera_relative_movement_math`: Validates camera-relative vector math computing directional vectors relative to camera yaw and confirms player orientation stability during pure camera orbit.
+7. `test_camera_controls_and_deadzone`: Validates pointer capture mode on left click (`Input.MOUSE_MODE_CAPTURED`), ESC release, and smooth radial analog stick deadzones (deadzone threshold $0.15$).
+8. `test_body_banking_and_slope_pitch`: Verifies dynamic banking roll (clamped to $\pm 6.5^\circ$) on yaw turn velocity and athletic pitch lean (clamped to $5.5^\circ$) during sprint acceleration.
+
+### 15.2 Comprehensive Multi-Suite Godot 3D Status (181 Tests, 100% Passing)
+```text
+========================================================
+  MYTHOS 3D GODOT ENGINE TEST RUNNER (Headless CI)
+========================================================
+Suite  1: Combat Mathematics (Domain)                                     [7/7 passed]
+Suite  2: Quest & Narrative Manager (Domain)                              [3/3 passed]
+Suite  3: Save State & Tamper Verification (Domain)                       [3/3 passed]
+Suite  4: Dialogue Runner (Domain)                                        [2/2 passed]
+Suite  5: Veer 3D Skinned Model & Rigging (Model/Anim)                    [4/4 passed]
+Suite  6: 3D Character Studio (Viewer/Inspection)                         [3/3 passed]
+Suite  7: 3D Physics, Camera & Traversal (Integration)                   [8/8 passed]
+Suite  8: 3D Landscape & World Architecture (Stage D)                     [8/8 passed]
+Suite  9: 3D Gameplay Vertical Slice & Boss Fight (Stage E)               [7/7 passed]
+Suite 10: Chapter II — Realm of Antariksha & Aerial Traversal (Stage G)   [9/9 passed]
+Suite 11: Chapter III — Realm of Patala & Subterranean Vaults (Stage H)   [9/9 passed]
+Suite 12: Chapter IV — Realm of Svar & Solar Citadels (Stage I)           [9/9 passed]
+Suite 13: Chapter V — Realm of Maharloka & Astral Libraries (Stage J)     [9/9 passed]
+Suite 14: Chapter VI — Realm of Tapoloka & Primordial Forge (Stage K)     [9/9 passed]
+Suite 15: Chapter VII — Realm of Satyaloka & Cosmic Dharma (Stage L)      [8/8 passed]
+Suite 16: Complete Seven-Realm Rendered Scene Lifecycle & E2E (Stage Q0)  [9/9 passed]
+Suite 17: Realistic 3D Locomotion & AnimationTree (Stage Q2)              [9/9 passed]
+Suite 18: Bhumi 3D Environment & Landscape Remaster (Stage Q3)            [6/6 passed]
+Suite 19: Polished 3D Combat, Enemy AI & Boss Experience (Stage Q4)       [6/6 passed]
+Suite 20: Antariksha Production Remaster (Stage Q5-A)                     [6/6 passed]
+Suite 21: Patala Production Remaster (Stage Q5-B)                         [6/6 passed]
+Suite 22: Seven-Realm Narrative, Animated NPCs & Cinematics (Stage Q6)    [7/7 passed]
+Suite 23: Svar Production Remaster & Cosmic Realm Verification (Stage Q5-C)[6/6 passed]
+Suite 24: Game Presentation, Modern UI/UX, Audio & Accessibility (Stage Q7)[7/7 passed]
+Suite 25: Production Hardening, Seven-Realm Verification & Release Certification (Stage Q8) [7/7 passed]
+Suite 26: Physical Integrity, Collisions & Camera Correction (Stage Q9)   [7/7 passed]
+Suite 27: Realistic Locomotion, Skeletal Animation & Control Refinement (Stage Q11) [8/8 passed]
+Suite 28: Bhumi Environment, Landscape & Architectural Quality Remaster (Stage Q12) [7/7 passed]
+Suite 29: Player Guidance, UI Functionality & Quest Navigation (Stage Q13)      [8/8 passed]
+Suite 30: Gameplay, Combat, AI & Cinematic Experience Overhaul (Stage Q14)   [10/10 passed]
+--------------------------------------------------------
+Summary: Total: 206 | Passed: 206 | Failed: 0
+========================================================
+[TEST RUNNER] ALL GODOT 3D SUITES PASSED CLEANLY.
+```
+
+### 15.3 Stage Q11 Locomotion & Skeletal Animation Screenshot Tour (`screenshots/locomotion_q11/`)
+1. `01_locomotion_walk_forward_stride.png`: 12-phase bipedal walk stride with heel-strike, foot roll, pelvic vertical oscillation, and counter-swing shoulders.
+2. `02_locomotion_sprint_forward_drive.png`: Maximum 10.5 m/s athletic sprint drive with 14° forward lean, deep knee flex, and arm drive.
+3. `03_locomotion_walk_backward_reverse_gait.png`: Reverse gait foot roll and backward stepping with balanced posture.
+4. `04_locomotion_strafe_lateral_step.png`: Lateral crossover strafe with grounded foot planting and pelvic tilt.
+5. `05_locomotion_stair_traversal_step_up.png`: Temple staircase ascent with clean tread contact and step clearance.
+6. `06_locomotion_slope_ground_conformance.png`: Slope ground conformance matching ramp incline with dual foot raycasts.
+7. `07_locomotion_jump_apex_trajectory.png`: Apex aerial leap silhouette with weapon readiness.
+8. `08_locomotion_landing_impact_compression.png`: Knees-flexed landing compression absorbing impact shock.
+9. `09_locomotion_stopping_inertia_plant.png`: Stopping inertia foot plant and deceleration posture.
+10. `10_locomotion_combat_alert_and_slash.png`: Alert combat stance and horizontal Surya slash arc synchronized with right hand socket.
+
+### 15.4 Stage Q12 Bhumi Environment, Landscape & Architectural Quality Remaster (`screenshots/environment_q12/`)
+1. `01_bhumi_sanctum_surya_kund_panoramic.png`: Grand panoramic view of reconstructed Hoysala Vimana and Sanctum in Vedic morning light.
+2. `02_bhumi_processional_avenue_and_torana.png`: Ceremonial Processional Avenue framed by monumental Sanchi Torana with Surya Dharmachakra crest.
+3. `03_bhumi_kalyani_stepped_reservoir.png`: Kalyani Stepped Water Reservoir with sacred turquoise water, flagstone ghat steps, and corner Chhatris.
+4. `04_bhumi_dandaka_forest_trail.png`: Winding Dandaka pilgrim forest trail passing Shorea Sal trees, rock outcrops, and stone lanterns.
+5. `05_bhumi_vata_vriksha_banyan_grove.png`: Monumental Vata-Vriksha Banyan tree with sinuous trunk, buttress roots, aerial prop roots, and organic canopy.
+6. `06_bhumi_temple_courtyard_and_pillars.png`: Lathe-turned Hoysala bell pillars, bracket capitals, and carved Deepastambha stone lanterns with glowing flames.
+7. `07_bhumi_tapas_mountain_ridge_ascent.png`: Ascending switchback trail up Tapas Mountain Ridge through red ochre crags and basalt boulders.
+8. `08_bhumi_ruined_watchtower_bastion.png`: Ruined Watchtower Cyclopean stone bastion at mountain summit with exterior spiral staircase and battlements.
+9. `09_bhumi_sun_shrine_and_astra_shard.png`: Sacred Sun Shrine Lotus Peetham with rotating golden Surya mandala, Astra Shard, and glowing Garbhagriha portal.
+10. `10_bhumi_third_person_traversal_exploration.png`: Protagonist Veer in third-person traversal across the remastered Bhumi Valley with atmospheric depth and dynamic shadows.
+
+### 15.5 Stage Q13 Player Guidance, UI Functionality & Quest Navigation Tour (`screenshots/guidance_q13/`)
+1. `01_guidance_unobstructed_hud_vitality_compass.png`: Clean, unobstructed HUD with Vitality bars, Surya weapon badge, dynamic compass, and hidden controls overlay.
+2. `02_guidance_tutorial_onboarding_camera_look.png`: Contextual Onboarding Step 1 guiding camera rotation with adaptive device-specific keycap prompts.
+3. `03_guidance_tutorial_onboarding_movement_walk.png`: Contextual Onboarding Step 2 guiding movement along the sacred processional avenue.
+4. `04_guidance_3d_waypoint_marker_devi_tara.png`: Screen-projected 3D Waypoint indicator with distance readout and objective name badge guiding player to Devi Tara.
+5. `05_guidance_npc_dialogue_modal_devi_tara.png`: Interactive NPC dialogue modal with Devi Tara featuring Sanskrit lore, speaker badges, and subtitles.
+6. `06_guidance_quest_journal_tab_active_mission.png`: Pause Menu Quest Journal tab displaying active chapter, lore description, and objective checklist.
+7. `07_guidance_2d_tactical_realm_map.png`: 2D Tactical Realm Map of Bhumi with live player arrow, active quest pin, regional borders, and fast travel.
+8. `08_guidance_settings_and_accessibility_tab.png`: Settings & Accessibility tab with volume sliders, camera sensitivity, invert-Y, reduced motion, and tutorial replay.
+9. `09_guidance_controls_guide_shortcuts_tab.png`: Comprehensive multi-device Controls Guide table for Keyboard/Mouse, Gamepad, and Touch.
+10. `10_guidance_kalanemi_encounter_boss_waypoint.png`: General Kalanemi Watchtower Ruins encounter with 3D boss waypoint, health bar, and combat guidance.
+
+### 15.6 Stage Q14 Gameplay, Combat, AI & Cinematic Experience Tour (`screenshots/gameplay_q14/`)
+1. `01_gameplay_training_sentinel_idle_yantra.png`: Sculpted Hoysala Training Sentinel in idle hover with spinning yantra rings and prana core.
+2. `02_gameplay_training_sentinel_telegraph_windup.png`: Sentinel rearing back blade arms with glaring warning optics and telegraph prompt.
+3. `03_gameplay_training_sentinel_parry_stagger.png`: Player executing perfect parry deflection breaking Sentinel poise with spark VFX.
+4. `04_gameplay_player_dodge_iframe_slide.png`: Veer executing Prana Dash through incoming strike with invulnerability frames.
+5. `05_gameplay_devi_tara_cinematic_dialogue.png`: Framed conversational performance with Devi Tara in Dandaka Grove with Sanskrit subtitles.
+6. `06_gameplay_asura_warriors_patrol_spacing.png`: Two Asura Warriors on Tapas Ridge maintaining coordinated tactical spacing.
+7. `07_gameplay_asura_parry_counter_critical.png`: Player parrying Asura strike triggering poise break critical window.
+8. `08_gameplay_kalanemi_phase1_ground_slam_shockwave.png`: General Kalanemi landing leap slam with expanding fiery shockwave ring.
+9. `09_gameplay_kalanemi_phase2_enraged_void_charge.png`: Phase 2 Enraged Kalanemi executing high-speed Void Charge rush.
+10. `10_gameplay_bhumi_altar_consecration_portal.png`: High Sun Altar consecrated with radiant solar beam and Antariksha Portal unsealed.
+
+---
+
+## 16. Stage Q15 — Seven-Realm Production Hardening & Independent Certification
+
+Stage Q15 independent certification verifies that all seven mythological realms (Bhumi, Antariksha, Patala, Svar, Maharloka, Tapoloka, Satyaloka) implement genuine 3D combat, enemy AI spacing, parry deflection callbacks, poise breaking, boss retry resets, and clean scene transitions.
+
+### 16.1 Suite 31: Seven-Realm Production Hardening Tests (`godot/tests/unit/test_seven_realms_hardening_q15.gd`)
+1. `test_bhumi_boss_kalanemi_reset_on_retry`: Asserts full 800 HP restoration, poise recovery, dormancy state, and Phase 1 reset upon player retry.
+2. `test_antariksha_boss_matarishvan_combat_math_and_parry`: Asserts CombatMath integration, poise break, and unconditional stagger transition during `_on_sweep_parried()`.
+3. `test_antariksha_enemies_spacing_and_parry`: Asserts Wind Archer and Gale Falcon neighbor repulsion flocking and attack parry callbacks.
+4. `test_patala_boss_shesha_combat_math_and_parry`: Asserts Boss Shesha Echo CombatMath integration and parry poise damage.
+5. `test_patala_naga_enemies_spacing_and_parry`: Asserts Naga Spitter and Naga Constrictor neighbor separation and parry callbacks.
+6. `test_svar_boss_surya_avatara_combat_math_and_parry`: Asserts Surya Avatara CombatMath damage calculation and cleave parry stagger.
+7. `test_maharloka_boss_brihaspati_combat_math_and_parry`: Asserts Brihaspati astral boss CombatMath integration and parry poise damage.
+8. `test_tapoloka_boss_agni_rudra_combat_math_and_parry`: Asserts Agni Rudra forge boss CombatMath integration and parry poise damage.
+9. `test_satyaloka_boss_brahma_avatara_combat_math_and_parry`: Asserts Brahma Avatara cosmic apex boss CombatMath integration and parry poise damage.
+10. `test_seven_realms_retry_reset_contracts`: Asserts all 7 realm level scripts implement `_on_retry_requested()` and cleanly reset their respective bosses without scene corruption.
+
+### 16.2 Full Multi-Suite Godot 3D Status (216 Tests, 100% Passing)
+```text
+========================================================
+  MYTHOS 3D GODOT ENGINE TEST RUNNER (Headless CI)
+========================================================
+Suite  1: Combat Mathematics (Domain)                                     [7/7 passed]
+Suite  2: Quest & Narrative Manager (Domain)                              [3/3 passed]
+Suite  3: Save State & Tamper Verification (Domain)                       [3/3 passed]
+Suite  4: Dialogue Runner (Domain)                                        [2/2 passed]
+Suite  5: Veer 3D Skinned Model & Rigging (Model/Anim)                    [4/4 passed]
+Suite  6: 3D Character Studio (Viewer/Inspection)                         [3/3 passed]
+Suite  7: 3D Physics, Camera & Traversal (Integration)                   [8/8 passed]
+Suite  8: 3D Landscape & World Architecture (Stage D)                     [8/8 passed]
+Suite  9: 3D Gameplay Vertical Slice & Boss Fight (Stage E)               [7/7 passed]
+Suite 10: Chapter II — Realm of Antariksha & Aerial Traversal (Stage G)   [9/9 passed]
+Suite 11: Chapter III — Realm of Patala & Subterranean Vaults (Stage H)   [9/9 passed]
+Suite 12: Chapter IV — Realm of Svar & Solar Citadels (Stage I)           [9/9 passed]
+Suite 13: Chapter V — Realm of Maharloka & Astral Libraries (Stage J)     [9/9 passed]
+Suite 14: Chapter VI — Realm of Tapoloka & Primordial Forge (Stage K)     [9/9 passed]
+Suite 15: Chapter VII — Realm of Satyaloka & Cosmic Dharma (Stage L)      [8/8 passed]
+Suite 16: Complete Seven-Realm Rendered Scene Lifecycle & E2E (Stage Q0)  [9/9 passed]
+Suite 17: Realistic 3D Locomotion & AnimationTree (Stage Q2)              [9/9 passed]
+Suite 18: Bhumi 3D Environment & Landscape Remaster (Stage Q3)            [6/6 passed]
+Suite 19: Polished 3D Combat, Enemy AI & Boss Experience (Stage Q4)       [6/6 passed]
+Suite 20: Antariksha Production Remaster (Stage Q5-A)                     [6/6 passed]
+Suite 21: Patala Production Remaster (Stage Q5-B)                         [6/6 passed]
+Suite 22: Seven-Realm Narrative, Animated NPCs & Cinematics (Stage Q6)    [7/7 passed]
+Suite 23: Svar Production Remaster & Cosmic Realm Verification (Stage Q5-C)[6/6 passed]
+Suite 24: Game Presentation, Modern UI/UX, Audio & Accessibility (Stage Q7)[7/7 passed]
+Suite 25: Production Hardening, Seven-Realm Verification & Release Certification (Stage Q8) [7/7 passed]
+Suite 26: Physical Integrity, Collisions & Camera Correction (Stage Q9)   [7/7 passed]
+Suite 27: Realistic Locomotion, Skeletal Animation & Control Refinement (Stage Q11) [8/8 passed]
+Suite 28: Bhumi Environment, Landscape & Architectural Quality Remaster (Stage Q12) [7/7 passed]
+Suite 29: Player Guidance, UI Functionality & Quest Navigation (Stage Q13)      [8/8 passed]
+Suite 30: Gameplay, Combat, AI & Cinematic Experience Overhaul (Stage Q14)   [10/10 passed]
+Suite 31: Seven-Realm Production Hardening & Independent Certification (Stage Q15) [10/10 passed]
+--------------------------------------------------------
+Summary: Total: 216 | Passed: 216 | Failed: 0
+========================================================
+[TEST RUNNER] ALL GODOT 3D SUITES PASSED CLEANLY.
+```
+
+### 16.3 Stage Q15 Seven-Realm In-Engine GPU Visual Certification Tour (`screenshots/seven_realms_q15/`)
+1. `01_bhumi_sanctum_panoramic.png`: Grand panoramic view of Bhumi Sanctum, Hoysala Vimana, and Dandaka Valley under Vedic dawn sky.
+2. `02_bhumi_kalanemi_boss_encounter.png`: Third-person combat encounter with General Kalanemi at the Ruined Watchtower bastion.
+3. `03_antariksha_cloud_sea_panoramic.png`: Vast panoramic view of Antariksha Cloud Sea, floating citadel spires, and wind turbine towers.
+4. `04_antariksha_matarishvan_boss_encounter.png`: Veer confronting Cyclone Titan Matarishvan in the aerial vortex amphitheater.
+5. `05_patala_subterranean_vaults_panoramic.png`: Monumental underground cavern with crystalline pillars, basalt bridges, and molten lava chasms.
+6. `06_patala_shesha_echo_boss_encounter.png`: Boss encounter with the colossal Shesha Echo serpent within the subterranean pit.
+7. `07_svar_solar_citadels_panoramic.png`: Radiant golden citadel platforms of Svar (Svarga) illuminated by divine celestial sunbeams.
+8. `08_svar_surya_avatara_boss_encounter.png`: Confrontation against Surya Avatara atop the high golden disc altar.
+9. `09_maharloka_astral_sanctuary_panoramic.png`: Mystic starlit libraries of Maharloka with floating scripture tablets and rishi meditation rings.
+10. `10_maharloka_brihaspati_boss_encounter.png`: Battle against Astral Guru Brihaspati with celestial yantras and resonant mantras.
+11. `11_tapoloka_primordial_forge_panoramic.png`: Burning red crags of Tapoloka with primordial forge furnaces and flowing magma rivers.
+12. `12_tapoloka_agni_rudra_boss_encounter.png`: Clashing with Agni Rudra in the heart of the sacred Vedic fire caldera.
+13. `13_satyaloka_apex_dharma_panoramic.png`: Transcendent white-and-gold lotus architecture of Satyaloka at the cosmic summit.
+14. `14_satyaloka_brahma_avatara_boss_encounter.png`: Final cosmic confrontation with Brahma Avatara before the great Wheel of Time.

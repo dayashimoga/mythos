@@ -191,14 +191,26 @@ static func create_terrain_mesh() -> ArrayMesh:
 	var mesh: ArrayMesh = st.commit()
 	return mesh
 
-# Creates standard PBR terrain material
+# Creates standard PBR terrain material with normal maps and high-frequency surface detail
 static func create_terrain_material() -> StandardMaterial3D:
 	var mat: StandardMaterial3D = StandardMaterial3D.new()
 	mat.vertex_color_use_as_albedo = true
 	mat.albedo_color = Color(1.0, 1.0, 1.0, 1.0)
-	mat.roughness = 0.84
-	mat.metallic = 0.04
-	mat.specular = 0.22
+	mat.roughness = 0.82
+	mat.metallic = 0.02
+	mat.specular = 0.25
+	mat.uv1_scale = Vector3(16.0, 16.0, 1.0)
+
+	var grass_tex = load("res://assets/environment/textures/terrain_grass_albedo.png")
+	if grass_tex:
+		mat.albedo_texture = grass_tex
+
+	var norm_tex = load("res://assets/environment/textures/terrain_grass_normal.png")
+	if norm_tex:
+		mat.normal_enabled = true
+		mat.normal_texture = norm_tex
+		mat.normal_scale = 1.15
+
 	return mat
 
 # Creates sacred water surface plane mesh
@@ -209,14 +221,23 @@ static func create_water_mesh() -> PlaneMesh:
 	plane.subdivide_depth = 24
 	return plane
 
-# Creates translucent sacred water material with Fresnel reflections and subtle emission
+# Creates translucent sacred water material with Fresnel reflections, ripples, and subtle emission
 static func create_water_material() -> StandardMaterial3D:
 	var mat: StandardMaterial3D = StandardMaterial3D.new()
 	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	mat.albedo_color = Color(0.14, 0.52, 0.58, 0.82) # Radiant Sacred Turquoise
-	mat.roughness = 0.08
-	mat.metallic = 0.18
-	mat.specular = 0.92
+	mat.albedo_color = Color(0.12, 0.48, 0.55, 0.80) # Radiant Sacred Turquoise
+	mat.roughness = 0.06
+	mat.metallic = 0.22
+	mat.specular = 0.95
 	mat.emission_enabled = true
 	mat.emission = Color(0.04, 0.18, 0.22)
+	mat.uv1_scale = Vector3(6.0, 6.0, 1.0)
+
+	var w_norm = load("res://assets/environment/textures/water_normal.png")
+	if w_norm:
+		mat.normal_enabled = true
+		mat.normal_texture = w_norm
+		mat.normal_scale = 0.85
+
 	return mat
+
