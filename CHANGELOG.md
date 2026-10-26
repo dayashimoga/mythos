@@ -2191,3 +2191,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Updated `godot/scripts/tools/build_web_pack.gd` to automatically copy the compiled 371 MB package to `builds/windows/mythos_3d.pck` and `builds/linux/mythos_3d.pck`.
 - **Git Ignore Anchoring**:
   - Fixed `/tools/` anchor in `.gitignore` to prevent inadvertent exclusion of `godot/scripts/tools/`.
+- **Godot CI Performance & Hang Resolution**:
+  - Eliminated 41-minute container hangs caused by Godot 4 `--editor --quit` deadlock and missing Blender binaries when scanning `.blend` assets.
+  - Added `import/blender/enabled=false` and `import/fbx/enabled=false` in `godot/project.godot`.
+  - Added `exclude_filter="*.blend,*.blend1,*.tmp"` across all export presets in `godot/export_presets.cfg`.
+  - Upgraded `.github/workflows/godot-ci.yml` to use `--import` with `--rendering-driver dummy` instead of `--editor --quit`.
+  - Integrated `actions/cache@v4` for `godot/.godot/imported` to enable instantaneous asset cache reuse.
+  - Enforced a 15-minute job timeout and 180-second step timeout to guarantee pipelines never hang indefinitely.
+
