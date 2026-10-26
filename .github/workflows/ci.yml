@@ -139,6 +139,15 @@ jobs:
         if: matrix.target == 'windows-x64'
         run: cargo build --manifest-path src-tauri/Cargo.toml --release
 
+      - name: Upload Windows Native Application Binary
+        if: matrix.target == 'windows-x64'
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-app-windows-x64
+          path: src-tauri/target/release/mythos-astra.exe
+          if-no-files-found: warn
+          retention-days: 14
+
       - name: Build Native Linux & Android
         if: matrix.target == 'linux-x64-and-android'
         run: |
@@ -147,11 +156,38 @@ jobs:
           chmod +x gradlew
           ./gradlew assembleDebug || echo "Gradle build step complete"
 
+      - name: Upload Linux Native Application Binary
+        if: matrix.target == 'linux-x64-and-android'
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-app-linux-x64
+          path: src-tauri/target/release/mythos-astra
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Upload Android APK
+        if: matrix.target == 'linux-x64-and-android'
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-app-android-apk
+          path: android/app/build/outputs/apk/**/*.apk
+          if-no-files-found: ignore
+          retention-days: 14
+
       - name: Build Native macOS & iOS
         if: matrix.target == 'macos-and-ios'
         run: |
           cargo build --manifest-path src-tauri/Cargo.toml --release || echo "macOS cargo build step"
           xcodebuild -project ios/MythosAstra.xcodeproj -scheme MythosAstra -destination 'generic/platform=iOS' CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO build || echo "iOS build step"
+
+      - name: Upload macOS Native Application Binary
+        if: matrix.target == 'macos-and-ios'
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-app-macos
+          path: src-tauri/target/release/mythos-astra
+          if-no-files-found: ignore
+          retention-days: 14
 
   build-verification:
     name: Package & Artifact Binary Verification
@@ -194,6 +230,13 @@ jobs:
           test -f dist/DEPENDENCY_MANIFEST.json || exit 1
           test -f dist/release-artifacts/SHA256SUMS.txt || exit 1
           test -f dist/release-artifacts/RELEASE_MANIFEST.json || exit 1
+
+      - name: Upload All Platform Distribution Artifacts (Apps & Packages)
+        uses: actions/upload-artifact@v4
+        with:
+          name: all-platform-release-artifacts
+          path: dist/release-artifacts/
+          retention-days: 30
 
       - name: Upload production build artifact
         uses: actions/upload-artifact@v4

@@ -19,6 +19,48 @@ function adler32(buf, offset = 0, length = buf.length - offset) {
   return ((b << 16) | a) >>> 0;
 }
 
+function extractArchive(archivePath, targetExtractDir) {
+  if (archivePath.endsWith('.tar.gz') || archivePath.endsWith('.tgz')) {
+    execSync(`tar -xzf "${archivePath}" -C "${targetExtractDir}"`, { stdio: 'pipe' });
+    return;
+  }
+
+  let extracted = false;
+  let lastError = null;
+
+  if (process.platform !== 'win32') {
+    try {
+      execSync(`unzip -qo "${archivePath}" -d "${targetExtractDir}"`, { stdio: 'pipe' });
+      extracted = true;
+    } catch (e) {
+      lastError = e;
+    }
+  } else {
+    try {
+      execSync(`tar -xf "${archivePath}" -C "${targetExtractDir}"`, { stdio: 'pipe' });
+      extracted = true;
+    } catch (e) {
+      lastError = e;
+    }
+  }
+
+  if (!extracted) {
+    for (const py of ['python3', 'python']) {
+      try {
+        execSync(`${py} -m zipfile -e "${archivePath}" "${targetExtractDir}"`, { stdio: 'pipe' });
+        extracted = true;
+        break;
+      } catch (e) {
+        lastError = e;
+      }
+    }
+  }
+
+  if (!extracted) {
+    throw new Error(`Failed to extract ${path.basename(archivePath)}: ${lastError?.message || 'unknown error'}`);
+  }
+}
+
 async function validateArtifacts() {
   console.log('================================================================');
   console.log('[Artifact Validator] Stage 1 Cross-Platform Artifact Validation');
@@ -270,7 +312,7 @@ async function validateArtifacts() {
     fs.mkdirSync(targetExtractDir, { recursive: true });
 
     try {
-      execSync(`tar -xf "${archivePath}" -C "${targetExtractDir}"`, { stdio: 'pipe' });
+      extractArchive(archivePath, targetExtractDir);
     } catch (err) {
       console.error(`[Artifact Validator] Failed to unpack ${check.archive}:`, err.message);
       process.exit(1);
