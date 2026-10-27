@@ -28,36 +28,40 @@ def save_image(img: Image.Image, filename: str):
 # 1. Mat_Veer_Skin (1024x1024)
 def make_skin_textures():
     size = (1024, 1024)
-    # Warm radiant Indian bronze heroic skin tone (#A86538)
-    albedo = Image.new("RGBA", size, (168, 101, 56, 255))
+    # Natural warm heroic Indian bronze skin tone (#A05F36 to #B67240)
+    albedo = Image.new("RGBA", size, (160, 95, 54, 255))
     draw = ImageDraw.Draw(albedo)
     
-    # Smooth anatomical gradient (warmer reddish undertones)
+    # Smooth anatomical tonal gradation (warmer reddish undertones)
     for y in range(size[1]):
         t = y / size[1]
-        r = int(162 + 18 * math.sin(t * math.pi))
-        g = int(96 + 14 * math.sin(t * math.pi))
-        b = int(52 + 10 * math.sin(t * math.pi))
+        r = int(156 + 22 * math.sin(t * math.pi))
+        g = int(92 + 16 * math.sin(t * math.pi))
+        b = int(50 + 12 * math.sin(t * math.pi))
         draw.line([(0, y), (size[0], y)], fill=(r, g, b, 255))
     
-    # Subtle skin pore and dermal noise
+    # Subtle organic epidermal micro-variation
     np.random.seed(42)
-    noise = (np.random.rand(size[1], size[0]) - 0.5) * 6.0
+    noise = (np.random.rand(size[1], size[0]) - 0.5) * 5.0
     arr = np.array(albedo, dtype=np.float32)
     for c in range(3):
         arr[:, :, c] = np.clip(arr[:, :, c] + noise, 0, 255)
     albedo = Image.fromarray(arr.astype(np.uint8))
     
-    # Normal map with subtle micro-pore texture
+    # Normal map with realistic micro-pore & dermal surface
     normal = Image.new("RGB", size, (128, 128, 255))
     narr = np.array(normal, dtype=np.float32)
-    pnoise = (np.random.rand(size[1], size[0]) - 0.5) * 4.0
+    pnoise = (np.random.rand(size[1], size[0]) - 0.5) * 3.5
     narr[:, :, 0] = np.clip(narr[:, :, 0] + pnoise, 0, 255)
     narr[:, :, 1] = np.clip(narr[:, :, 1] + pnoise, 0, 255)
-    normal = Image.fromarray(narr.astype(np.uint8)).filter(ImageFilter.GaussianBlur(radius=0.8))
+    normal = Image.fromarray(narr.astype(np.uint8)).filter(ImageFilter.GaussianBlur(radius=0.7))
     
-    # MR: Skin roughness ~ 0.48 (122), metallic = 0
-    mr = Image.new("RGB", size, (255, 122, 0))
+    # MR: Natural skin roughness ~ 0.62 (158), metallic = 0.0 (ELIMINATES PLASTIC SPECULAR SHINE)
+    mr_arr = np.zeros((size[1], size[0], 3), dtype=np.uint8)
+    mr_arr[:, :, 0] = 255 # Unused/AO
+    mr_arr[:, :, 1] = 158 # Roughness = 0.62 (matte skin)
+    mr_arr[:, :, 2] = 0   # Metallic = 0.0
+    mr = Image.fromarray(mr_arr)
     
     save_image(albedo, "skin_albedo.png")
     save_image(normal, "skin_normal.png")
@@ -196,28 +200,69 @@ def make_gold_textures():
 # 5. Mat_Veer_Sash (1024x1024)
 def make_sash_textures():
     size = (1024, 1024)
-    # Tapovan Celestial Azure Silk (#1565C0) with golden runes
-    albedo = Image.new("RGBA", size, (21, 101, 192, 255))
+    # Royal Lapis Lazuli / Tapovan Celestial Azure Silk (#122B4A to #1A3B66)
+    albedo = Image.new("RGBA", size, (18, 43, 74, 255))
     draw = ImageDraw.Draw(albedo)
     
-    for y in range(0, size[1], 8):
-        draw.line([(0, y), (size[0], y)], fill=(28, 120, 222, 255), width=4)
-    draw.rectangle([0, 0, size[0], 40], fill=(246, 192, 42, 255))
-    draw.rectangle([0, size[1] - 40, size[0], size[1]], fill=(246, 192, 42, 255))
+    # Fine woven silk warp/weft striations
+    for y in range(0, size[1], 4):
+        tint = (y * 7) % 16 - 8
+        draw.line([(0, y), (size[0], y)], fill=(18 + tint, 43 + tint, 74 + tint + 6, 255), width=2)
+        
+    # Rich Golden Zari borders along both edges of the sash (Y in [0, 90] and [size[1]-90, size[1]])
+    zari_gold = (246, 186, 34, 255)
+    zari_dark = (168, 108, 18, 255)
+    border_w = 75
+    draw.rectangle([0, 0, size[0], border_w], fill=zari_gold)
+    draw.rectangle([0, size[1] - border_w, size[0], size[1]], fill=zari_gold)
+    draw.line([(0, border_w), (size[0], border_w)], fill=zari_dark, width=4)
+    draw.line([(0, size[1] - border_w), (size[0], size[1] - border_w)], fill=zari_dark, width=4)
     
+    # Intricate geometric Zari embroidery diamonds along borders
+    for x in range(0, size[0], 36):
+        # Top border diamonds
+        draw.polygon([(x, 15), (x + 18, 38), (x, 60), (x - 18, 38)], fill=(255, 235, 120, 255), outline=zari_dark)
+        # Bottom border diamonds
+        by = size[1] - border_w + 15
+        draw.polygon([(x, by), (x + 18, by + 23), (x, by + 45), (x - 18, by + 23)], fill=(255, 235, 120, 255), outline=zari_dark)
+        
+    # Central radiant solar medallions (Surya-Padma) along the sash body
     emissive = Image.new("RGB", size, (0, 0, 0))
     edraw = ImageDraw.Draw(emissive)
-    for x in range(80, size[0], 140):
-        cy = size[1] // 2
-        draw.ellipse([x - 28, cy - 28, x + 28, cy + 28], fill=(255, 218, 55, 255), outline=(255, 255, 195, 255), width=3)
-        draw.line([(x - 40, cy), (x + 40, cy)], fill=(255, 238, 95, 255), width=4)
-        draw.line([(x, cy - 40), (x, cy + 40)], fill=(255, 238, 95, 255), width=4)
-        edraw.ellipse([x - 28, cy - 28, x + 28, cy + 28], fill=(100, 215, 255))
-        edraw.line([(x - 40, cy), (x + 40, cy)], fill=(160, 235, 255), width=4)
-        edraw.line([(x, cy - 40), (x, cy + 40)], fill=(160, 235, 255), width=4)
+    step_x = 128
+    cy = size[1] // 2
+    for x in range(step_x // 2, size[0], step_x):
+        # Golden floral rosette
+        draw.ellipse([x - 28, cy - 28, x + 28, cy + 28], fill=(245, 195, 45, 255), outline=(255, 240, 160, 255), width=3)
+        draw.ellipse([x - 14, cy - 14, x + 14, cy + 14], fill=(215, 25, 30, 255)) # Ruby core
+        # 8 radiant rays
+        for a_deg in range(0, 360, 45):
+            rad = math.radians(a_deg)
+            x1 = x + int(math.cos(rad) * 44)
+            y1 = cy + int(math.sin(rad) * 44)
+            draw.line([(x, cy), (x1, y1)], fill=(255, 225, 75, 255), width=3)
+            edraw.line([(x, cy), (x1, y1)], fill=(120, 200, 255), width=2)
+        edraw.ellipse([x - 12, cy - 12, x + 12, cy + 12], fill=(255, 160, 30))
     
+    # Normal map with woven silk ribbing
     normal = Image.new("RGB", size, (128, 128, 255))
-    mr = Image.new("RGB", size, (255, 140, 25))
+    ndraw = ImageDraw.Draw(normal)
+    ndraw.line([(0, border_w), (size[0], border_w)], fill=(155, 155, 245), width=4)
+    ndraw.line([(0, size[1] - border_w), (size[0], size[1] - border_w)], fill=(100, 100, 245), width=4)
+    normal = normal.filter(ImageFilter.GaussianBlur(radius=1.2))
+    
+    # MR: Silk Roughness ~ 0.45 (115), Metallic = 0.05 (13); Zari borders Roughness 0.22, Metallic 0.85
+    mr_arr = np.zeros((size[1], size[0], 3), dtype=np.uint8)
+    mr_arr[:, :, 0] = 255
+    mr_arr[:, :, 1] = 115 # Silk roughness
+    mr_arr[:, :, 2] = 13  # Low metallic
+    # Zari gold borders
+    mr_arr[:border_w, :, 1] = 56
+    mr_arr[:border_w, :, 2] = 216
+    mr_arr[size[1]-border_w:, :, 1] = 56
+    mr_arr[size[1]-border_w:, :, 2] = 216
+    mr = Image.fromarray(mr_arr)
+    
     save_image(albedo, "sash_albedo.png")
     save_image(normal, "sash_normal.png")
     save_image(mr, "sash_mr.png")
@@ -282,25 +327,55 @@ def make_hair_textures():
 # 8. Mat_Veer_Eyes (512x512)
 def make_eyes_textures():
     size = (512, 512)
-    # Off-white sclera with subtle warm shading
-    albedo = Image.new("RGBA", size, (235, 232, 228, 255))
+    # Off-white warm sclera with subtle realistic edge shadow
+    albedo = Image.new("RGBA", size, (240, 237, 232, 255))
     draw = ImageDraw.Draw(albedo)
     
     cx, cy = size[0] // 2, size[1] // 2
-    # Dark amber / honey-brown iris with limbal ring
+    # Deep limbal ring (#1A0E04)
     r_iris = 160
-    draw.ellipse([cx - r_iris, cy - r_iris, cx + r_iris, cy + r_iris], fill=(85, 42, 16, 255), outline=(32, 16, 8, 255), width=8)
-    # Inner honey highlights
-    r_inner = 110
-    draw.ellipse([cx - r_inner, cy - r_inner, cx + r_inner, cy + r_inner], fill=(148, 78, 24, 255))
+    draw.ellipse([cx - r_iris, cy - r_iris, cx + r_iris, cy + r_iris], fill=(42, 20, 8, 255), outline=(18, 8, 4, 255), width=10)
+    
+    # Outer dark amber ring
+    r_outer = 150
+    draw.ellipse([cx - r_outer, cy - r_outer, cx + r_outer, cy + r_outer], fill=(136, 68, 16, 255))
+    
+    # Radiant solar golden-amber iris body (#E89B16)
+    r_mid = 125
+    draw.ellipse([cx - r_mid, cy - r_mid, cx + r_mid, cy + r_mid], fill=(228, 152, 22, 255))
+    
+    # Radial solar striations (Surya Netra rays)
+    for a_deg in range(0, 360, 6):
+        rad = math.radians(a_deg)
+        x0 = cx + math.cos(rad) * 65
+        y0 = cy + math.sin(rad) * 65
+        x1 = cx + math.cos(rad) * (145 + 5 * math.sin(rad * 8))
+        y1 = cy + math.sin(rad) * (145 + 5 * math.sin(rad * 8))
+        ray_c = (255, 205, 50, 255) if (a_deg % 12 == 0) else (185, 95, 15, 255)
+        draw.line([(x0, y0), (x1, y1)], fill=ray_c, width=2)
+        
     # Deep black pupil
-    r_pupil = 65
-    draw.ellipse([cx - r_pupil, cy - r_pupil, cx + r_pupil, cy + r_pupil], fill=(12, 12, 14, 255))
+    r_pupil = 62
+    draw.ellipse([cx - r_pupil, cy - r_pupil, cx + r_pupil, cy + r_pupil], fill=(10, 8, 10, 255), outline=(35, 20, 10, 255), width=3)
+    
+    # Subtle corneal highlight glint
+    draw.ellipse([cx - 40, cy - 40, cx - 18, cy - 18], fill=(255, 255, 255, 140))
     
     # Cornea normal map (spherical dome over iris)
     normal = Image.new("RGB", size, (128, 128, 255))
-    # High glossy finish: Roughness ~ 0.08 (20), Metallic = 0
-    mr = Image.new("RGB", size, (255, 20, 0))
+    narr = np.array(normal, dtype=np.float32)
+    y_grid, x_grid = np.ogrid[:size[1], :size[0]]
+    dist_sq = (x_grid - cx)**2 + (y_grid - cy)**2
+    mask = dist_sq < (r_iris**2)
+    dist = np.sqrt(np.maximum(dist_sq, 1e-6))
+    nx = np.where(mask, 128.0 + (x_grid - cx) / r_iris * 55.0, 128.0)
+    ny = np.where(mask, 128.0 + (y_grid - cy) / r_iris * 55.0, 128.0)
+    narr[:, :, 0] = np.clip(nx, 0, 255)
+    narr[:, :, 1] = np.clip(ny, 0, 255)
+    normal = Image.fromarray(narr.astype(np.uint8)).filter(ImageFilter.GaussianBlur(radius=1.2))
+    
+    # High glossy finish: Roughness ~ 0.06 (15), Metallic = 0.0
+    mr = Image.new("RGB", size, (255, 15, 0))
     save_image(albedo, "eyes_albedo.png")
     save_image(normal, "eyes_normal.png")
     save_image(mr, "eyes_mr.png")

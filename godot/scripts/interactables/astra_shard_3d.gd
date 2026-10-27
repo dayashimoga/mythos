@@ -6,6 +6,7 @@ const AudioManager3D = preload("res://scripts/audio/audio_manager_3d.gd")
 ## 3D Floating Astra Shard pickup with continuous rotation, bobbing, and collection detection.
 
 signal collected(shard_name: String)
+signal shard_collected()
 
 @export var shard_id: String = "shard_1"
 @export var rotation_speed: float = 2.4
@@ -20,6 +21,7 @@ var is_collected: bool = false
 @onready var light: OmniLight3D = $OmniLight3D
 
 func _ready() -> void:
+	add_to_group("shards")
 	base_y = position.y
 	elapsed_time = randf() * 10.0
 	body_entered.connect(_on_body_entered)
@@ -39,6 +41,7 @@ func _on_body_entered(body: Node3D) -> void:
 		AudioManager3D.play_3d("crystal_pickup", global_position)
 		body.add_shard(1)
 		collected.emit(shard_id)
+		shard_collected.emit()
 
 		# Collection animation: scale down and dissipate
 		var tween = create_tween()

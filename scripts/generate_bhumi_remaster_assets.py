@@ -593,11 +593,16 @@ class MeshBuilder:
             cos_a = math.cos(ang)
             sin_a = math.sin(ang)
 
-            self.positions.append([cx + cos_a * r, y0, cz + sin_a * r])
+            px = cx + cos_a * r
+            pz = cz + sin_a * r
+            if abs(px) < 2.4 and pz > 4.8:
+                pz = 4.8
+
+            self.positions.append([px, y0, pz])
             self.normals.append([cos_a, 0.0, sin_a])
             self.uvs.append([i / float(points * 2), 0.0])
 
-            self.positions.append([cx + cos_a * r, y1, cz + sin_a * r])
+            self.positions.append([px, y1, pz])
             self.normals.append([cos_a, 0.0, sin_a])
             self.uvs.append([i / float(points * 2), 1.0])
 
@@ -616,7 +621,11 @@ class MeshBuilder:
         for i in range(points * 2 + 1):
             ang = (i / float(points * 2)) * 2.0 * math.pi
             r = base_radius if (i % 2 == 0) else base_radius * 0.82
-            self.positions.append([cx + math.cos(ang) * r, y1, cz + math.sin(ang) * r])
+            px = cx + math.cos(ang) * r
+            pz = cz + math.sin(ang) * r
+            if abs(px) < 2.4 and pz > 4.8:
+                pz = 4.8
+            self.positions.append([px, y1, pz])
             self.normals.append([0.0, 1.0, 0.0])
             self.uvs.append([0.5 + 0.5 * math.cos(ang), 0.5 + 0.5 * math.sin(ang)])
         for i in range(points * 2):
@@ -674,8 +683,8 @@ def generate_temple_shikhara(output_dir):
     mesh_sand.add_box([0, 5.0, 4.1], [4.0, 0.85, 0.55], (3.0, 0.8)) # Lintel
     mesh_gold.add_cylinder([0, 5.5, 4.2], 0.45, 0.45, 0.12, 14) # Kirtimukha solar crest
 
-    # Sanctum Floor Flagstones
-    mesh_sand.add_box([0, 1.42, 0], [6.4, 0.04, 6.4], (3.0, 3.0))
+    # Sanctum & Mandapa Floor Flagstones (continuous paved floor from top of stairs to altar)
+    mesh_sand.add_box([0, 1.42, 1.0], [6.4, 0.04, 8.4], (3.0, 4.0))
 
     # 3. Mandapa Front Portico (Outer Pillared Hall with Lathe-turned Columns)
     for col_x in [-2.4, 2.4]:

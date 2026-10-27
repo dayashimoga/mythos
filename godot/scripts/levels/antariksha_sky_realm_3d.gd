@@ -62,9 +62,10 @@ func _ready() -> void:
 		boss_matarishvan.boss_phase_changed.connect(_on_boss_phase_changed)
 		boss_matarishvan.boss_defeated.connect(_on_boss_defeated)
 
-	for turbine in get_tree().get_nodes_in_group("vayu_turbines"):
-		if turbine.has_signal("turbine_harmonized"):
-			turbine.turbine_harmonized.connect(_on_turbine_harmonized)
+	if is_inside_tree() and get_tree():
+		for turbine in get_tree().get_nodes_in_group("vayu_turbines"):
+			if turbine.has_signal("turbine_harmonized"):
+				turbine.turbine_harmonized.connect(_on_turbine_harmonized)
 
 	if gale_peetham_altar:
 		gale_peetham_altar.shrine_activated.connect(_on_peetham_consecrated)
@@ -150,14 +151,13 @@ func _on_peetham_consecrated() -> void:
 
 	# Persist save state with tamper verification
 	var save_state = SaveSystem.get_default_state()
-	save_state["currentRealm"] = "Dyaus"
+	save_state["currentRealm"] = "Antariksha"
 	save_state["shardsCollected"] = 8
 	save_state["altarConsecrated"] = true
 	save_state["playtimeSeconds"] = elapsed
-	if not save_state["unlockedRealms"].has("Antariksha"):
-		save_state["unlockedRealms"].append("Antariksha")
-	if not save_state["unlockedRealms"].has("Dyaus"):
-		save_state["unlockedRealms"].append("Dyaus")
+	for r in ["Bhumi", "Antariksha", "Dyaus", "Patala"]:
+		if not save_state["unlockedRealms"].has(r):
+			save_state["unlockedRealms"].append(r)
 	SaveSystem.save_game(save_state)
 
 	if cinematic_director and gale_peetham_altar:

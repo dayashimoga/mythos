@@ -65,9 +65,10 @@ func _ready() -> void:
 		boss_surya.boss_phase_changed.connect(_on_boss_phase_changed)
 		boss_surya.boss_defeated.connect(_on_boss_defeated)
 
-	for prism in get_tree().get_nodes_in_group("surya_prisms"):
-		if prism.has_signal("prism_harmonized"):
-			prism.prism_harmonized.connect(_on_prism_harmonized)
+	if is_inside_tree() and get_tree():
+		for prism in get_tree().get_nodes_in_group("surya_prisms"):
+			if prism.has_signal("prism_harmonized"):
+				prism.prism_harmonized.connect(_on_prism_harmonized)
 
 	if mahapeetham_altar:
 		mahapeetham_altar.mahapeetham_consecrated.connect(_on_mahapeetham_consecrated)
@@ -118,9 +119,10 @@ func _on_prism_harmonized(_prism_id: String) -> void:
 		quest_mgr.update_objective_progress("ascension_to_svar", "align_surya_prisms", 1)
 
 	# Activate linked light bridges upon prism harmonization
-	for bridge in get_tree().get_nodes_in_group("light_bridges"):
-		if bridge.has_method("activate_bridge"):
-			bridge.activate_bridge()
+	if is_inside_tree() and get_tree():
+		for bridge in get_tree().get_nodes_in_group("light_bridges"):
+			if bridge.has_method("activate_bridge"):
+				bridge.activate_bridge()
 
 	if hud:
 		hud.show_banner("✦ SURYA PRISM ALIGNED (%d / %d) ✦\nSolar Light Bridge Activated!" % [aligned_prisms, TARGET_PRISMS], 3.5)

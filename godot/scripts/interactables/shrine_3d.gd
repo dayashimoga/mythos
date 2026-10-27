@@ -11,6 +11,8 @@ signal shrine_activated()
 
 @export var required_shards: int = 3
 var is_ignited: bool = false
+var is_consecration_allowed: bool = false
+var blocked_reason: String = "Cleanse General Kalanemi at the Watchtower first!"
 
 @onready var prompt_label: Label3D = $PromptLabel
 @onready var sun_light: OmniLight3D = $SunLight
@@ -32,7 +34,10 @@ func _process(delta: float) -> void:
 func _on_body_entered(body: Node3D) -> void:
 	if body is PlayerController3D and not is_ignited:
 		if prompt_label:
-			prompt_label.text = "[E] Kindle Sun Altar (%d/%d Shards)" % [body.shards_collected, required_shards]
+			if not is_consecration_allowed:
+				prompt_label.text = "☀️ " + blocked_reason
+			else:
+				prompt_label.text = "[E] Kindle Sun Altar (%d/%d Shards)" % [body.shards_collected, required_shards]
 			prompt_label.visible = true
 
 func _on_body_exited(body: Node3D) -> void:
@@ -42,6 +47,11 @@ func _on_body_exited(body: Node3D) -> void:
 
 func interact(player: PlayerController3D) -> void:
 	if is_ignited:
+		return
+
+	if not is_consecration_allowed:
+		if prompt_label:
+			prompt_label.text = "☀️ " + blocked_reason
 		return
 
 	if player.shards_collected >= required_shards:

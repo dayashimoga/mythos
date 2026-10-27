@@ -224,6 +224,10 @@ func _ensure_node_references() -> void:
 	if not context_prompt_label: context_prompt_label = find_child("ContextPromptLabel", true, false) as Label
 	if not subtitle_panel: subtitle_panel = find_child("SubtitlePanel", true, false) as PanelContainer
 	if not subtitle_label: subtitle_label = find_child("SubtitleLabel", true, false) as Label
+	if not defeat_overlay: defeat_overlay = find_child("DefeatOverlay", true, false) as Control
+	if not victory_overlay: victory_overlay = find_child("VictoryOverlay", true, false) as Control
+	if not dialogue_panel: dialogue_panel = find_child("DialoguePanel", true, false) as PanelContainer
+	if not boss_panel: boss_panel = find_child("BossPanel", true, false) as PanelContainer
 
 func _setup_tutorial_manager() -> void:
 	if not tutorial_manager:
@@ -569,6 +573,8 @@ func hide_boss_bar() -> void:
 		boss_panel.visible = false
 
 func show_defeat_overlay() -> void:
+	if not defeat_overlay:
+		defeat_overlay = find_child("DefeatOverlay", true, false) as Control
 	if defeat_overlay:
 		defeat_overlay.visible = true
 

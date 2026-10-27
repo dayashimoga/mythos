@@ -65,9 +65,10 @@ func _ready() -> void:
 		boss_agni.boss_phase_changed.connect(_on_boss_phase_changed)
 		boss_agni.boss_defeated.connect(_on_boss_defeated)
 
-	for forge in get_tree().get_nodes_in_group("forges"):
-		if forge.has_signal("forge_attuned"):
-			forge.forge_attuned.connect(_on_forge_attuned)
+	if is_inside_tree() and get_tree():
+		for forge in get_tree().get_nodes_in_group("forges"):
+			if forge.has_signal("forge_attuned"):
+				forge.forge_attuned.connect(_on_forge_attuned)
 
 	if tapo_peetham_altar:
 		tapo_peetham_altar.peetham_consecrated.connect(_on_peetham_consecrated)

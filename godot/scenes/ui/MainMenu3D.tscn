@@ -1,0 +1,309 @@
+[gd_scene load_steps=2 format=3 uid="uid://mainmenu3d_scene"]
+
+[ext_resource type="Script" path="res://scripts/ui/main_menu_3d.gd" id="1_menu"]
+
+[node name="MainMenu3D" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_menu")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.027, 0.039, 0.067, 1)
+
+[node name="MandalaAura" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -350.0
+offset_top = -350.0
+offset_right = 350.0
+offset_bottom = 350.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.988, 0.718, 0.012, 0.04)
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 80
+theme_override_constants/margin_top = 60
+theme_override_constants/margin_right = 80
+theme_override_constants/margin_bottom = 60
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 24
+
+[node name="TitleBox" type="VBoxContainer" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="TitleLabel" type="Label" parent="MarginContainer/VBoxContainer/TitleBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.718, 0.012, 1)
+theme_override_colors/font_shadow_color = Color(0.85, 0.35, 0.05, 0.6)
+theme_override_constants/shadow_offset_x = 2
+theme_override_constants/shadow_offset_y = 2
+theme_override_font_sizes/font_size = 40
+text = "MYTHOS: ASTRA & THE SEVEN REALMS"
+
+[node name="SubtitleLabel" type="Label" parent="MarginContainer/VBoxContainer/TitleBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.58, 0.64, 0.72, 1)
+theme_override_font_sizes/font_size = 17
+text = "A Genuine 3D Vedic Action RPG • Mount Meru Cosmic Axis"
+
+[node name="SaveSummaryLabel" type="Label" parent="MarginContainer/VBoxContainer/TitleBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.22, 0.74, 0.97, 1)
+theme_override_font_sizes/font_size = 14
+text = "Saved Journey: Realm of Bhumi • ✦ 0 Shards"
+
+[node name="MenuButtons" type="VBoxContainer" parent="MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(340, 0)
+layout_mode = 2
+size_flags_horizontal = 0
+theme_override_constants/separation = 12
+
+[node name="BtnContinue" type="Button" parent="MarginContainer/VBoxContainer/MenuButtons"]
+custom_minimum_size = Vector2(320, 50)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.9, 0.5, 1)
+theme_override_font_sizes/font_size = 18
+text = "CONTINUE JOURNEY"
+alignment = 0
+
+[node name="BtnNewGame" type="Button" parent="MarginContainer/VBoxContainer/MenuButtons"]
+custom_minimum_size = Vector2(320, 50)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "NEW GAME"
+alignment = 0
+
+[node name="BtnChapters" type="Button" parent="MarginContainer/VBoxContainer/MenuButtons"]
+custom_minimum_size = Vector2(320, 46)
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "CHAPTER EXPEDITIONS"
+alignment = 0
+
+[node name="BtnSettings" type="Button" parent="MarginContainer/VBoxContainer/MenuButtons"]
+custom_minimum_size = Vector2(320, 46)
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "SETTINGS & ACCESSIBILITY"
+alignment = 0
+
+[node name="BtnQuit" type="Button" parent="MarginContainer/VBoxContainer/MenuButtons"]
+custom_minimum_size = Vector2(320, 44)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.4, 0.4, 1)
+theme_override_font_sizes/font_size = 15
+text = "QUIT TO DESKTOP"
+alignment = 0
+
+[node name="VersionLabel" type="Label" parent="MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 10
+theme_override_colors/font_color = Color(0.4, 0.45, 0.52, 1)
+theme_override_font_sizes/font_size = 12
+text = "Mythos 3D Production Build • v1.17.0-3d (Stage Q17 Campaign Architecture)"
+
+[node name="ConfirmModal" type="PanelContainer" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -220.0
+offset_top = -110.0
+offset_right = 220.0
+offset_bottom = 110.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Margin" type="MarginContainer" parent="ConfirmModal"]
+layout_mode = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 20
+
+[node name="VBox" type="VBoxContainer" parent="ConfirmModal/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="ModalTitle" type="Label" parent="ConfirmModal/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.72, 0.1, 1)
+theme_override_font_sizes/font_size = 20
+text = "START A NEW EXPEDITION?"
+horizontal_alignment = 1
+
+[node name="ModalDesc" type="Label" parent="ConfirmModal/Margin/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "Starting a new journey will reset your current checkpoint, collected Astra Shards, and unlocked realms.\n\nDo you wish to proceed?"
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="HBox" type="HBoxContainer" parent="ConfirmModal/Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 20
+alignment = 1
+
+[node name="BtnConfirmNew" type="Button" parent="ConfirmModal/Margin/VBox/HBox"]
+custom_minimum_size = Vector2(140, 40)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0.3, 1)
+text = "START FRESH"
+
+[node name="BtnCancelNew" type="Button" parent="ConfirmModal/Margin/VBox/HBox"]
+custom_minimum_size = Vector2(140, 40)
+layout_mode = 2
+text = "CANCEL"
+
+[node name="ChaptersModal" type="PanelContainer" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -300.0
+offset_top = -220.0
+offset_right = 300.0
+offset_bottom = 220.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Margin" type="MarginContainer" parent="ChaptersModal"]
+layout_mode = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 16
+
+[node name="VBox" type="VBoxContainer" parent="ChaptersModal/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="ModalTitle" type="Label" parent="ChaptersModal/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.72, 0.1, 1)
+theme_override_font_sizes/font_size = 18
+text = "SEVEN-REALM CHAPTER EXPEDITIONS"
+horizontal_alignment = 1
+
+[node name="ScrollContainer" type="ScrollContainer" parent="ChaptersModal/Margin/VBox"]
+custom_minimum_size = Vector2(0, 310)
+layout_mode = 2
+
+[node name="ChaptersList" type="VBoxContainer" parent="ChaptersModal/Margin/VBox/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="BtnCloseChapters" type="Button" parent="ChaptersModal/Margin/VBox"]
+custom_minimum_size = Vector2(160, 36)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "BACK TO MENU"
+
+[node name="SettingsModal" type="PanelContainer" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -240.0
+offset_top = -160.0
+offset_right = 240.0
+offset_bottom = 160.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Margin" type="MarginContainer" parent="SettingsModal"]
+layout_mode = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 20
+
+[node name="VBox" type="VBoxContainer" parent="SettingsModal/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="SettingsTitle" type="Label" parent="SettingsModal/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.72, 0.1, 1)
+theme_override_font_sizes/font_size = 18
+text = "AUDIO & ACCESSIBILITY SETTINGS"
+horizontal_alignment = 1
+
+[node name="Grid" type="GridContainer" parent="SettingsModal/Margin/VBox"]
+layout_mode = 2
+theme_override_constants/h_separation = 16
+theme_override_constants/v_separation = 12
+columns = 2
+
+[node name="LblMaster" type="Label" parent="SettingsModal/Margin/VBox/Grid"]
+layout_mode = 2
+text = "Master Volume:"
+
+[node name="MenuSliderMaster" type="HSlider" parent="SettingsModal/Margin/VBox/Grid"]
+custom_minimum_size = Vector2(220, 24)
+layout_mode = 2
+max_value = 1.0
+step = 0.05
+value = 1.0
+
+[node name="LblSFX" type="Label" parent="SettingsModal/Margin/VBox/Grid"]
+layout_mode = 2
+text = "SFX Volume:"
+
+[node name="MenuSliderSFX" type="HSlider" parent="SettingsModal/Margin/VBox/Grid"]
+custom_minimum_size = Vector2(220, 24)
+layout_mode = 2
+max_value = 1.0
+step = 0.05
+value = 1.0
+
+[node name="LblAmbience" type="Label" parent="SettingsModal/Margin/VBox/Grid"]
+layout_mode = 2
+text = "Ambience Volume:"
+
+[node name="MenuSliderAmbience" type="HSlider" parent="SettingsModal/Margin/VBox/Grid"]
+custom_minimum_size = Vector2(220, 24)
+layout_mode = 2
+max_value = 1.0
+step = 0.05
+value = 0.7
+
+[node name="BtnCloseSettings" type="Button" parent="SettingsModal/Margin/VBox"]
+custom_minimum_size = Vector2(160, 36)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "CLOSE SETTINGS"

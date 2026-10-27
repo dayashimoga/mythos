@@ -26,6 +26,7 @@ const AsuraWarriorScript = preload("res://scripts/entities/asura_warrior_3d.gd")
 const BossKalanemiScript = preload("res://scripts/entities/boss_kalanemi_3d.gd")
 const CinematicDirectorScript = preload("res://scripts/cinematics/cinematic_director_3d.gd")
 const WorldCollisionBuilderScript = preload("res://scripts/levels/world_collision_builder.gd")
+const CampaignGraphScript = preload("res://scripts/domain/campaign_graph.gd")
 
 var current_region: WorldRegion = WorldRegion.NONE
 var collected_shards: int = 0
@@ -34,7 +35,7 @@ const SHARDS_FOR_BARRIER: int = 3
 
 var quest_mgr: QuestManager = null
 var dialogue_runner: DialogueRunner = null
-var last_checkpoint_pos: Vector3 = Vector3(0.0, 1.2, 6.0)
+var last_checkpoint_pos: Vector3 = Vector3(0.0, 0.8, 7.5)
 var level_start_time: float = 0.0
 var is_barrier_dispelled: bool = false
 var is_game_completed: bool = false
@@ -60,7 +61,17 @@ var _region_names = {
 	WorldRegion.RUINS_WATCHTOWER: "Ruins of Kalanemi Watchtower"
 }
 
+func _resolve_scene_nodes() -> void:
+	if not player and has_node("Player3D"): player = $Player3D
+	if not hud and has_node("HUD3D"): hud = $HUD3D
+	if not sun_altar and has_node("Interactables/SunShrine3D"): sun_altar = $Interactables/SunShrine3D
+	if not terrain_container and has_node("TerrainContainer"): terrain_container = $TerrainContainer
+	if not tamas_barrier and has_node("Architecture/TamasBarrier"): tamas_barrier = $Architecture/TamasBarrier
+	if not boss_kalanemi and has_node("Enemies/BossKalanemi"): boss_kalanemi = $Enemies/BossKalanemi
+	if not tara_npc and has_node("NPCs/DeviTara3D"): tara_npc = $NPCs/DeviTara3D
+
 func _ready() -> void:
+	_resolve_scene_nodes()
 	level_start_time = Time.get_ticks_msec() / 1000.0
 	AudioManager3D.set_ambience("bhumi")
 
@@ -158,15 +169,32 @@ func _evaluate_region_at(x: float, z: float, y: float) -> WorldRegion:
 	return WorldRegion.DANDAKA_GROVE
 
 func _setup_systems_and_quest() -> void:
+	_resolve_scene_nodes()
 	quest_mgr = QuestManager.new()
 	dialogue_runner = DialogueRunner.new()
 
-	# Start Stage E campaign quest
-	quest_mgr.start_mission("cleansing_of_bhumi")
-
-	# Save checkpoint initial state
-	if player:
-		last_checkpoint_pos = player.global_position
+	var save = SaveSystem.load_game()
+	var has_saved_progress = save.has("campaignState") and (save.get("shardsCollected", 0) > 0 or save.has("checkpointPosition"))
+	if has_saved_progress and save["campaignState"] is Dictionary:
+		CampaignGraphScript.deserialize_campaign_state(quest_mgr, save["campaignState"])
+		if save.has("shardsCollected"):
+			collected_shards = int(save["shardsCollected"])
+			if player:
+				player.shards_collected = collected_shards
+		if save.has("checkpointPosition") and player:
+			var cp = save["checkpointPosition"]
+			if cp is Array and cp.size() >= 3:
+				last_checkpoint_pos = Vector3(cp[0], cp[1], cp[2])
+				player.global_position = last_checkpoint_pos
+		if save.get("tamasBarrierDispelled", false) or collected_shards >= SHARDS_FOR_BARRIER:
+			is_barrier_dispelled = true
+			if tamas_barrier:
+				tamas_barrier.collision_layer = 0
+				tamas_barrier.visible = false
+	else:
+		quest_mgr.start_mission("cleansing_of_bhumi")
+		if player:
+			last_checkpoint_pos = player.global_position
 
 func _refresh_objective_display() -> void:
 	if not hud or not quest_mgr:
@@ -271,24 +299,35 @@ func _setup_water_plane() -> void:
 	add_child(water_container)
 
 func _wire_interactables() -> void:
-	# Connect all Astra Shards in scene
-	for shard in get_tree().get_nodes_in_group("shards"):
-		if shard.has_signal("shard_collected") and not shard.shard_collected.is_connected(_on_shard_collected):
-			shard.shard_collected.connect(_on_shard_collected)
+	_resolve_scene_nodes()
+	if is_inside_tree() and get_tree():
+		# Connect all Astra Shards in scene
+		for shard in get_tree().get_nodes_in_group("shards"):
+			if shard.has_signal("shard_collected") and not shard.shard_collected.is_connected(_on_shard_collected):
+				shard.shard_collected.connect(_on_shard_collected)
+			if shard.has_signal("collected") and not shard.is_connected("collected", _on_shard_collected_param):
+				shard.connect("collected", _on_shard_collected_param)
+
+		# Connect Devi Tara NPC
+		for npc in get_tree().get_nodes_in_group("npcs"):
+			if npc.has_signal("dialogue_requested") and not npc.dialogue_requested.is_connected(_on_dialogue_requested):
+				npc.dialogue_requested.connect(_on_dialogue_requested)
+
+		# Connect Checkpoints
+		for cp in get_tree().get_nodes_in_group("checkpoints"):
+			if cp.has_signal("checkpoint_activated") and not cp.checkpoint_activated.is_connected(_on_checkpoint_activated):
+				cp.checkpoint_activated.connect(_on_checkpoint_activated)
 
 	# Connect Sun Altar
-	if sun_altar and sun_altar.has_signal("shrine_consecrated") and not sun_altar.shrine_consecrated.is_connected(_on_altar_consecrated):
-		sun_altar.shrine_consecrated.connect(_on_altar_consecrated)
+	if sun_altar:
+		var m = quest_mgr.get_mission("cleansing_of_bhumi") if quest_mgr else null
+		var kalanemi_done = m != null and m.objectives.size() > 2 and m.objectives[2].is_completed
+		sun_altar.is_consecration_allowed = kalanemi_done
+		if sun_altar.has_signal("shrine_consecrated") and not sun_altar.shrine_consecrated.is_connected(_on_altar_consecrated):
+			sun_altar.shrine_consecrated.connect(_on_altar_consecrated)
 
-	# Connect Devi Tara NPC
-	for npc in get_tree().get_nodes_in_group("npcs"):
-		if npc.has_signal("dialogue_requested") and not npc.dialogue_requested.is_connected(_on_dialogue_requested):
-			npc.dialogue_requested.connect(_on_dialogue_requested)
-
-	# Connect Checkpoints
-	for cp in get_tree().get_nodes_in_group("checkpoints"):
-		if cp.has_signal("checkpoint_activated") and not cp.checkpoint_activated.is_connected(_on_checkpoint_activated):
-			cp.checkpoint_activated.connect(_on_checkpoint_activated)
+func _on_shard_collected_param(_id: String) -> void:
+	_on_shard_collected()
 
 func _wire_enemies_and_boss() -> void:
 	# Connect Boss Kalanemi
@@ -301,10 +340,11 @@ func _wire_enemies_and_boss() -> void:
 			boss_kalanemi.boss_defeated.connect(_on_boss_defeated)
 
 	# Connect Asura Warriors
-	for enemy in get_tree().get_nodes_in_group("enemies"):
-		if enemy.has_signal("warrior_defeated"):
-			if not enemy.warrior_defeated.is_connected(_on_warrior_defeated):
-				enemy.warrior_defeated.connect(_on_warrior_defeated)
+	if is_inside_tree() and get_tree():
+		for enemy in get_tree().get_nodes_in_group("enemies"):
+			if enemy.has_signal("warrior_defeated"):
+				if not enemy.warrior_defeated.is_connected(_on_warrior_defeated):
+					enemy.warrior_defeated.connect(_on_warrior_defeated)
 
 func _wire_player_and_hud() -> void:
 	if player and hud:
@@ -324,11 +364,11 @@ func _on_player_health_changed(curr: int, max_hp: int) -> void:
 			hud.show_defeat_overlay()
 
 func _on_retry_requested() -> void:
+	_resolve_scene_nodes()
 	if player:
+		player.position = last_checkpoint_pos
 		if player.is_inside_tree():
 			player.global_position = last_checkpoint_pos
-		else:
-			player.position = last_checkpoint_pos
 		player.velocity = Vector3.ZERO
 		player.health = 100
 		player.is_guarding = false
@@ -344,6 +384,8 @@ func _on_retry_requested() -> void:
 
 func _on_shard_collected() -> void:
 	collected_shards += 1
+	if player:
+		player.shards_collected = collected_shards
 	if quest_mgr:
 		quest_mgr.update_objective_progress("cleansing_of_bhumi", "reclaim_shards", 1)
 
@@ -356,6 +398,8 @@ func _on_shard_collected() -> void:
 	elif collected_shards < TARGET_SHARDS:
 		if hud:
 			hud.show_banner("✦ ASTRA SHARD RECOVERED (%d / %d)" % [collected_shards, TARGET_SHARDS], 2.5)
+
+	_save_campaign_snapshot()
 
 func _dispel_tamas_barrier() -> void:
 	is_barrier_dispelled = true
@@ -370,6 +414,7 @@ func _dispel_tamas_barrier() -> void:
 	if hud:
 		hud.show_banner("⚡ TAMAS BARRIER SHATTERED! ⚡\nThe Path to Watchtower Ruins is Open.", 4.5)
 	_refresh_objective_display()
+	_save_campaign_snapshot()
 
 func _on_altar_consecrated() -> void:
 	if quest_mgr:
@@ -379,14 +424,17 @@ func _on_altar_consecrated() -> void:
 	var elapsed = (Time.get_ticks_msec() / 1000.0) - level_start_time
 
 	# Persist save state with tamper verification
-	var save_state = SaveSystem.get_default_state()
-	save_state["currentRealm"] = "Antariksha"
-	save_state["shardsCollected"] = collected_shards
-	save_state["altarConsecrated"] = true
-	save_state["playtimeSeconds"] = elapsed
-	if not save_state["unlockedRealms"].has("Antariksha"):
-		save_state["unlockedRealms"].append("Antariksha")
-	SaveSystem.save_game(save_state)
+	if not CampaignGraphScript.is_chapter_replay:
+		var save_state = SaveSystem.load_game()
+		save_state["currentRealm"] = "Antariksha"
+		save_state["shardsCollected"] = collected_shards
+		save_state["altarConsecrated"] = true
+		save_state["playtimeSeconds"] = elapsed
+		if not save_state.has("unlockedRealms") or not (save_state["unlockedRealms"] is Array):
+			save_state["unlockedRealms"] = ["SanctumOfAstra", "Bhumi"]
+		if not save_state["unlockedRealms"].has("Antariksha"):
+			save_state["unlockedRealms"].append("Antariksha")
+		SaveSystem.save_game(save_state)
 
 	_spawn_antariksha_portal()
 
@@ -398,15 +446,43 @@ func _on_altar_consecrated() -> void:
 		hud.show_banner("☀️ SURYA PEETHAM CONSECRATED!\nThe Sky Portal to Antariksha is Open. [Press E or Walk Into Beam to Ascend]", 6.0)
 		hud.show_victory_overlay(collected_shards, elapsed)
 
+func _get_tara_npcs() -> Array:
+	if is_inside_tree() and get_tree():
+		return get_tree().get_nodes_in_group("npcs")
+	return [tara_npc] if tara_npc else []
+
 func _on_dialogue_requested(dialogue_id: String) -> void:
 	if not dialogue_runner or not hud:
+		return
+
+	# If commune_tara is already completed, provide contextual ambient guidance
+	var m = quest_mgr.get_mission("cleansing_of_bhumi") if quest_mgr else null
+	if m != null and m.objectives.size() > 0 and m.objectives[0].is_completed:
+		for tara in _get_tara_npcs():
+			if tara.has_method("play_talk"):
+				tara.play_talk()
+
+		var guidance = ""
+		if collected_shards < SHARDS_FOR_BARRIER:
+			guidance = "The 3 Primal Astra Shards resonate in the valley below. Gather them from Dandaka Grove and Kalyani Reservoir to dissolve the Tamas Barrier on the ridge."
+		elif m.objectives.size() > 2 and not m.objectives[2].is_completed:
+			guidance = "The Tamas Barrier is shattered! Ascend Tapas Ridge to the Watchtower and cleanse General Kalanemi."
+		else:
+			guidance = "General Kalanemi has been cleansed! Ascend the grand staircase into the temple and kindle the High Sun Altar."
+
+		hud.show_dialogue("Devi Tara", "Celestial Oracle of Tapas", guidance, func():
+			hud.hide_dialogue()
+			for tara in _get_tara_npcs():
+				if tara.has_method("play_idle"):
+					tara.play_idle()
+		)
 		return
 
 	var start_node = "tara_dandaka_1"
 	if dialogue_id == "tara_intro":
 		start_node = "tara_intro"
 
-	for tara in get_tree().get_nodes_in_group("npcs"):
+	for tara in _get_tara_npcs():
 		if tara.has_method("play_talk"):
 			tara.play_talk()
 
@@ -417,7 +493,7 @@ func _display_active_dialogue_node() -> void:
 	if not dialogue_runner or not dialogue_runner.is_active:
 		if hud:
 			hud.hide_dialogue()
-		for tara in get_tree().get_nodes_in_group("npcs"):
+		for tara in _get_tara_npcs():
 			if tara.has_method("play_idle"):
 				tara.play_idle()
 		return
@@ -429,17 +505,19 @@ func _display_active_dialogue_node() -> void:
 				_display_active_dialogue_node()
 			else:
 				hud.hide_dialogue()
-				for tara in get_tree().get_nodes_in_group("npcs"):
+				for tara in _get_tara_npcs():
 					if tara.has_method("play_bless"):
 						tara.play_bless()
 				# Mark objective completed
 				if quest_mgr:
 					quest_mgr.update_objective_progress("cleansing_of_bhumi", "commune_tara", 1)
 					_refresh_objective_display()
+				_save_campaign_snapshot()
 		)
 
 func _on_checkpoint_activated(cp_id: String, pos: Vector3) -> void:
 	last_checkpoint_pos = pos
+	_save_campaign_snapshot()
 	if hud:
 		hud.show_banner("RESONANCE CHECKPOINT ATTUNED:\nRespawn Coordinates Harmonized.", 3.0)
 
@@ -453,13 +531,38 @@ func _on_boss_phase_changed(phase: int) -> void:
 			hud.show_banner("🔥 ENRAGED TAMAS FLARE! 🔥\nGeneral Kalanemi unleashes void fury!", 4.0)
 
 func _on_boss_defeated() -> void:
+	_resolve_scene_nodes()
 	if quest_mgr:
 		quest_mgr.update_objective_progress("cleansing_of_bhumi", "defeat_kalanemi", 1)
+
+	if sun_altar:
+		sun_altar.is_consecration_allowed = true
 
 	if hud:
 		hud.hide_boss_bar()
 		hud.show_banner("✦ GENERAL KALANEMI PURIFIED! ✦\nThe High Sun Altar can now be consecrated.", 4.5)
 		_refresh_objective_display()
+
+	_save_campaign_snapshot()
+
+func _save_campaign_snapshot() -> void:
+	if CampaignGraphScript.is_chapter_replay:
+		return
+	var save = SaveSystem.load_game()
+	save["currentRealm"] = "Bhumi"
+	save["shardsCollected"] = collected_shards
+	save["checkpointPosition"] = [last_checkpoint_pos.x, last_checkpoint_pos.y, last_checkpoint_pos.z]
+	save["tamasBarrierDispelled"] = is_barrier_dispelled
+	var mission = quest_mgr.get_mission("cleansing_of_bhumi") if quest_mgr else null
+	if mission:
+		var completed: Array[String] = []
+		var counts: Dictionary = {}
+		for obj in mission.objectives:
+			counts[obj.id] = obj.current_count
+			if obj.is_completed:
+				completed.append(obj.id)
+		save["campaignState"] = CampaignGraphScript.serialize_campaign_state("cleansing_of_bhumi", completed, counts)
+	SaveSystem.save_game(save)
 
 func _on_warrior_defeated(_warrior: CharacterBody3D) -> void:
 	if hud:

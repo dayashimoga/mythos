@@ -62,11 +62,12 @@ func _ready() -> void:
 		boss_shesha.boss_phase_changed.connect(_on_boss_phase_changed)
 		boss_shesha.boss_defeated.connect(_on_boss_defeated)
 
-	for spitter in get_tree().get_nodes_in_group("enemies"):
-		if spitter.has_signal("spitter_defeated"):
-			spitter.spitter_defeated.connect(_on_naga_guardian_defeated)
-		elif spitter.has_signal("constrictor_defeated"):
-			spitter.constrictor_defeated.connect(_on_naga_guardian_defeated)
+	if is_inside_tree() and get_tree():
+		for spitter in get_tree().get_nodes_in_group("enemies"):
+			if spitter.has_signal("spitter_defeated"):
+				spitter.spitter_defeated.connect(_on_naga_guardian_defeated)
+			elif spitter.has_signal("constrictor_defeated"):
+				spitter.constrictor_defeated.connect(_on_naga_guardian_defeated)
 
 	if vasuki_peetham_altar:
 		vasuki_peetham_altar.consecrated.connect(_on_peetham_consecrated)

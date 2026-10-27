@@ -17,6 +17,12 @@ static func get_height(x: float, z: float) -> float:
 		# Elevated Sanctum Peetham in the center (|x| <= 6, |z| <= 6)
 		if abs(x) <= 6.0 and abs(z) <= 6.0:
 			return 1.4
+		# Grand Processional Approach leading smoothly from courtyard (z=8.0, y=0.0) up to temple first step (z=6.125, y=1.6)
+		if abs(x) <= 3.8 and z >= 6.125 and z < 8.0:
+			var t_app: float = (8.0 - z) / (8.0 - 6.125)
+			return lerp(0.0, 1.6, t_app)
+		if abs(x) <= 6.0 and z < 6.125 and z >= -6.0:
+			return 1.4
 		# Stone-paved courtyard floor with subtle drainage slope
 		return 0.0
 	

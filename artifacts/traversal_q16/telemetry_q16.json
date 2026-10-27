@@ -1,0 +1,1542 @@
+[
+	{
+		"cam_hit_len": 3.93,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "inward",
+		"pos_x": 0,
+		"pos_y": 0.8,
+		"pos_z": 7.488,
+		"tick": 0
+	},
+	{
+		"cam_hit_len": 3.96,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "inward",
+		"pos_x": 0,
+		"pos_y": 0.812,
+		"pos_z": 7.472,
+		"tick": 1
+	},
+	{
+		"cam_hit_len": 3.98,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "inward",
+		"pos_x": 0,
+		"pos_y": 0.827,
+		"pos_z": 7.446,
+		"tick": 2
+	},
+	{
+		"cam_hit_len": 4.03,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "inward",
+		"pos_x": 0,
+		"pos_y": 0.846,
+		"pos_z": 7.411,
+		"tick": 3
+	},
+	{
+		"cam_hit_len": 4.09,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "inward",
+		"pos_x": 0,
+		"pos_y": 0.871,
+		"pos_z": 7.367,
+		"tick": 4
+	},
+	{
+		"cam_hit_len": 4.19,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "inward",
+		"pos_x": 0,
+		"pos_y": 0.901,
+		"pos_z": 7.314,
+		"tick": 5
+	},
+	{
+		"cam_hit_len": 4.34,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "inward",
+		"pos_x": 0,
+		"pos_y": 0.935,
+		"pos_z": 7.253,
+		"tick": 6
+	},
+	{
+		"cam_hit_len": 4.42,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "inward",
+		"pos_x": 0,
+		"pos_y": 0.975,
+		"pos_z": 7.183,
+		"tick": 7
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "inward",
+		"pos_x": 0,
+		"pos_y": 1.019,
+		"pos_z": 7.107,
+		"tick": 8
+	},
+	{
+		"cam_hit_len": 4.42,
+		"on_floor": true,
+		"on_wall": true,
+		"phase": "inward",
+		"pos_x": 0,
+		"pos_y": 1.334,
+		"pos_z": 6.894,
+		"tick": 9
+	},
+	{
+		"cam_hit_len": 4.42,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "inward",
+		"pos_x": 0,
+		"pos_y": 1.334,
+		"pos_z": 6.882,
+		"tick": 10
+	},
+	{
+		"cam_hit_len": 4.44,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "inward",
+		"pos_x": 0,
+		"pos_y": 1.347,
+		"pos_z": 6.869,
+		"tick": 11
+	},
+	{
+		"cam_hit_len": 4.46,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "inward",
+		"pos_x": 0,
+		"pos_y": 1.364,
+		"pos_z": 6.845,
+		"tick": 12
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "inward",
+		"pos_x": 0,
+		"pos_y": 1.385,
+		"pos_z": 6.81,
+		"tick": 13
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "inward",
+		"pos_x": 0,
+		"pos_y": 1.408,
+		"pos_z": 6.762,
+		"tick": 14
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "inward",
+		"pos_x": 0,
+		"pos_y": 1.433,
+		"pos_z": 6.702,
+		"tick": 15
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "inward",
+		"pos_x": 0,
+		"pos_y": 1.462,
+		"pos_z": 6.632,
+		"tick": 16
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "inward",
+		"pos_x": 0,
+		"pos_y": 1.494,
+		"pos_z": 6.553,
+		"tick": 17
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "inward",
+		"pos_x": 0,
+		"pos_y": 1.53,
+		"pos_z": 6.477,
+		"tick": 18
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "inward",
+		"pos_x": 0,
+		"pos_y": 1.59,
+		"pos_z": 6.401,
+		"tick": 19
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "inward",
+		"pos_x": 0,
+		"pos_y": 1.644,
+		"pos_z": 6.296,
+		"tick": 20
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "inward",
+		"pos_x": 0,
+		"pos_y": 1.673,
+		"pos_z": 6.174,
+		"tick": 21
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "inward",
+		"pos_x": 0,
+		"pos_y": 1.7,
+		"pos_z": 6.067,
+		"tick": 22
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "inward",
+		"pos_x": 0,
+		"pos_y": 1.763,
+		"pos_z": 5.986,
+		"tick": 23
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "inward",
+		"pos_x": 0,
+		"pos_y": 1.824,
+		"pos_z": 5.891,
+		"tick": 24
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "inward",
+		"pos_x": 0,
+		"pos_y": 1.865,
+		"pos_z": 5.775,
+		"tick": 25
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "inward",
+		"pos_x": 0,
+		"pos_y": 1.876,
+		"pos_z": 5.652,
+		"tick": 26
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "inward",
+		"pos_x": 0,
+		"pos_y": 1.927,
+		"pos_z": 5.578,
+		"tick": 27
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "inward",
+		"pos_x": 0,
+		"pos_y": 1.989,
+		"pos_z": 5.495,
+		"tick": 28
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "inward",
+		"pos_x": 0,
+		"pos_y": 2.045,
+		"pos_z": 5.39,
+		"tick": 29
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "inward",
+		"pos_x": 0,
+		"pos_y": 2.074,
+		"pos_z": 5.268,
+		"tick": 30
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "inward",
+		"pos_x": 0,
+		"pos_y": 2.09,
+		"pos_z": 5.162,
+		"tick": 31
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "inward",
+		"pos_x": 0,
+		"pos_y": 2.145,
+		"pos_z": 5.087,
+		"tick": 32
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "inward",
+		"pos_x": 0,
+		"pos_y": 2.215,
+		"pos_z": 5,
+		"tick": 33
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "inward",
+		"pos_x": 0,
+		"pos_y": 2.262,
+		"pos_z": 4.886,
+		"tick": 34
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "inward",
+		"pos_x": 0,
+		"pos_y": 2.274,
+		"pos_z": 4.761,
+		"tick": 35
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "inward",
+		"pos_x": 0,
+		"pos_y": 2.274,
+		"pos_z": 4.636,
+		"tick": 36
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "inward",
+		"pos_x": 0,
+		"pos_y": 2.358,
+		"pos_z": 4.582,
+		"tick": 37
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "inward",
+		"pos_x": 0,
+		"pos_y": 2.438,
+		"pos_z": 4.489,
+		"tick": 38
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "inward",
+		"pos_x": 0,
+		"pos_y": 2.473,
+		"pos_z": 4.367,
+		"tick": 39
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "inward",
+		"pos_x": 0,
+		"pos_y": 2.49,
+		"pos_z": 4.262,
+		"tick": 40
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "inward",
+		"pos_x": 0,
+		"pos_y": 2.545,
+		"pos_z": 4.187,
+		"tick": 41
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "inward",
+		"pos_x": 0,
+		"pos_y": 2.615,
+		"pos_z": 4.1,
+		"tick": 42
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "inward",
+		"pos_x": 0,
+		"pos_y": 2.662,
+		"pos_z": 3.986,
+		"tick": 43
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "inward",
+		"pos_x": 0,
+		"pos_y": 2.674,
+		"pos_z": 3.861,
+		"tick": 44
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "inward",
+		"pos_x": 0,
+		"pos_y": 2.674,
+		"pos_z": 3.736,
+		"tick": 45
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "inward",
+		"pos_x": -0.001,
+		"pos_y": 2.76,
+		"pos_z": 3.681,
+		"tick": 46
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "inward",
+		"pos_x": -0.001,
+		"pos_y": 2.839,
+		"pos_z": 3.587,
+		"tick": 47
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "inward",
+		"pos_x": -0.001,
+		"pos_y": 2.873,
+		"pos_z": 3.465,
+		"tick": 48
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "inward",
+		"pos_x": -0.001,
+		"pos_y": 2.893,
+		"pos_z": 3.346,
+		"tick": 49
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "inward",
+		"pos_x": -0.001,
+		"pos_y": 2.915,
+		"pos_z": 3.222,
+		"tick": 50
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "inward",
+		"pos_x": -0.001,
+		"pos_y": 2.935,
+		"pos_z": 3.106,
+		"tick": 51
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "inward",
+		"pos_x": -0.001,
+		"pos_y": 2.976,
+		"pos_z": 2.998,
+		"tick": 52
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "inward",
+		"pos_x": -0.001,
+		"pos_y": 3.019,
+		"pos_z": 2.891,
+		"tick": 53
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "inward",
+		"pos_x": -0.001,
+		"pos_y": 3.063,
+		"pos_z": 2.784,
+		"tick": 54
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "inward",
+		"pos_x": -0.001,
+		"pos_y": 3.108,
+		"pos_z": 2.675,
+		"tick": 55
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "inward",
+		"pos_x": -0.001,
+		"pos_y": 3.138,
+		"pos_z": 2.553,
+		"tick": 56
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "inward",
+		"pos_x": -0.001,
+		"pos_y": 3.061,
+		"pos_z": 2.429,
+		"tick": 57
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "inward",
+		"pos_x": -0.001,
+		"pos_y": 3.009,
+		"pos_z": 2.293,
+		"tick": 58
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "inward",
+		"pos_x": -0.001,
+		"pos_y": 2.903,
+		"pos_z": 2.153,
+		"tick": 59
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": true,
+		"phase": "inward",
+		"pos_x": -0.001,
+		"pos_y": 2.914,
+		"pos_z": 2.043,
+		"tick": 60
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "inward",
+		"pos_x": -0.001,
+		"pos_y": 2.914,
+		"pos_z": 1.918,
+		"tick": 61
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "inward",
+		"pos_x": -0.001,
+		"pos_y": 2.914,
+		"pos_z": 1.793,
+		"tick": 62
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "inward",
+		"pos_x": -0.001,
+		"pos_y": 2.914,
+		"pos_z": 1.668,
+		"tick": 63
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "inward",
+		"pos_x": -0.001,
+		"pos_y": 2.914,
+		"pos_z": 1.543,
+		"tick": 64
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "inward",
+		"pos_x": -0.001,
+		"pos_y": 2.914,
+		"pos_z": 1.418,
+		"tick": 65
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "inward",
+		"pos_x": -0.001,
+		"pos_y": 2.914,
+		"pos_z": 1.293,
+		"tick": 66
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "inward",
+		"pos_x": -0.001,
+		"pos_y": 2.914,
+		"pos_z": 1.168,
+		"tick": 67
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "inward",
+		"pos_x": -0.001,
+		"pos_y": 2.914,
+		"pos_z": 1.043,
+		"tick": 68
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "inward",
+		"pos_x": -0.001,
+		"pos_y": 2.914,
+		"pos_z": 0.918,
+		"tick": 69
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "inward",
+		"pos_x": -0.001,
+		"pos_y": 2.914,
+		"pos_z": 0.793,
+		"tick": 70
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "inward",
+		"pos_x": -0.001,
+		"pos_y": 2.914,
+		"pos_z": 0.668,
+		"tick": 71
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "inward",
+		"pos_x": -0.001,
+		"pos_y": 2.914,
+		"pos_z": 0.543,
+		"tick": 72
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "inward",
+		"pos_x": -0.001,
+		"pos_y": 2.914,
+		"pos_z": 0.418,
+		"tick": 73
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "inward",
+		"pos_x": -0.001,
+		"pos_y": 2.914,
+		"pos_z": 0.293,
+		"tick": 74
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "inward",
+		"pos_x": -0.001,
+		"pos_y": 2.914,
+		"pos_z": 0.168,
+		"tick": 75
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "inward",
+		"pos_x": -0.001,
+		"pos_y": 2.914,
+		"pos_z": 0.043,
+		"tick": 76
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "inward",
+		"pos_x": -0.001,
+		"pos_y": 2.914,
+		"pos_z": -0.082,
+		"tick": 77
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "inward",
+		"pos_x": -0.001,
+		"pos_y": 2.914,
+		"pos_z": -0.207,
+		"tick": 78
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "outward",
+		"pos_x": -0.001,
+		"pos_y": 2.914,
+		"pos_z": -0.608,
+		"tick": 0
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "outward",
+		"pos_x": -0.001,
+		"pos_y": 2.914,
+		"pos_z": -0.68,
+		"tick": 1
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "outward",
+		"pos_x": -0.001,
+		"pos_y": 2.914,
+		"pos_z": -0.741,
+		"tick": 2
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "outward",
+		"pos_x": -0.001,
+		"pos_y": 2.914,
+		"pos_z": -0.79,
+		"tick": 3
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "outward",
+		"pos_x": -0.001,
+		"pos_y": 2.914,
+		"pos_z": -0.828,
+		"tick": 4
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "outward",
+		"pos_x": -0.001,
+		"pos_y": 2.914,
+		"pos_z": -0.854,
+		"tick": 5
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "outward",
+		"pos_x": -0.001,
+		"pos_y": 2.914,
+		"pos_z": -0.868,
+		"tick": 6
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "outward",
+		"pos_x": -0.001,
+		"pos_y": 2.914,
+		"pos_z": -0.87,
+		"tick": 7
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "outward",
+		"pos_x": -0.001,
+		"pos_y": 2.914,
+		"pos_z": -0.861,
+		"tick": 8
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "outward",
+		"pos_x": -0.001,
+		"pos_y": 2.914,
+		"pos_z": -0.84,
+		"tick": 9
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "outward",
+		"pos_x": -0.001,
+		"pos_y": 2.914,
+		"pos_z": -0.808,
+		"tick": 10
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "outward",
+		"pos_x": -0.001,
+		"pos_y": 2.914,
+		"pos_z": -0.764,
+		"tick": 11
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "outward",
+		"pos_x": -0.001,
+		"pos_y": 2.914,
+		"pos_z": -0.708,
+		"tick": 12
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "outward",
+		"pos_x": -0.001,
+		"pos_y": 2.914,
+		"pos_z": -0.64,
+		"tick": 13
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "outward",
+		"pos_x": -0.001,
+		"pos_y": 2.914,
+		"pos_z": -0.561,
+		"tick": 14
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "outward",
+		"pos_x": -0.001,
+		"pos_y": 2.914,
+		"pos_z": -0.47,
+		"tick": 15
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "outward",
+		"pos_x": -0.001,
+		"pos_y": 2.914,
+		"pos_z": -0.368,
+		"tick": 16
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "outward",
+		"pos_x": -0.001,
+		"pos_y": 2.914,
+		"pos_z": -0.254,
+		"tick": 17
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "outward",
+		"pos_x": -0.001,
+		"pos_y": 2.914,
+		"pos_z": -0.129,
+		"tick": 18
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "outward",
+		"pos_x": -0.001,
+		"pos_y": 2.914,
+		"pos_z": -0.004,
+		"tick": 19
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "outward",
+		"pos_x": -0.001,
+		"pos_y": 2.914,
+		"pos_z": 0.121,
+		"tick": 20
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "outward",
+		"pos_x": -0.001,
+		"pos_y": 2.914,
+		"pos_z": 0.246,
+		"tick": 21
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "outward",
+		"pos_x": -0.001,
+		"pos_y": 2.914,
+		"pos_z": 0.371,
+		"tick": 22
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "outward",
+		"pos_x": -0.001,
+		"pos_y": 2.914,
+		"pos_z": 0.496,
+		"tick": 23
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "outward",
+		"pos_x": -0.001,
+		"pos_y": 2.914,
+		"pos_z": 0.621,
+		"tick": 24
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "outward",
+		"pos_x": -0.001,
+		"pos_y": 2.914,
+		"pos_z": 0.746,
+		"tick": 25
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "outward",
+		"pos_x": -0.001,
+		"pos_y": 2.914,
+		"pos_z": 0.871,
+		"tick": 26
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "outward",
+		"pos_x": -0.001,
+		"pos_y": 2.914,
+		"pos_z": 0.996,
+		"tick": 27
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "outward",
+		"pos_x": -0.001,
+		"pos_y": 2.914,
+		"pos_z": 1.121,
+		"tick": 28
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "outward",
+		"pos_x": -0.001,
+		"pos_y": 2.914,
+		"pos_z": 1.246,
+		"tick": 29
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "outward",
+		"pos_x": -0.001,
+		"pos_y": 2.914,
+		"pos_z": 1.371,
+		"tick": 30
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "outward",
+		"pos_x": -0.001,
+		"pos_y": 2.914,
+		"pos_z": 1.496,
+		"tick": 31
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "outward",
+		"pos_x": -0.001,
+		"pos_y": 2.914,
+		"pos_z": 1.621,
+		"tick": 32
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "outward",
+		"pos_x": -0.001,
+		"pos_y": 2.914,
+		"pos_z": 1.746,
+		"tick": 33
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "outward",
+		"pos_x": -0.001,
+		"pos_y": 2.914,
+		"pos_z": 1.871,
+		"tick": 34
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "outward",
+		"pos_x": -0.001,
+		"pos_y": 2.914,
+		"pos_z": 1.996,
+		"tick": 35
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "outward",
+		"pos_x": -0.001,
+		"pos_y": 2.914,
+		"pos_z": 2.121,
+		"tick": 36
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "outward",
+		"pos_x": -0.001,
+		"pos_y": 2.961,
+		"pos_z": 2.191,
+		"tick": 37
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "outward",
+		"pos_x": -0.001,
+		"pos_y": 3.029,
+		"pos_z": 2.263,
+		"tick": 38
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "outward",
+		"pos_x": -0.001,
+		"pos_y": 3.102,
+		"pos_z": 2.36,
+		"tick": 39
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "outward",
+		"pos_x": -0.001,
+		"pos_y": 3.138,
+		"pos_z": 2.483,
+		"tick": 40
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "outward",
+		"pos_x": -0.001,
+		"pos_y": 3.059,
+		"pos_z": 2.607,
+		"tick": 41
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "outward",
+		"pos_x": -0.001,
+		"pos_y": 3.007,
+		"pos_z": 2.744,
+		"tick": 42
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "outward",
+		"pos_x": -0.001,
+		"pos_y": 3.02,
+		"pos_z": 2.884,
+		"tick": 43
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "outward",
+		"pos_x": -0.001,
+		"pos_y": 2.98,
+		"pos_z": 3.003,
+		"tick": 44
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "outward",
+		"pos_x": -0.001,
+		"pos_y": 2.932,
+		"pos_z": 3.119,
+		"tick": 45
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "outward",
+		"pos_x": -0.001,
+		"pos_y": 2.884,
+		"pos_z": 3.234,
+		"tick": 46
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "outward",
+		"pos_x": -0.001,
+		"pos_y": 2.808,
+		"pos_z": 3.361,
+		"tick": 47
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "outward",
+		"pos_x": 0,
+		"pos_y": 2.832,
+		"pos_z": 3.499,
+		"tick": 48
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "outward",
+		"pos_x": 0,
+		"pos_y": 2.749,
+		"pos_z": 3.628,
+		"tick": 49
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "outward",
+		"pos_x": 0,
+		"pos_y": 2.615,
+		"pos_z": 3.773,
+		"tick": 50
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "outward",
+		"pos_x": -0.001,
+		"pos_y": 2.666,
+		"pos_z": 3.893,
+		"tick": 51
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "outward",
+		"pos_x": -0.001,
+		"pos_y": 2.577,
+		"pos_z": 4.018,
+		"tick": 52
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "outward",
+		"pos_x": -0.001,
+		"pos_y": 2.488,
+		"pos_z": 4.16,
+		"tick": 53
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "outward",
+		"pos_x": -0.001,
+		"pos_y": 2.458,
+		"pos_z": 4.302,
+		"tick": 54
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "outward",
+		"pos_x": -0.001,
+		"pos_y": 2.387,
+		"pos_z": 4.427,
+		"tick": 55
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "outward",
+		"pos_x": -0.001,
+		"pos_y": 2.324,
+		"pos_z": 4.567,
+		"tick": 56
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "outward",
+		"pos_x": -0.001,
+		"pos_y": 2.2,
+		"pos_z": 4.711,
+		"tick": 57
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "outward",
+		"pos_x": -0.001,
+		"pos_y": 2.269,
+		"pos_z": 4.868,
+		"tick": 58
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "outward",
+		"pos_x": -0.001,
+		"pos_y": 2.142,
+		"pos_z": 4.99,
+		"tick": 59
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "outward",
+		"pos_x": -0.001,
+		"pos_y": 2.011,
+		"pos_z": 5.134,
+		"tick": 60
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "outward",
+		"pos_x": 0,
+		"pos_y": 2.029,
+		"pos_z": 5.287,
+		"tick": 61
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "outward",
+		"pos_x": 0,
+		"pos_y": 1.954,
+		"pos_z": 5.417,
+		"tick": 62
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "outward",
+		"pos_x": 0,
+		"pos_y": 1.833,
+		"pos_z": 5.562,
+		"tick": 63
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "outward",
+		"pos_x": 0,
+		"pos_y": 1.842,
+		"pos_z": 5.73,
+		"tick": 64
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "outward",
+		"pos_x": 0,
+		"pos_y": 1.76,
+		"pos_z": 5.858,
+		"tick": 65
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "outward",
+		"pos_x": 0,
+		"pos_y": 1.648,
+		"pos_z": 6.002,
+		"tick": 66
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "outward",
+		"pos_x": 0,
+		"pos_y": 1.661,
+		"pos_z": 6.163,
+		"tick": 67
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "outward",
+		"pos_x": 0,
+		"pos_y": 1.568,
+		"pos_z": 6.289,
+		"tick": 68
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "outward",
+		"pos_x": 0,
+		"pos_y": 1.469,
+		"pos_z": 6.433,
+		"tick": 69
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "outward",
+		"pos_x": 0,
+		"pos_y": 1.479,
+		"pos_z": 6.598,
+		"tick": 70
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "outward",
+		"pos_x": 0,
+		"pos_y": 1.433,
+		"pos_z": 6.714,
+		"tick": 71
+	},
+	{
+		"cam_hit_len": 4.49,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "outward",
+		"pos_x": 0,
+		"pos_y": 1.288,
+		"pos_z": 6.829,
+		"tick": 72
+	},
+	{
+		"cam_hit_len": 4.5,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "outward",
+		"pos_x": 0,
+		"pos_y": 1.098,
+		"pos_z": 6.968,
+		"tick": 73
+	},
+	{
+		"cam_hit_len": 4.47,
+		"on_floor": true,
+		"on_wall": false,
+		"phase": "outward",
+		"pos_x": 0,
+		"pos_y": 0.925,
+		"pos_z": 7.137,
+		"tick": 74
+	}
+]

@@ -142,14 +142,37 @@ def main():
         bpy.context.collection.objects.link(obj)
         eyes.append(obj)
 
-    # CRITICAL FIX: Reset raw object location to (0, 0, 0) to remove the -2.26m lineup offset!
+    # CRITICAL FIX: Open eye palpebral fissure by removing occluding inner pocket faces
+    body_obj.parent = None
     body_obj.location = (0.0, 0.0, 0.0)
     body_obj.rotation_euler = (0.0, 0.0, 0.0)
-    for eye in eyes:
-        eye.location = (0.0, 0.0, 0.0)
-        eye.rotation_euler = (0.0, 0.0, 0.0)
 
-    # Scale to heroic 1.85m stature (scale factor 1.055)
+    bm_body = bmesh.new()
+    bm_body.from_mesh(body_obj.data)
+    pocket_faces = []
+    for f in bm_body.faces:
+        fc = f.calc_center_median()
+        if (0.018 < abs(fc.x) < 0.048) and (1.562 < fc.z < 1.583) and (-0.134 < fc.y < -0.118):
+            if f.normal.y > 0.1 or (abs(f.normal.x) > 0.6 and f.normal.y > -0.2):
+                pocket_faces.append(f)
+
+    print(f"Deleting {len(pocket_faces)} occluding pocket faces to open eye aperture...")
+    bmesh.ops.delete(bm_body, geom=pocket_faces, context='FACES')
+
+    # Part upper and lower eyelids for clear, alert, heroic warrior gaze
+    for v in bm_body.verts:
+        if 0.018 < abs(v.co.x) < 0.046 and -0.134 < v.co.y < -0.124:
+            if 1.574 < v.co.z < 1.583:
+                v.co.z += 0.0030 # Upper lid lift
+                v.co.y += 0.0010
+            elif 1.564 < v.co.z <= 1.574:
+                v.co.z -= 0.0030 # Lower lid lowering
+                v.co.y += 0.0010
+
+    bm_body.to_mesh(body_obj.data)
+    bm_body.free()
+
+    # Scale body to heroic 1.85m stature (scale factor 1.055)
     scale_factor = 1.055
     body_obj.scale = (scale_factor, scale_factor, scale_factor)
     bpy.ops.object.select_all(action='DESELECT')
@@ -157,44 +180,80 @@ def main():
     bpy.context.view_layer.objects.active = body_obj
     bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
 
-    for eye in eyes:
-        eye.scale = (scale_factor, scale_factor, scale_factor)
-        eye.select_set(True)
-        bpy.context.view_layer.objects.active = eye
-        bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
-
     # Place soles of feet exactly at Z = 0.0m
     min_z = min(v.co.z for v in body_obj.data.vertices)
     for v in body_obj.data.vertices:
         v.co.z -= min_z
-    for eye in eyes:
-        for v in eye.data.vertices:
-            v.co.z -= min_z
 
-    # Smart Project Body Mesh into unified 0..1 UV layout
+    # Measure exact 3D coordinates of the left open eye aperture on the scaled body
+    bm_body_meas = bmesh.new()
+    bm_body_meas.from_mesh(body_obj.data)
+    aperture_verts = [v for v in bm_body_meas.verts if any(e.is_boundary for e in v.link_edges) and v.co.z > 1.5 and v.co.x > 0.015]
+    ap_cx = sum(v.co.x for v in aperture_verts) / len(aperture_verts)
+    ap_cy = sum(v.co.y for v in aperture_verts) / len(aperture_verts)
+    ap_cz = sum(v.co.z for v in aperture_verts) / len(aperture_verts)
+    print(f"Measured scaled eye aperture center: X={ap_cx:.4f}, Y={ap_cy:.4f}, Z={ap_cz:.4f}")
+    bm_body_meas.free()
+
+    # Place eyeballs directly inside the opened ocular apertures with forward gaze
+    for eye in eyes:
+        eye.parent = None
+        side = 1.0 if ("eye.L" in eye.name or ".L" in eye.name) else -1.0
+        eye.scale = (scale_factor, scale_factor, scale_factor)
+        # Position centered in aperture with subtle 2.5mm recess so cornea dome bulges through fissure
+        eye.location = Vector((side * ap_cx, ap_cy + 0.0025, ap_cz))
+        # 90-degree pitch around X aligns sphere pole with forward -Y gaze
+        eye.rotation_euler = (math.radians(90.0), 0.0, 0.0)
+        bpy.ops.object.select_all(action='DESELECT')
+        eye.select_set(True)
+        bpy.context.view_layer.objects.active = eye
+        bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
+
+    # Smart Project Body Mesh into unified 0..1 UV layout with gentle angle limit
     bpy.ops.object.select_all(action='DESELECT')
     body_obj.select_set(True)
     bpy.context.view_layer.objects.active = body_obj
     bpy.ops.object.mode_set(mode='EDIT')
     bpy.ops.mesh.select_all(action='SELECT')
-    bpy.ops.uv.smart_project(angle_limit=1.15, island_margin=0.02)
+    bpy.ops.uv.smart_project(angle_limit=math.radians(80.0), island_margin=0.012, correct_aspect=True)
     bpy.ops.object.mode_set(mode='OBJECT')
 
-    # Assign materials to body and eyes
+    # Assign materials to body
     for m in mat_list:
         body_obj.data.materials.append(m)
+
+    # Spherical Ocular UV Mapping for Eyes (Direct forward gaze mapping amber iris to center)
     for eye in eyes:
         for m in mat_list:
             eye.data.materials.append(m)
-        if len(eye.data.materials) > 0:
-            eye.data.materials[0] = mats_dict["Mat_Veer_Eyes"]
-        bpy.ops.object.select_all(action='DESELECT')
-        eye.select_set(True)
-        bpy.context.view_layer.objects.active = eye
-        bpy.ops.object.mode_set(mode='EDIT')
-        bpy.ops.mesh.select_all(action='SELECT')
-        bpy.ops.uv.smart_project(angle_limit=1.15, island_margin=0.02)
-        bpy.ops.object.mode_set(mode='OBJECT')
+        bm_eye = bmesh.new()
+        bm_eye.from_mesh(eye.data)
+        uv_layer = bm_eye.loops.layers.uv.verify()
+        
+        # Calculate local eye center
+        c_eye = Vector((0, 0, 0))
+        for v in bm_eye.verts:
+            c_eye += v.co
+        c_eye /= max(len(bm_eye.verts), 1)
+        
+        for face in bm_eye.faces:
+            face.material_index = 7 # Mat_Veer_Eyes
+            for loop in face.loops:
+                v_co = loop.vert.co - c_eye
+                r_sphere = max(v_co.length, 1e-5)
+                # Front of eyeball is along -Y
+                cos_alpha = max(-1.0, min(1.0, -v_co.y / r_sphere))
+                alpha = math.acos(cos_alpha)
+                theta = math.atan2(v_co.z, v_co.x)
+                
+                # Map alpha: 0..pi to radius 0..0.48 in UV space
+                r_uv = min(0.48, (alpha / (math.pi * 0.70)) * 0.44)
+                u = 0.5 + r_uv * math.cos(theta)
+                v = 0.5 + r_uv * math.sin(theta)
+                loop[uv_layer].uv = (u, v)
+                
+        bm_eye.to_mesh(eye.data)
+        bm_eye.free()
 
     # 3. Create All 3D Vedic Pieces
     topknot_obj = geom.create_topknot_and_hair(mat_list)
@@ -213,17 +272,30 @@ def main():
     ]
     for c_obj in costume_objs:
         bpy.context.collection.objects.link(c_obj)
-        # Apply UV unwrapping
-        bpy.ops.object.select_all(action='DESELECT')
-        c_obj.select_set(True)
-        bpy.context.view_layer.objects.active = c_obj
-        bpy.ops.object.mode_set(mode='EDIT')
-        bpy.ops.mesh.select_all(action='SELECT')
-        bpy.ops.uv.smart_project(angle_limit=1.15, island_margin=0.02)
-        bpy.ops.object.mode_set(mode='OBJECT')
+        # Preserve explicitly authored UV layouts for dhoti, tripundra, sash, and scimitar!
+        if c_obj not in [dhoti_obj, tripundra_obj, sash_obj, scimitar_obj]:
+            bpy.ops.object.select_all(action='DESELECT')
+            c_obj.select_set(True)
+            bpy.context.view_layer.objects.active = c_obj
+            bpy.ops.object.mode_set(mode='EDIT')
+            bpy.ops.mesh.select_all(action='SELECT')
+            bpy.ops.uv.smart_project(angle_limit=math.radians(75.0), island_margin=0.015)
+            bpy.ops.object.mode_set(mode='OBJECT')
         bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
 
-    print("All 8 Vedic costume & weapon components created and UV unwrapped.")
+    print("All 9 Vedic costume & weapon components created and UV unwrapped.")
+
+    # Standardize and sanitize UV layer names across all meshes before joining
+    for o in [body_obj] + eyes + costume_objs:
+        if len(o.data.uv_layers) == 0:
+            o.data.uv_layers.new(name="UVMap")
+        else:
+            o.data.uv_layers[0].name = "UVMap"
+        o.data.uv_layers["UVMap"].active = True
+        # Strip any extraneous UV layers (like Float2) to ensure a single, clean UVMap
+        for l in list(o.data.uv_layers):
+            if l.name != "UVMap":
+                o.data.uv_layers.remove(l)
 
     # 4. Join All Meshes into Unified VeerSkinnedHumanoidMesh in Rest Pose
     bpy.ops.object.select_all(action='DESELECT')
@@ -233,6 +305,10 @@ def main():
     bpy.ops.object.join()
     body_obj.name = "VeerSkinnedHumanoidMesh"
     body_obj.data.name = "Veer_Humanoid_Mesh"
+
+    # CRITICAL: Apply smooth shading across all polygons of unified character geometry
+    for p in body_obj.data.polygons:
+        p.use_smooth = True
 
     # Shift entire unified character geometry so sandal soles rest precisely at Z = 0.0m on the ground
     min_mesh_z = min(v.co.z for v in body_obj.data.vertices)
@@ -304,73 +380,142 @@ def main():
     bpy.ops.object.mode_set(mode='OBJECT')
     print("Armature built with 24 bones in Rest Pose.")
 
-    # 6. Apply 3D Heat Diffusion Auto Skin Weights to the Entire Unified Mesh
-    bpy.ops.object.select_all(action='DESELECT')
-    body_obj.select_set(True)
-    arm_obj.select_set(True)
-    bpy.context.view_layer.objects.active = arm_obj
-    bpy.ops.object.parent_set(type='ARMATURE_AUTO')
-    print("Entire unified character mesh successfully auto-weighted to 24 bones!")
+    # 6. Apply Complete 3D Proximity Skin Weights (100% Vertices Weighted, Zero Gaps)
+    import numpy as np
+    
+    # Establish Armature parent and modifier
+    body_obj.parent = arm_obj
+    arm_mod = body_obj.modifiers.new(name="Armature", type='ARMATURE')
+    arm_mod.object = arm_obj
+    arm_mod.use_vertex_groups = True
 
-    # 7. Lock Surya-Kripana Scimitar rigidly to socket_right_hand
-    # Vertices belonging to Mat_Veer_Khadga (slot 5)
+    # Clear any old groups
+    while body_obj.vertex_groups:
+        body_obj.vertex_groups.remove(body_obj.vertex_groups[0])
+
+    deform_bones = [b for b in arm_obj.data.bones if b.name != "root"]
+    vg_map = {}
+    for b in arm_obj.data.bones:
+        vg_map[b.name] = body_obj.vertex_groups.new(name=b.name)
+
+    bone_segs = []
+    for b in deform_bones:
+        bone_segs.append((b.name, np.array(b.head_local), np.array(b.tail_local)))
+
+    verts_co = np.array([[v.co.x, v.co.y, v.co.z] for v in body_obj.data.vertices])
+    print(f"Skinning {len(verts_co)} vertices across {len(deform_bones)} deform bones...")
+
+    for i, p in enumerate(verts_co):
+        weights = []
+        px, py, pz = p
+        for bname, a, b in bone_segs:
+            # Cross-lateral symmetry filters
+            if px > 0.04 and ("_r" in bname or "right" in bname):
+                continue
+            if px < -0.04 and ("_l" in bname or "left" in bname):
+                continue
+            # Vertical height constraints
+            if pz > 1.76 and bname not in ["head", "topknot"]:
+                continue
+            if pz < 0.10 and bname not in ["shin_l", "foot_l", "shin_r", "foot_r"]:
+                continue
+
+            ab = b - a
+            ap = p - a
+            ab2 = np.dot(ab, ab)
+            t = np.clip(np.dot(ap, ab) / (ab2 + 1e-8), 0.0, 1.0)
+            closest = a + t * ab
+            dist = np.linalg.norm(p - closest)
+            w = 1.0 / (dist**3 + 1e-4)
+            weights.append((bname, w))
+
+        weights.sort(key=lambda x: x[1], reverse=True)
+        top_w = weights[:4]
+        total_w = sum(w for _, w in top_w)
+        for bname, w in top_w:
+            vg_map[bname].add([i], w / total_w, 'REPLACE')
+
+    # 7. Lock Specific Vedic Components to Functional Sockets & Bones
+    # Material slot indices:
+    # 5: Mat_Veer_Khadga -> socket_right_hand (1.0 rigidly)
+    # 6: Mat_Veer_Hair -> topknot (0.8), head (0.6)
+    # 7: Mat_Veer_Eyes -> head (1.0 rigidly)
+    # 8: Mat_Veer_Tilak -> head (1.0 rigidly)
     khadga_v_indices = set()
-    for p in body_obj.data.polygons:
-        if p.material_index == 5: # Mat_Veer_Khadga
-            for v_idx in p.vertices:
-                khadga_v_indices.add(v_idx)
+    hair_v_indices = set()
+    eyes_v_indices = set()
+    tilak_v_indices = set()
 
-    # Clear other bone weights from scimitar and assign 100% to socket_right_hand and hand_r
+    for p in body_obj.data.polygons:
+        if p.material_index == 5:
+            for vi in p.vertices:
+                khadga_v_indices.add(vi)
+        elif p.material_index == 6:
+            for vi in p.vertices:
+                hair_v_indices.add(vi)
+        elif p.material_index == 7:
+            for vi in p.vertices:
+                eyes_v_indices.add(vi)
+        elif p.material_index == 8:
+            for vi in p.vertices:
+                tilak_v_indices.add(vi)
+
+    # Scimitar 100% rigid locking to socket_right_hand (no deformation from other bones)
     for vg in body_obj.vertex_groups:
-        if vg.name not in ["socket_right_hand", "hand_r"]:
-            for v_idx in khadga_v_indices:
+        if vg.name != "socket_right_hand":
+            for vi in khadga_v_indices:
                 try:
-                    vg.remove([v_idx])
+                    vg.remove([vi])
                 except:
                     pass
+    for vi in khadga_v_indices:
+        vg_map["socket_right_hand"].add([vi], 1.0, 'REPLACE')
 
-    vg_socket = body_obj.vertex_groups.get("socket_right_hand")
-    if not vg_socket:
-        vg_socket = body_obj.vertex_groups.new(name="socket_right_hand")
-    vg_hand = body_obj.vertex_groups.get("hand_r")
-    if not vg_hand:
-        vg_hand = body_obj.vertex_groups.new(name="hand_r")
+    # Eyes 100% rigid locking to head
+    for vg in body_obj.vertex_groups:
+        if vg.name != "head":
+            for vi in eyes_v_indices:
+                try:
+                    vg.remove([vi])
+                except:
+                    pass
+    for vi in eyes_v_indices:
+        vg_map["head"].add([vi], 1.0, 'REPLACE')
 
-    for v_idx in khadga_v_indices:
-        vg_socket.add([v_idx], 1.0, 'REPLACE')
-        vg_hand.add([v_idx], 0.4, 'REPLACE')
+    # Hair locking
+    for vi in hair_v_indices:
+        vg_map["topknot"].add([vi], 0.8, 'REPLACE')
+        vg_map["head"].add([vi], 0.5, 'REPLACE')
 
-    print(f"Surya-Kripana scimitar ({len(khadga_v_indices)} vertices) rigidly bound to socket_right_hand.")
+    # Tilak 100% rigid locking to head
+    for vg in body_obj.vertex_groups:
+        if vg.name != "head":
+            for vi in tilak_v_indices:
+                try:
+                    vg.remove([vi])
+                except:
+                    pass
+    for vi in tilak_v_indices:
+        vg_map["head"].add([vi], 1.0, 'REPLACE')
 
-    # 7b. Lock Paduka sandals and foot vertices to foot_l and foot_r (eliminate any root bone pinning)
-    vg_root = body_obj.vertex_groups.get("root")
-    vg_foot_l = body_obj.vertex_groups.get("foot_l")
-    vg_foot_r = body_obj.vertex_groups.get("foot_r")
-
+    # 7b. Lock Paduka sandals and foot vertices to foot_l and foot_r
     sandal_foot_count = 0
     for v in body_obj.data.vertices:
         if v.co.z < 0.11:
-            if vg_root:
-                try:
-                    vg_root.remove([v.index])
-                except:
-                    pass
+            try:
+                vg_map["root"].remove([v.index])
+            except:
+                pass
             if v.co.x > 0.0:
-                if vg_foot_l:
-                    vg_foot_l.add([v.index], 1.0, 'REPLACE')
-                    sandal_foot_count += 1
+                vg_map["foot_l"].add([v.index], 1.0, 'REPLACE')
+                sandal_foot_count += 1
             else:
-                if vg_foot_r:
-                    vg_foot_r.add([v.index], 1.0, 'REPLACE')
-                    sandal_foot_count += 1
-        elif v.co.z < 0.48:
-            if vg_root:
-                try:
-                    vg_root.remove([v.index])
-                except:
-                    pass
+                vg_map["foot_r"].add([v.index], 1.0, 'REPLACE')
+                sandal_foot_count += 1
 
-    print(f"Paduka sandals and feet ({sandal_foot_count} vertices) locked to foot_l & foot_r with zero root pinning.")
+    unweighted = [v.index for v in body_obj.data.vertices if len(v.groups) == 0]
+    print(f"Skinning verification complete: {len(body_obj.data.vertices)} vertices skinned, unweighted: {len(unweighted)} (0 expected).")
+    assert len(unweighted) == 0, f"Error: {len(unweighted)} unweighted vertices detected!"
     if arm_obj.animation_data is None:
         arm_obj.animation_data_create()
 

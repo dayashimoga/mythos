@@ -260,13 +260,17 @@ func _advance_shot() -> void:
 		cine_camera.fov = shot.fov
 
 	# Display Subtitles
-	if shot.dialogue_text.is_empty():
-		subtitle_panel.visible = false
-	else:
-		subtitle_panel.visible = true
-		speaker_label.text = shot.speaker_name.to_upper()
-		role_label.text = "— " + shot.speaker_role if not shot.speaker_role.is_empty() else ""
-		subtitle_label.text = shot.dialogue_text
+	if subtitle_panel:
+		if shot.dialogue_text.is_empty():
+			subtitle_panel.visible = false
+		else:
+			subtitle_panel.visible = true
+			if speaker_label:
+				speaker_label.text = shot.speaker_name.to_upper()
+			if role_label:
+				role_label.text = "— " + shot.speaker_role if not shot.speaker_role.is_empty() else ""
+			if subtitle_label:
+				subtitle_label.text = shot.dialogue_text
 
 	if shot.on_start_callback.is_valid():
 		shot.on_start_callback.call()

@@ -240,14 +240,18 @@ func _process(delta: float) -> void:
 			var remapped = stick_norm * stick_mag
 			orbit(remapped.x * gamepad_sensitivity * 280.0 * delta, remapped.y * gamepad_sensitivity * 240.0 * delta)
 
-	# 3. Adaptive Tight-Space Framing & Distance
-	# If camera is compressed close to player (< 2.2m) by walls or low ceilings, shift arm offset to shoulder view
+	# 3. Adaptive Tight-Space Framing & Obstruction Avoidance
+	# If camera is compressed close to player (< 2.2m) by walls, pillars, or low ceilings, adapt framing
 	var current_hit_len = get_hit_length()
 	var effective_arm_offset = target_arm_offset
 	if current_hit_len < 2.2 and not is_over_shoulder:
 		var t_tight = clamp((2.2 - current_hit_len) / 1.5, 0.0, 1.0)
-		# Lower arm height and shift right so Veer remains centered and visible
-		effective_arm_offset = standard_arm_offset.lerp(Vector3(0.55, 1.25, 0.0), t_tight)
+		# Adjust arm height and shift right so Veer remains centered and visible
+		effective_arm_offset = standard_arm_offset.lerp(Vector3(0.55, 1.30, 0.0), t_tight)
+		# Dynamically bound pitch in tight interiors to prevent camera pressing into roofs or stairs
+		var dynamic_max_pitch = lerp(deg_to_rad(14.0), deg_to_rad(max_pitch_deg), clamp(current_hit_len / 2.0, 0.0, 1.0))
+		var dynamic_min_pitch = lerp(deg_to_rad(-52.0), deg_to_rad(min_pitch_deg), clamp(current_hit_len / 2.0, 0.0, 1.0))
+		rotation.x = clamp(rotation.x, dynamic_min_pitch, dynamic_max_pitch)
 
 	# 4. Smooth zoom & arm offset lerp
 	spring_length = lerp(spring_length, target_zoom, zoom_damping * delta)

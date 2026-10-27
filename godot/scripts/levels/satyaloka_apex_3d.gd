@@ -65,9 +65,10 @@ func _ready() -> void:
 		boss_brahma.boss_phase_changed.connect(_on_boss_phase_changed)
 		boss_brahma.boss_defeated.connect(_on_boss_defeated)
 
-	for chakra in get_tree().get_nodes_in_group("dharmachakras"):
-		if chakra.has_signal("chakra_aligned"):
-			chakra.chakra_aligned.connect(_on_chakra_aligned)
+	if is_inside_tree() and get_tree():
+		for chakra in get_tree().get_nodes_in_group("dharmachakras"):
+			if chakra.has_signal("chakra_aligned"):
+				chakra.chakra_aligned.connect(_on_chakra_aligned)
 
 	if moksha_peetham_altar:
 		moksha_peetham_altar.peetham_consecrated.connect(_on_moksha_consecrated)
@@ -125,9 +126,10 @@ func _on_chakra_aligned(_node_id: String) -> void:
 		_manifest_all_bridges()
 
 func _manifest_all_bridges() -> void:
-	for bridge in get_tree().get_nodes_in_group("bridges"):
-		if bridge.has_method("manifest_bridge"):
-			bridge.manifest_bridge()
+	if is_inside_tree() and get_tree():
+		for bridge in get_tree().get_nodes_in_group("bridges"):
+			if bridge.has_method("manifest_bridge"):
+				bridge.manifest_bridge()
 	if hud:
 		hud.show_banner("⚡ TRANSCENDENT LIGHT BRIDGES MANIFESTED! ⚡\nThe Path to Brahma Avatara is Open!", 4.0)
 

@@ -47,6 +47,11 @@ func _init() -> void:
 	var test_guidance_q13 = load("res://tests/unit/test_player_guidance_and_navigation_q13.gd")
 	var test_gameplay_combat_q14 = load("res://tests/unit/test_gameplay_combat_cinematics_q14.gd")
 	var test_seven_realms_q15 = load("res://tests/unit/test_seven_realms_hardening_q15.gd")
+	var test_temple_traversal_q16 = load("res://tests/unit/test_temple_traversal_q16.gd")
+	var test_story_and_campaign_q17 = load("res://tests/unit/test_story_and_campaign_sequencing_q17.gd")
+	var test_locomotion_animation_q19 = load("res://tests/unit/test_locomotion_animation_q19.gd")
+	var test_bhumi_reference_q20a = load("res://tests/unit/test_bhumi_reference_q20a.gd")
+	var test_full_gameplay_automation_q21 = load("res://tests/unit/test_full_gameplay_automation_q21.gd")
 
 	var suites = [
 		{"name": "Combat Mathematics (Domain)", "runner": test_combat_math},
@@ -79,7 +84,12 @@ func _init() -> void:
 		{"name": "Suite 28: Bhumi Environment, Landscape & Architectural Quality Remaster (Stage Q12)", "runner": test_bhumi_q12},
 		{"name": "Suite 29: Player Guidance, UI Functionality & Quest Navigation (Stage Q13)", "runner": test_guidance_q13},
 		{"name": "Suite 30: Gameplay, Combat, AI & Cinematic Experience Overhaul (Stage Q14)", "runner": test_gameplay_combat_q14},
-		{"name": "Suite 31: Seven-Realm Production Hardening & Release Certification (Stage Q15)", "runner": test_seven_realms_q15}
+		{"name": "Suite 31: Seven-Realm Production Hardening & Release Certification (Stage Q15)", "runner": test_seven_realms_q15},
+		{"name": "Suite 32: Temple Traversal, Physics & Camera Repair (Stage Q16)", "runner": test_temple_traversal_q16},
+		{"name": "Suite 33: Complete Seven-Realm Story & Gameplay Sequencing (Stage Q17)", "runner": test_story_and_campaign_q17},
+		{"name": "Suite 34: Production Locomotion, Animation & Movement Calibration (Stage Q19)", "runner": test_locomotion_animation_q19},
+		{"name": "Suite 35: Bhumi Final Reference Certification (Stage Q20-A)", "runner": test_bhumi_reference_q20a},
+		{"name": "Suite 36: Full Gameplay Automation, Regression & Release Certification (Stage Q21)", "runner": test_full_gameplay_automation_q21}
 	]
 
 	for suite in suites:

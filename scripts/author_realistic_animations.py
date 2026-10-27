@@ -1145,6 +1145,332 @@ med_rot = {
 }
 add_full_action("meditation", 2.0, med_rot)
 
+# =========================================================================
+# 21. CROUCH_IDLE (Low Tactical Crouch, 2.0s loop)
+# =========================================================================
+crouch_idle_rot = {
+    "pelvis": [
+        (0.0, euler_to_quat(math.radians(12.0), 0.0, 0.0)),
+        (1.0, euler_to_quat(math.radians(14.0), 0.0, 0.0)),
+        (2.0, euler_to_quat(math.radians(12.0), 0.0, 0.0)),
+    ],
+    "thigh_l": [(0.0, euler_to_quat(math.radians(42.0), 0.0, math.radians(-6.0))), (2.0, euler_to_quat(math.radians(42.0), 0.0, math.radians(-6.0)))],
+    "shin_l": [(0.0, euler_to_quat(math.radians(-54.0), 0.0, 0.0)), (2.0, euler_to_quat(math.radians(-54.0), 0.0, 0.0))],
+    "foot_l": [(0.0, euler_to_quat(math.radians(16.0), 0.0, 0.0)), (2.0, euler_to_quat(math.radians(16.0), 0.0, 0.0))],
+    "thigh_r": [(0.0, euler_to_quat(math.radians(42.0), 0.0, math.radians(6.0))), (2.0, euler_to_quat(math.radians(42.0), 0.0, math.radians(6.0)))],
+    "shin_r": [(0.0, euler_to_quat(math.radians(-54.0), 0.0, 0.0)), (2.0, euler_to_quat(math.radians(-54.0), 0.0, 0.0))],
+    "foot_r": [(0.0, euler_to_quat(math.radians(16.0), 0.0, 0.0)), (2.0, euler_to_quat(math.radians(16.0), 0.0, 0.0))],
+    "spine_01": [(0.0, euler_to_quat(math.radians(-10.0), 0.0, 0.0)), (2.0, euler_to_quat(math.radians(-10.0), 0.0, 0.0))],
+    "chest": [
+        (0.0, euler_to_quat(math.radians(-8.0), 0.0, 0.0)),
+        (1.0, euler_to_quat(math.radians(-5.0), 0.0, 0.0)),
+        (2.0, euler_to_quat(math.radians(-8.0), 0.0, 0.0)),
+    ],
+    "head": [
+        (0.0, euler_to_quat(math.radians(8.0), 0.0, 0.0)),
+        (1.0, euler_to_quat(math.radians(6.0), 0.0, 0.0)),
+        (2.0, euler_to_quat(math.radians(8.0), 0.0, 0.0)),
+    ],
+    "arm_l": [(0.0, euler_to_quat(math.radians(12.0), math.radians(8.0), math.radians(12.0))), (2.0, euler_to_quat(math.radians(12.0), math.radians(8.0), math.radians(12.0)))],
+    "forearm_l": [(0.0, euler_to_quat(math.radians(40.0), 0.0, 0.0)), (2.0, euler_to_quat(math.radians(40.0), 0.0, 0.0))],
+    "arm_r": [(0.0, euler_to_quat(math.radians(12.0), math.radians(-8.0), math.radians(-12.0))), (2.0, euler_to_quat(math.radians(12.0), math.radians(-8.0), math.radians(-12.0)))],
+    "forearm_r": [(0.0, euler_to_quat(math.radians(40.0), 0.0, 0.0)), (2.0, euler_to_quat(math.radians(40.0), 0.0, 0.0))],
+}
+crouch_idle_loc = {
+    "pelvis": [
+        (0.0, Vector((0.0, 0.0, -0.25))),
+        (1.0, Vector((0.0, 0.0, -0.24))),
+        (2.0, Vector((0.0, 0.0, -0.25))),
+    ]
+}
+add_full_action("crouch_idle", 2.0, crouch_idle_rot, crouch_idle_loc)
+
+# =========================================================================
+# 22. CROUCH_WALK (Low Stealth Bipedal Stalking, 1.0s loop)
+# =========================================================================
+crouch_walk_rot = {
+    "pelvis": [
+        (0.0, euler_to_quat(math.radians(14.0), math.radians(4.0), 0.0)),
+        (0.5, euler_to_quat(math.radians(14.0), math.radians(-4.0), 0.0)),
+        (1.0, euler_to_quat(math.radians(14.0), math.radians(4.0), 0.0)),
+    ],
+    "thigh_l": [
+        (0.0, euler_to_quat(math.radians(28.0), 0.0, 0.0)),
+        (0.5, euler_to_quat(math.radians(52.0), 0.0, 0.0)),
+        (1.0, euler_to_quat(math.radians(28.0), 0.0, 0.0)),
+    ],
+    "shin_l": [
+        (0.0, euler_to_quat(math.radians(-38.0), 0.0, 0.0)),
+        (0.5, euler_to_quat(math.radians(-64.0), 0.0, 0.0)),
+        (1.0, euler_to_quat(math.radians(-38.0), 0.0, 0.0)),
+    ],
+    "foot_l": [
+        (0.0, euler_to_quat(math.radians(12.0), 0.0, 0.0)),
+        (0.5, euler_to_quat(math.radians(20.0), 0.0, 0.0)),
+        (1.0, euler_to_quat(math.radians(12.0), 0.0, 0.0)),
+    ],
+    "thigh_r": [
+        (0.0, euler_to_quat(math.radians(52.0), 0.0, 0.0)),
+        (0.5, euler_to_quat(math.radians(28.0), 0.0, 0.0)),
+        (1.0, euler_to_quat(math.radians(52.0), 0.0, 0.0)),
+    ],
+    "shin_r": [
+        (0.0, euler_to_quat(math.radians(-64.0), 0.0, 0.0)),
+        (0.5, euler_to_quat(math.radians(-38.0), 0.0, 0.0)),
+        (1.0, euler_to_quat(math.radians(-64.0), 0.0, 0.0)),
+    ],
+    "foot_r": [
+        (0.0, euler_to_quat(math.radians(20.0), 0.0, 0.0)),
+        (0.5, euler_to_quat(math.radians(12.0), 0.0, 0.0)),
+        (1.0, euler_to_quat(math.radians(20.0), 0.0, 0.0)),
+    ],
+    "spine_01": [(0.0, euler_to_quat(math.radians(-10.0), 0.0, 0.0)), (1.0, euler_to_quat(math.radians(-10.0), 0.0, 0.0))],
+    "chest": [(0.0, euler_to_quat(math.radians(-8.0), 0.0, 0.0)), (1.0, euler_to_quat(math.radians(-8.0), 0.0, 0.0))],
+    "head": [(0.0, euler_to_quat(math.radians(8.0), 0.0, 0.0)), (1.0, euler_to_quat(math.radians(8.0), 0.0, 0.0))],
+    "arm_l": [
+        (0.0, euler_to_quat(math.radians(18.0), 0.0, math.radians(10.0))),
+        (0.5, euler_to_quat(math.radians(-8.0), 0.0, math.radians(10.0))),
+        (1.0, euler_to_quat(math.radians(18.0), 0.0, math.radians(10.0))),
+    ],
+    "forearm_l": [(0.0, euler_to_quat(math.radians(35.0), 0.0, 0.0)), (1.0, euler_to_quat(math.radians(35.0), 0.0, 0.0))],
+    "arm_r": [
+        (0.0, euler_to_quat(math.radians(-8.0), 0.0, math.radians(-10.0))),
+        (0.5, euler_to_quat(math.radians(18.0), 0.0, math.radians(-10.0))),
+        (1.0, euler_to_quat(math.radians(-8.0), 0.0, math.radians(-10.0))),
+    ],
+    "forearm_r": [(0.0, euler_to_quat(math.radians(35.0), 0.0, 0.0)), (1.0, euler_to_quat(math.radians(35.0), 0.0, 0.0))],
+}
+crouch_walk_loc = {
+    "pelvis": [
+        (0.0, Vector((0.0, 0.0, -0.23))),
+        (0.5, Vector((0.0, 0.0, -0.21))),
+        (1.0, Vector((0.0, 0.0, -0.23))),
+    ]
+}
+add_full_action("crouch_walk", 1.0, crouch_walk_rot, crouch_walk_loc)
+
+# =========================================================================
+# 23. ROLL (Athletic Evasive Combat Dive-Roll, 0.70s one-shot)
+# =========================================================================
+roll_rot = {
+    "pelvis": [
+        (0.0, euler_to_quat(0.0, 0.0, 0.0)),
+        (0.18, euler_to_quat(math.radians(55.0), 0.0, 0.0)),
+        (0.35, euler_to_quat(math.radians(175.0), 0.0, 0.0)),
+        (0.52, euler_to_quat(math.radians(290.0), 0.0, 0.0)),
+        (0.70, euler_to_quat(math.radians(360.0), 0.0, 0.0)),
+    ],
+    "thigh_l": [
+        (0.0, euler_to_quat(0.0, 0.0, 0.0)),
+        (0.35, euler_to_quat(math.radians(75.0), 0.0, 0.0)),
+        (0.70, euler_to_quat(0.0, 0.0, 0.0)),
+    ],
+    "shin_l": [
+        (0.0, euler_to_quat(0.0, 0.0, 0.0)),
+        (0.35, euler_to_quat(math.radians(-90.0), 0.0, 0.0)),
+        (0.70, euler_to_quat(0.0, 0.0, 0.0)),
+    ],
+    "thigh_r": [
+        (0.0, euler_to_quat(0.0, 0.0, 0.0)),
+        (0.35, euler_to_quat(math.radians(75.0), 0.0, 0.0)),
+        (0.70, euler_to_quat(0.0, 0.0, 0.0)),
+    ],
+    "shin_r": [
+        (0.0, euler_to_quat(0.0, 0.0, 0.0)),
+        (0.35, euler_to_quat(math.radians(-90.0), 0.0, 0.0)),
+        (0.70, euler_to_quat(0.0, 0.0, 0.0)),
+    ],
+    "spine_01": [
+        (0.0, euler_to_quat(0.0, 0.0, 0.0)),
+        (0.35, euler_to_quat(math.radians(35.0), 0.0, 0.0)),
+        (0.70, euler_to_quat(0.0, 0.0, 0.0)),
+    ],
+    "chest": [
+        (0.0, euler_to_quat(0.0, 0.0, 0.0)),
+        (0.35, euler_to_quat(math.radians(25.0), 0.0, 0.0)),
+        (0.70, euler_to_quat(0.0, 0.0, 0.0)),
+    ],
+    "head": [
+        (0.0, euler_to_quat(0.0, 0.0, 0.0)),
+        (0.35, euler_to_quat(math.radians(-35.0), 0.0, 0.0)),
+        (0.70, euler_to_quat(0.0, 0.0, 0.0)),
+    ],
+    "arm_l": [
+        (0.0, euler_to_quat(0.0, 0.0, 0.0)),
+        (0.20, euler_to_quat(math.radians(65.0), 0.0, math.radians(20.0))),
+        (0.70, euler_to_quat(0.0, 0.0, 0.0)),
+    ],
+    "arm_r": [
+        (0.0, euler_to_quat(0.0, 0.0, 0.0)),
+        (0.20, euler_to_quat(math.radians(-45.0), 0.0, math.radians(-25.0))),
+        (0.70, euler_to_quat(0.0, 0.0, 0.0)),
+    ],
+}
+roll_loc = {
+    "pelvis": [
+        (0.0, Vector((0.0, 0.0, 0.0))),
+        (0.18, Vector((0.0, 0.0, -0.28))),
+        (0.35, Vector((0.0, 0.0, -0.38))),
+        (0.52, Vector((0.0, 0.0, -0.22))),
+        (0.70, Vector((0.0, 0.0, 0.0))),
+    ]
+}
+add_full_action("roll", 0.70, roll_rot, roll_loc)
+
+# =========================================================================
+# 24. RECOIL (Blade Clash Impact Deflection, 0.45s one-shot)
+# =========================================================================
+recoil_rot = {
+    "pelvis": [
+        (0.0, euler_to_quat(0.0, 0.0, 0.0)),
+        (0.10, euler_to_quat(math.radians(-10.0), math.radians(6.0), 0.0)),
+        (0.45, euler_to_quat(0.0, 0.0, 0.0)),
+    ],
+    "chest": [
+        (0.0, euler_to_quat(0.0, 0.0, 0.0)),
+        (0.10, euler_to_quat(math.radians(-14.0), math.radians(8.0), 0.0)),
+        (0.45, euler_to_quat(0.0, 0.0, 0.0)),
+    ],
+    "head": [
+        (0.0, euler_to_quat(0.0, 0.0, 0.0)),
+        (0.10, euler_to_quat(math.radians(-10.0), math.radians(-5.0), 0.0)),
+        (0.45, euler_to_quat(0.0, 0.0, 0.0)),
+    ],
+    "arm_r": [
+        (0.0, euler_to_quat(0.0, 0.0, 0.0)),
+        (0.08, euler_to_quat(math.radians(-42.0), math.radians(-25.0), math.radians(-15.0))),
+        (0.45, euler_to_quat(0.0, 0.0, 0.0)),
+    ],
+    "forearm_r": [
+        (0.0, euler_to_quat(0.0, 0.0, 0.0)),
+        (0.08, euler_to_quat(math.radians(65.0), 0.0, 0.0)),
+        (0.45, euler_to_quat(0.0, 0.0, 0.0)),
+    ],
+    "arm_l": [
+        (0.0, euler_to_quat(0.0, 0.0, 0.0)),
+        (0.08, euler_to_quat(math.radians(-15.0), math.radians(15.0), 0.0)),
+        (0.45, euler_to_quat(0.0, 0.0, 0.0)),
+    ],
+}
+recoil_loc = {
+    "pelvis": [
+        (0.0, Vector((0.0, 0.0, 0.0))),
+        (0.10, Vector((0.0, 0.025, -0.04))),
+        (0.45, Vector((0.0, 0.0, 0.0))),
+    ]
+}
+add_full_action("recoil", 0.45, recoil_rot, recoil_loc)
+
+# =========================================================================
+# 25. STAIR_ASCENT (High Knee Lift Step-Up Traversal, 1.0s loop)
+# =========================================================================
+stair_ascent_rot = {
+    "pelvis": [
+        (0.0, euler_to_quat(math.radians(6.0), math.radians(4.0), 0.0)),
+        (0.5, euler_to_quat(math.radians(6.0), math.radians(-4.0), 0.0)),
+        (1.0, euler_to_quat(math.radians(6.0), math.radians(4.0), 0.0)),
+    ],
+    "thigh_l": [
+        (0.0, euler_to_quat(math.radians(-15.0), 0.0, 0.0)),
+        (0.25, euler_to_quat(math.radians(46.0), 0.0, 0.0)),
+        (0.5, euler_to_quat(math.radians(15.0), 0.0, 0.0)),
+        (0.75, euler_to_quat(math.radians(-32.0), 0.0, 0.0)),
+        (1.0, euler_to_quat(math.radians(-15.0), 0.0, 0.0)),
+    ],
+    "shin_l": [
+        (0.0, euler_to_quat(math.radians(18.0), 0.0, 0.0)),
+        (0.25, euler_to_quat(math.radians(62.0), 0.0, 0.0)),
+        (0.5, euler_to_quat(math.radians(12.0), 0.0, 0.0)),
+        (0.75, euler_to_quat(math.radians(8.0), 0.0, 0.0)),
+        (1.0, euler_to_quat(math.radians(18.0), 0.0, 0.0)),
+    ],
+    "thigh_r": [
+        (0.0, euler_to_quat(math.radians(15.0), 0.0, 0.0)),
+        (0.25, euler_to_quat(math.radians(-32.0), 0.0, 0.0)),
+        (0.5, euler_to_quat(math.radians(-15.0), 0.0, 0.0)),
+        (0.75, euler_to_quat(math.radians(46.0), 0.0, 0.0)),
+        (1.0, euler_to_quat(math.radians(15.0), 0.0, 0.0)),
+    ],
+    "shin_r": [
+        (0.0, euler_to_quat(math.radians(12.0), 0.0, 0.0)),
+        (0.25, euler_to_quat(math.radians(8.0), 0.0, 0.0)),
+        (0.5, euler_to_quat(math.radians(18.0), 0.0, 0.0)),
+        (0.75, euler_to_quat(math.radians(62.0), 0.0, 0.0)),
+        (1.0, euler_to_quat(math.radians(12.0), 0.0, 0.0)),
+    ],
+    "chest": [(0.0, euler_to_quat(math.radians(8.0), 0.0, 0.0)), (1.0, euler_to_quat(math.radians(8.0), 0.0, 0.0))],
+    "arm_l": [
+        (0.0, euler_to_quat(math.radians(24.0), 0.0, math.radians(5.0))),
+        (0.5, euler_to_quat(math.radians(-16.0), 0.0, math.radians(5.0))),
+        (1.0, euler_to_quat(math.radians(24.0), 0.0, math.radians(5.0))),
+    ],
+    "arm_r": [
+        (0.0, euler_to_quat(math.radians(-16.0), 0.0, math.radians(-5.0))),
+        (0.5, euler_to_quat(math.radians(24.0), 0.0, math.radians(-5.0))),
+        (1.0, euler_to_quat(math.radians(-16.0), 0.0, math.radians(-5.0))),
+    ],
+}
+stair_ascent_loc = {
+    "pelvis": [
+        (0.0, Vector((0.0, 0.0, -0.01))),
+        (0.25, Vector((-0.015, 0.0, 0.035))),
+        (0.5, Vector((0.0, 0.0, -0.01))),
+        (0.75, Vector((0.015, 0.0, 0.035))),
+        (1.0, Vector((0.0, 0.0, -0.01))),
+    ]
+}
+add_full_action("stair_ascent", 1.0, stair_ascent_rot, stair_ascent_loc)
+
+# =========================================================================
+# 26. STAIR_DESCENT (Downward Foot Extension & Impact Absorption, 1.0s loop)
+# =========================================================================
+stair_descent_rot = {
+    "pelvis": [
+        (0.0, euler_to_quat(math.radians(-3.0), math.radians(3.0), 0.0)),
+        (0.5, euler_to_quat(math.radians(-3.0), math.radians(-3.0), 0.0)),
+        (1.0, euler_to_quat(math.radians(-3.0), math.radians(3.0), 0.0)),
+    ],
+    "thigh_l": [
+        (0.0, euler_to_quat(math.radians(32.0), 0.0, 0.0)),
+        (0.25, euler_to_quat(math.radians(-18.0), 0.0, 0.0)),
+        (0.5, euler_to_quat(math.radians(-28.0), 0.0, 0.0)),
+        (0.75, euler_to_quat(math.radians(12.0), 0.0, 0.0)),
+        (1.0, euler_to_quat(math.radians(32.0), 0.0, 0.0)),
+    ],
+    "shin_l": [
+        (0.0, euler_to_quat(math.radians(45.0), 0.0, 0.0)),
+        (0.25, euler_to_quat(math.radians(16.0), 0.0, 0.0)),
+        (0.5, euler_to_quat(math.radians(8.0), 0.0, 0.0)),
+        (0.75, euler_to_quat(math.radians(30.0), 0.0, 0.0)),
+        (1.0, euler_to_quat(math.radians(45.0), 0.0, 0.0)),
+    ],
+    "thigh_r": [
+        (0.0, euler_to_quat(math.radians(-28.0), 0.0, 0.0)),
+        (0.25, euler_to_quat(math.radians(12.0), 0.0, 0.0)),
+        (0.5, euler_to_quat(math.radians(32.0), 0.0, 0.0)),
+        (0.75, euler_to_quat(math.radians(-18.0), 0.0, 0.0)),
+        (1.0, euler_to_quat(math.radians(-28.0), 0.0, 0.0)),
+    ],
+    "shin_r": [
+        (0.0, euler_to_quat(math.radians(8.0), 0.0, 0.0)),
+        (0.25, euler_to_quat(math.radians(30.0), 0.0, 0.0)),
+        (0.5, euler_to_quat(math.radians(45.0), 0.0, 0.0)),
+        (0.75, euler_to_quat(math.radians(16.0), 0.0, 0.0)),
+        (1.0, euler_to_quat(math.radians(8.0), 0.0, 0.0)),
+    ],
+    "chest": [(0.0, euler_to_quat(math.radians(-4.0), 0.0, 0.0)), (1.0, euler_to_quat(math.radians(-4.0), 0.0, 0.0))],
+}
+stair_descent_loc = {
+    "pelvis": [
+        (0.0, Vector((0.0, 0.0, 0.01))),
+        (0.25, Vector((-0.015, 0.0, -0.035))),
+        (0.5, Vector((0.0, 0.0, 0.01))),
+        (0.75, Vector((0.015, 0.0, -0.035))),
+        (1.0, Vector((0.0, 0.0, 0.01))),
+    ]
+}
+add_full_action("stair_descent", 1.0, stair_descent_rot, stair_descent_loc)
+
 print(f"Authored all actions! Total actions in blend: {len(bpy.data.actions)}")
 
 # CRITICAL: Reset pose to Rest Pose before saving and exporting!

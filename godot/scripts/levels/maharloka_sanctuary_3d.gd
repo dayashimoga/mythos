@@ -65,9 +65,10 @@ func _ready() -> void:
 		boss_brihaspati.boss_phase_changed.connect(_on_boss_phase_changed)
 		boss_brihaspati.boss_defeated.connect(_on_boss_defeated)
 
-	for ped in get_tree().get_nodes_in_group("scripture_pedestals"):
-		if ped.has_signal("scripture_deciphered"):
-			ped.scripture_deciphered.connect(_on_scripture_deciphered)
+	if is_inside_tree() and get_tree():
+		for ped in get_tree().get_nodes_in_group("scripture_pedestals"):
+			if ped.has_signal("scripture_deciphered"):
+				ped.scripture_deciphered.connect(_on_scripture_deciphered)
 
 	if mahar_mandala_altar:
 		mahar_mandala_altar.mandala_consecrated.connect(_on_mandala_consecrated)

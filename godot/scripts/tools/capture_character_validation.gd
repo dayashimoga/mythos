@@ -1,7 +1,7 @@
 extends SceneTree
 
 const OUT_DIR = "h:/mythologicalgame/docs/images/veer_validation/"
-const BRAIN_DIR = "C:/Users/dayan/.gemini/antigravity-ide/brain/4a5bfbbb-2b05-4ffa-a9b4-fd46b2031671/"
+const BRAIN_DIR = "C:/Users/dayan/.gemini/antigravity-ide/brain/76f7b200-4c66-4077-80b0-19baeb9535b1/"
 
 func _init() -> void:
 	call_deferred("_run_captures")
@@ -31,63 +31,79 @@ func _run_captures() -> void:
 	var studio_shots = [
 		{
 			"id": "veer_front",
-			"pivot_pos": Vector3(0, 1.05, 0),
+			"pivot_pos": Vector3(0, 1.15, 0),
 			"rot_y": 0.0,
-			"zoom": 3.0,
+			"zoom": 2.7,
 			"desc": "Full Body Front Stature & Vedic Attire"
 		},
 		{
 			"id": "veer_three_quarter",
-			"pivot_pos": Vector3(0, 1.10, 0),
+			"pivot_pos": Vector3(0, 1.15, 0),
 			"rot_y": 0.65,
-			"zoom": 2.8,
+			"zoom": 2.6,
 			"desc": "Heroic Three-Quarter Angle & PBR Material Response"
 		},
 		{
 			"id": "veer_closeup_face",
-			"pivot_pos": Vector3(0, 1.64, 0),
-			"rot_y": 0.15,
-			"zoom": 1.4,
+			"pivot_pos": Vector3(0, 1.68, 0),
+			"rot_y": 0.0,
+			"zoom": 0.88,
 			"desc": "Facial Anatomy, Amber Surya Netra, Tripundra & Shikha"
 		},
 		{
+			"id": "veer_costume_dhoti_kamarband",
+			"pivot_pos": Vector3(0, 0.95, 0),
+			"rot_y": 0.0,
+			"zoom": 1.5,
+			"desc": "Fitted Dhoti with Zari Hem and Snug Kamarband"
+		},
+		{
 			"id": "veer_weapon_detail",
-			"pivot_pos": Vector3(-0.45, 1.0, 0.0),
-			"rot_y": -0.85,
-			"zoom": 1.6,
+			"pivot_pos": Vector3(-0.35, 0.65, 0.0),
+			"rot_y": -0.75,
+			"zoom": 1.4,
 			"desc": "Forged Damascus Surya-Kripana & Antique Bronze Bracer"
 		},
 		{
+			"id": "veer_footwear_paduka_sandals",
+			"pivot_pos": Vector3(0, 0.22, 0),
+			"rot_y": 0.20,
+			"zoom": 1.15,
+			"desc": "Warrior Paduka Sandals, Golden Peg & Greaves"
+		},
+		{
 			"id": "veer_back",
-			"pivot_pos": Vector3(0, 1.05, 0),
+			"pivot_pos": Vector3(0, 1.15, 0),
 			"rot_y": 3.14159,
-			"zoom": 3.0,
+			"zoom": 2.7,
 			"desc": "Full Body Rear, Shikha Binding, and Kashta Fold"
 		},
 		{
 			"id": "veer_profile_left",
-			"pivot_pos": Vector3(0, 1.05, 0),
+			"pivot_pos": Vector3(0, 1.15, 0),
 			"rot_y": 1.5708,
-			"zoom": 3.0,
+			"zoom": 2.6,
 			"desc": "Profile Left Showing Flowing Uttariya & Bicep Armlet"
 		},
 		{
 			"id": "veer_character_studio_overview",
-			"pivot_pos": Vector3(0, 1.15, 0),
+			"pivot_pos": Vector3(0, 1.25, 0),
 			"rot_y": 0.40,
-			"zoom": 3.6,
+			"zoom": 3.2,
 			"desc": "Full Character Studio 3D Inspection Environment"
 		}
 	]
 
 	for shot in studio_shots:
+		if "target_zoom" in studio:
+			studio.target_zoom = shot["zoom"]
+		if spring_arm:
+			spring_arm.spring_length = shot["zoom"]
 		if camera_pivot:
 			camera_pivot.position = shot["pivot_pos"]
 			camera_pivot.rotation.y = shot["rot_y"]
-		if spring_arm:
-			spring_arm.spring_length = shot["zoom"]
 
-		for f in range(15):
+		for f in range(25):
 			await process_frame
 
 		_save_root_image(shot["id"])
@@ -103,7 +119,21 @@ func _run_captures() -> void:
 		var bhumi = bhumi_res.instantiate()
 		root.add_child(bhumi)
 
-		for f in range(35):
+		for f in range(15):
+			await process_frame
+
+		if bhumi.has_node("CinematicDirector3D"):
+			var cd = bhumi.get_node("CinematicDirector3D")
+			if cd.has_node("CinematicCamera"):
+				var cam = cd.get_node("CinematicCamera")
+				if cam is Camera3D:
+					cam.current = false
+
+		var player_cam = bhumi.find_child("Camera3D", true, false)
+		if player_cam and player_cam is Camera3D:
+			player_cam.current = true
+
+		for f in range(30):
 			await process_frame
 
 		_save_root_image("veer_bhumi_gameplay")

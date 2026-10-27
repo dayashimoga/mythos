@@ -172,6 +172,17 @@ static func _create_collision_for_mesh(mesh_node: MeshInstance3D, context_name: 
 			col_shape.name = "ArchitectureTrimeshShape"
 			col_shape.shape = shape
 			static_body.add_child(col_shape)
+		
+		# If this is temple shikhara, add calibrated smooth front staircase ramp for fluid player traversal
+		if "shikhara" in combined_name:
+			var ramp_box = BoxShape3D.new()
+			ramp_box.size = Vector3(4.2, 0.22, 4.4)
+			var ramp_col = CollisionShape3D.new()
+			ramp_col.name = "TempleStairSmoothRampShape"
+			ramp_col.shape = ramp_box
+			ramp_col.rotation.x = atan2(1.22, 2.925)
+			ramp_col.position = Vector3(0.0, 0.72, 6.50)
+			static_body.add_child(ramp_col)
 	
 	if static_body.get_child_count() > 0:
 		mesh_node.add_child(static_body)

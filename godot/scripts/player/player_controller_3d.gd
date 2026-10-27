@@ -129,6 +129,16 @@ var is_grappling: bool = false
 var grapple_target_pos: Vector3 = Vector3.ZERO
 var grapple_speed: float = 24.0
 
+# Traversal & Locomotion Expansion (Stage Q19)
+var is_crouching: bool = false
+@export var crouch_speed: float = 2.4
+var is_rolling: bool = false
+var roll_timer: float = 0.0
+var is_on_stairs: bool = false
+var stair_direction: int = 1
+var stair_timer: float = 0.0
+
+
 func _ready() -> void:
 	if not visual_root:
 		visual_root = get_node_or_null("Visual")
@@ -143,7 +153,7 @@ func _ready() -> void:
 
 	health = max_health
 	floor_snap_length = 0.45
-	floor_max_angle = deg_to_rad(48.0)
+	floor_max_angle = deg_to_rad(58.0)
 	floor_stop_on_slope = true
 	floor_constant_speed = true
 	floor_block_on_wall = true
@@ -175,6 +185,32 @@ func _ready() -> void:
 func _setup_animation_tree() -> void:
 	if not anim_player:
 		return
+
+	# Explicitly enforce looping on continuous cyclic locomotion tracks
+	var looping_names = [
+		"idle", "idle_alert", "walk", "jog", "run", "sprint",
+		"walk_backward", "strafe_left", "strafe_right", "fall",
+		"crouch_idle", "crouch_walk", "block", "meditation",
+		"stair_ascent", "stair_descent"
+	]
+	for l_name in looping_names:
+		if anim_player.has_animation(l_name):
+			var a = anim_player.get_animation(l_name)
+			if a:
+				a.loop_mode = Animation.LOOP_LINEAR
+
+	var oneshot_names = [
+		"jump", "landing", "dodge", "roll", "parry", "recoil",
+		"attack_light_1", "attack_light_2", "attack_heavy_finisher",
+		"hit_reaction", "interact", "turn_left_90", "turn_right_90",
+		"turn_180", "walk_start", "walk_stop", "run_stop", "solar_blast",
+		"victory", "defeat"
+	]
+	for os_name in oneshot_names:
+		if anim_player.has_animation(os_name):
+			var a = anim_player.get_animation(os_name)
+			if a:
+				a.loop_mode = Animation.LOOP_NONE
 
 	anim_tree = find_child("AnimationTree", true, false) as AnimationTree
 	if not anim_tree:
@@ -227,8 +263,10 @@ func _build_production_animation_tree() -> void:
 		{"name": "fall", "xfade_in": 0.15, "xfade_out": 0.16, "at_end": false},
 		{"name": "landing", "xfade_in": 0.08, "xfade_out": 0.18, "at_end": true},
 		{"name": "dodge", "xfade_in": 0.08, "xfade_out": 0.16, "at_end": true},
+		{"name": "roll", "xfade_in": 0.08, "xfade_out": 0.16, "at_end": true},
 		{"name": "block", "xfade_in": 0.12, "xfade_out": 0.15, "at_end": false},
 		{"name": "parry", "xfade_in": 0.06, "xfade_out": 0.15, "at_end": true},
+		{"name": "recoil", "xfade_in": 0.06, "xfade_out": 0.16, "at_end": true},
 		{"name": "attack_light_1", "xfade_in": 0.08, "xfade_out": 0.16, "at_end": true},
 		{"name": "attack_light_2", "xfade_in": 0.08, "xfade_out": 0.16, "at_end": true},
 		{"name": "attack_heavy_finisher", "xfade_in": 0.10, "xfade_out": 0.20, "at_end": true},
@@ -241,6 +279,10 @@ func _build_production_animation_tree() -> void:
 		{"name": "walk_stop", "xfade_in": 0.12, "xfade_out": 0.16, "at_end": true},
 		{"name": "run_stop", "xfade_in": 0.12, "xfade_out": 0.18, "at_end": true},
 		{"name": "idle_alert", "xfade_in": 0.15, "xfade_out": 0.18, "at_end": false},
+		{"name": "crouch_idle", "xfade_in": 0.12, "xfade_out": 0.16, "at_end": false},
+		{"name": "crouch_walk", "xfade_in": 0.12, "xfade_out": 0.16, "at_end": false},
+		{"name": "stair_ascent", "xfade_in": 0.12, "xfade_out": 0.16, "at_end": false},
+		{"name": "stair_descent", "xfade_in": 0.12, "xfade_out": 0.16, "at_end": false},
 		{"name": "solar_blast", "xfade_in": 0.08, "xfade_out": 0.18, "at_end": true},
 		{"name": "meditation", "xfade_in": 0.20, "xfade_out": 0.25, "at_end": false},
 		{"name": "victory", "xfade_in": 0.20, "xfade_out": 0.25, "at_end": true},
@@ -259,27 +301,36 @@ func _build_production_animation_tree() -> void:
 			trans_to.xfade_time = act["xfade_in"]
 			state_machine.add_transition("Locomotion", anim_name, trans_to)
 
-			# Transition from Action -> Locomotion
+			# Transition from Action -> Locomotion (with automatic advance at end)
 			var trans_back = AnimationNodeStateMachineTransition.new()
 			trans_back.xfade_time = act["xfade_out"]
 			if act["at_end"]:
 				trans_back.switch_mode = AnimationNodeStateMachineTransition.SWITCH_MODE_AT_END
+				trans_back.advance_mode = AnimationNodeStateMachineTransition.ADVANCE_MODE_AUTO
 			state_machine.add_transition(anim_name, "Locomotion", trans_back)
 
-	# Transition between Jump and Fall
-	if anim_player.has_animation("jump") and anim_player.has_animation("fall"):
-		var trans_jf = AnimationNodeStateMachineTransition.new()
-		trans_jf.xfade_time = 0.15
-		state_machine.add_transition("jump", "fall", trans_jf)
+	# Action-to-Action Transitions for fluid combo chaining and movement continuity
+	var chain_transitions = [
+		{"from": "attack_light_1", "to": "attack_light_2", "xfade": 0.08},
+		{"from": "attack_light_2", "to": "attack_heavy_finisher", "xfade": 0.10},
+		{"from": "dodge", "to": "roll", "xfade": 0.10},
+		{"from": "block", "to": "parry", "xfade": 0.06},
+		{"from": "block", "to": "recoil", "xfade": 0.08},
+		{"from": "jump", "to": "fall", "xfade": 0.15},
+		{"from": "fall", "to": "landing", "xfade": 0.08},
+		{"from": "crouch_idle", "to": "crouch_walk", "xfade": 0.12},
+		{"from": "crouch_walk", "to": "crouch_idle", "xfade": 0.12},
+	]
 
-	# Transition between Fall and Landing
-	if anim_player.has_animation("fall") and anim_player.has_animation("landing"):
-		var trans_fl = AnimationNodeStateMachineTransition.new()
-		trans_fl.xfade_time = 0.08
-		state_machine.add_transition("fall", "landing", trans_fl)
+	for ct in chain_transitions:
+		if anim_player.has_animation(ct["from"]) and anim_player.has_animation(ct["to"]):
+			var trans = AnimationNodeStateMachineTransition.new()
+			trans.xfade_time = ct["xfade"]
+			state_machine.add_transition(ct["from"], ct["to"], trans)
 
 	# Initial transition from Start to Locomotion
 	var trans_start = AnimationNodeStateMachineTransition.new()
+	trans_start.advance_mode = AnimationNodeStateMachineTransition.ADVANCE_MODE_AUTO
 	state_machine.add_transition("Start", "Locomotion", trans_start)
 
 	anim_tree.tree_root = state_machine
@@ -361,6 +412,14 @@ func _physics_process(delta: float) -> void:
 		combo_window_timer -= delta
 		if combo_window_timer <= 0.0:
 			combo_index = 0
+	if stair_timer > 0.0:
+		stair_timer -= delta
+		if stair_timer <= 0.0:
+			is_on_stairs = false
+	if is_rolling:
+		roll_timer -= delta
+		if roll_timer <= 0.0:
+			is_rolling = false
 
 	# 3. Read Input & Modes
 	var is_locked_on = camera_arm != null and camera_arm.has_method("is_locked_on") and camera_arm.is_locked_on()
@@ -373,6 +432,7 @@ func _physics_process(delta: float) -> void:
 			player_action_performed.emit("look")
 			_last_camera_yaw = camera_arm.rotation.y
 
+	is_crouching = (Input.is_key_pressed(KEY_C) or (InputMap.has_action("crouch") and Input.is_action_pressed("crouch"))) and on_floor and not is_dashing and not is_attacking
 	is_guarding = (Input.is_key_pressed(KEY_Q) or Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT) or Input.is_joy_button_pressed(0, JOY_BUTTON_LEFT_SHOULDER)) and not is_attacking and not is_dashing and not is_gliding
 	if is_guarding and not _prev_is_guarding:
 		player_action_performed.emit("guard")
@@ -447,7 +507,7 @@ func _physics_process(delta: float) -> void:
 		# Face locked target or attack direction
 		if locked_target and is_instance_valid(locked_target):
 			var to_target = (locked_target.global_position - global_position)
-			visual_root.rotation.y = atan2(to_target.x, to_target.z)
+			visual_root.rotation.y = atan2(-to_target.x, -to_target.z)
 
 		if attack_timer <= 0.0:
 			is_attacking = false
@@ -491,11 +551,13 @@ func _physics_process(delta: float) -> void:
 
 	# 9. Determine Target Speed
 	var sprint_pressed = Input.is_key_pressed(KEY_SHIFT) or (InputMap.has_action("sprint") and Input.is_action_pressed("sprint")) or Input.is_joy_button_pressed(0, JOY_BUTTON_LEFT_STICK)
-	var is_sprinting = sprint_pressed and not is_guarding
+	var is_sprinting = sprint_pressed and not is_guarding and not is_crouching
 	var target_speed = 0.0
 	if move_dir.length_squared() > 0.001:
 		if is_guarding:
 			target_speed = guard_speed
+		elif is_crouching:
+			target_speed = crouch_speed
 		elif is_sprinting:
 			target_speed = sprint_speed
 		elif input_dir.length() < 0.65:
@@ -513,14 +575,14 @@ func _physics_process(delta: float) -> void:
 		if is_locked_on and locked_target and is_instance_valid(locked_target):
 			# Strafing mode: face locked target continuously
 			var to_t = (locked_target.global_position - global_position)
-			visual_root.rotation.y = lerp_angle(visual_root.rotation.y, atan2(to_t.x, to_t.z), turn_speed * 1.5 * delta)
-		elif is_guarding:
+			visual_root.rotation.y = lerp_angle(visual_root.rotation.y, atan2(-to_t.x, -to_t.z), turn_speed * 1.5 * delta)
+		elif is_guarding and visual_root:
 			# Guard mode: face camera forward
 			var cam_rot_y = camera_arm.rotation.y if camera_arm else 0.0
 			visual_root.rotation.y = lerp_angle(visual_root.rotation.y, cam_rot_y, turn_speed * delta)
-		else:
+		elif visual_root:
 			# Free roam: face direction of movement
-			var target_angle = atan2(move_dir.x, move_dir.z)
+			var target_angle = atan2(-move_dir.x, -move_dir.z)
 			visual_root.rotation.y = lerp_angle(visual_root.rotation.y, target_angle, turn_speed * delta)
 	else:
 		if on_floor:
@@ -536,7 +598,7 @@ func _physics_process(delta: float) -> void:
 		elif horiz_speed < 0.35 and previous_horiz_speed > 3.2 and anim_player and anim_player.has_animation("walk_stop"):
 			_travel_to("walk_stop")
 			stop_transition_timer = 0.35
-		elif horiz_speed < 0.2:
+		elif horiz_speed < 0.2 and visual_root:
 			var cam_rot_y = camera_arm.rotation.y if camera_arm else visual_root.rotation.y
 			var turn_diff = wrapf(cam_rot_y - visual_root.rotation.y, -PI, PI)
 			if abs(turn_diff) > deg_to_rad(70.0):
@@ -679,28 +741,38 @@ func _update_body_lean_physics(delta: float, horiz_speed: float) -> void:
 ## Physically tests step risers up to 0.38m to step over stair edges cleanly
 func _handle_stair_step_up(move_dir: Vector3, delta: float) -> void:
 	var max_step_height: float = 0.38
-	var step_distance: float = clamp(Vector2(velocity.x, velocity.z).length() * delta * 2.0, 0.08, 0.35)
+	var probe_speed: float = max(walk_speed, Vector2(velocity.x, velocity.z).length())
+	var step_distance: float = clamp(probe_speed * delta * 2.5, 0.20, 0.40)
 	
-	# 1. Test vertical clearance overhead
+	# 1. Test vertical head clearance overhead before stepping up
 	var up_disp = Vector3(0.0, max_step_height, 0.0)
 	if test_move(global_transform, up_disp, null, safe_margin):
-		return # Overhead obstruction
+		return # Overhead obstruction (low doorway or ceiling)
 	
 	# 2. Test forward displacement at elevated height
 	var elevated_trans = global_transform.translated(up_disp)
 	var fwd_disp = move_dir.normalized() * step_distance
 	if test_move(elevated_trans, fwd_disp, null, safe_margin):
-		return # Blocked forward at step height - this is a solid wall, not a step
+		return # Blocked forward at step height - this is a high solid wall, not a step
 	
 	# 3. Test downwards to detect step tread surface
 	var target_top_trans = elevated_trans.translated(fwd_disp)
 	var down_col = KinematicCollision3D.new()
-	if test_move(target_top_trans, Vector3(0.0, -max_step_height * 1.15, 0.0), down_col, safe_margin):
+	var test_down = Vector3(0.0, -max_step_height * 1.25, 0.0)
+	if test_move(target_top_trans, test_down, down_col, safe_margin):
 		var normal = down_col.get_normal()
-		if normal.dot(Vector3.UP) > 0.65:
-			var step_up_amount = max_step_height - down_col.get_travel().y
-			if step_up_amount > 0.03 and step_up_amount <= max_step_height:
-				global_position += Vector3(0.0, step_up_amount + 0.02, 0.0) + fwd_disp * 0.4
+		if normal.dot(Vector3.UP) >= 0.65:
+			# In Godot 4, downward travel is negative
+			var traveled_down = abs(down_col.get_travel().y)
+			var step_up_amount = max_step_height - traveled_down
+			if step_up_amount > 0.02 and step_up_amount <= max_step_height:
+				# Validate candidate position on top of the step tread
+				var target_trans = global_transform.translated(Vector3(0.0, step_up_amount + 0.02, 0.0) + fwd_disp * 0.5)
+				if not test_move(target_trans, Vector3.ZERO, null, safe_margin):
+					global_position = target_trans.origin
+					is_on_stairs = true
+					stair_direction = 1
+					stair_timer = 0.35
 
 ## Gait stride tracking for footstep contact timing and 3D audio triggering
 func _update_footstep_audio(delta: float, on_floor: bool, horiz_speed: float) -> void:
@@ -733,9 +805,12 @@ func _emit_footstep(foot_index: int) -> void:
 	AudioManager3D.play_3d("footstep_stone", contact_pos, randf_range(0.96, 1.06))
 
 func _unhandled_input(event: InputEvent) -> void:
-	# Prana Dash Trigger
+	# Prana Dash / Dodge / Roll Trigger
 	if event.is_action_pressed("dash") or (event is InputEventJoypadButton and event.button_index == JOY_BUTTON_B and event.pressed):
-		_trigger_dash()
+		if is_dashing and dash_timer < 0.14:
+			_trigger_roll()
+		else:
+			_trigger_dash()
 
 	# Melee Attack Trigger
 	if (event.is_action_pressed("attack") or (event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT) or (event is InputEventJoypadButton and event.button_index == JOY_BUTTON_X and event.pressed)) and not is_guarding:
@@ -750,7 +825,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		_trigger_parry()
 
 	# Harpoon Grapple Trigger
-	if (event is InputEventKey and event.pressed and not event.echo and (event.keycode == KEY_G or event.keycode == KEY_C)) or (event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_MIDDLE):
+	if (event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_G) or (event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_MIDDLE):
 		_trigger_grapple()
 
 func apply_updraft(force: float) -> void:
@@ -798,9 +873,22 @@ func _trigger_dash() -> void:
 	else:
 		dash_direction = -visual_root.global_transform.basis.z.normalized()
 
-func _trigger_attack() -> void:
-	if is_attacking or is_dashing:
+func _trigger_roll() -> void:
+	if is_rolling:
 		return
+	is_rolling = true
+	roll_timer = 0.36
+	_travel_to("roll")
+	player_action_performed.emit("roll")
+	AudioManager3D.play("dash_whoosh", 0.9)
+
+func _trigger_attack() -> void:
+	if is_dashing:
+		return
+	if is_attacking:
+		if attack_timer > 0.18:
+			return # Still in active swing
+		# In recovery window: allow chaining into next combo strike
 
 	player_action_performed.emit("attack")
 	is_attacking = true
@@ -1027,9 +1115,12 @@ func take_damage_spec(attack_spec: CombatMath.AttackSpec) -> CombatMath.CombatHi
 			camera_arm.add_trauma(0.22)
 		_trigger_hit_stop(0.08)
 	elif result.was_blocked:
-		_travel_to("block")
 		health = max(0, health - result.damage_dealt)
 		health_changed.emit(health, max_health)
+		if result.poise_damage_dealt > 40.0:
+			_travel_to("recoil")
+		else:
+			_travel_to("block")
 		AudioManager3D.play("hit_impact", 1.1)
 	else:
 		health = max(0, health - result.damage_dealt)
@@ -1057,6 +1148,20 @@ func _update_locomotion_animation(delta: float) -> void:
 	var horiz_vel = Vector3(velocity.x, 0.0, velocity.z)
 	var horiz_speed = horiz_vel.length()
 
+	# Dynamic speed-to-stride cadence scaling to eliminate foot sliding
+	if anim_player:
+		if current_state == "Locomotion":
+			if horiz_speed > 8.5:
+				anim_player.speed_scale = clamp(horiz_speed / sprint_speed, 0.85, 1.35)
+			elif horiz_speed > 5.0:
+				anim_player.speed_scale = clamp(horiz_speed / jog_speed, 0.80, 1.30)
+			elif horiz_speed > 0.35:
+				anim_player.speed_scale = clamp(horiz_speed / walk_speed, 0.70, 1.30)
+			else:
+				anim_player.speed_scale = 1.0
+		else:
+			anim_player.speed_scale = 1.0
+
 	# Compute local character-relative velocity for 2D blend space
 	var local_x = 0.0
 	var local_z = 0.0
@@ -1072,7 +1177,11 @@ func _update_locomotion_animation(delta: float) -> void:
 	if anim_tree and anim_tree.active:
 		anim_tree.set("parameters/Locomotion/blend_position", Vector2(local_x, local_z))
 
-	# Priority 1: Dash (Dodge)
+	# Priority 1: Dash (Dodge) & Roll
+	if is_rolling:
+		_travel_to("roll")
+		locomotion_state_changed.emit("Roll", horiz_speed)
+		return
 	if is_dashing:
 		_travel_to("dodge")
 		locomotion_state_changed.emit("Dodge", dash_speed)
@@ -1119,7 +1228,27 @@ func _update_locomotion_animation(delta: float) -> void:
 	if stop_transition_timer > 0.0:
 		return
 
-	# Priority 6: Ground Locomotion via BlendSpace2D
+	# Priority 6: Crouch Movement
+	if is_crouching:
+		if horiz_speed < 0.2:
+			_travel_to("crouch_idle")
+			locomotion_state_changed.emit("CrouchIdle", 0.0)
+		else:
+			_travel_to("crouch_walk")
+			locomotion_state_changed.emit("CrouchWalk", horiz_speed)
+		return
+
+	# Priority 7: Stair Traversal
+	if is_on_stairs and horiz_speed > 0.3:
+		if stair_direction > 0:
+			_travel_to("stair_ascent")
+			locomotion_state_changed.emit("StairAscent", horiz_speed)
+		else:
+			_travel_to("stair_descent")
+			locomotion_state_changed.emit("StairDescent", horiz_speed)
+		return
+
+	# Priority 8: Ground Locomotion via BlendSpace2D
 	if horiz_speed < 0.2:
 		if combo_window_timer > 0.0 or parry_window_timer > 0.0:
 			_travel_to("idle_alert")
